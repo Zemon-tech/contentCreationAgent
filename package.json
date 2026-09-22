@@ -7,7 +7,13 @@
   "scripts": {
     "dev": "mastra dev",
     "build": "mastra build",
-    "start": "mastra start"
+    "start": "mastra start",
+    "typecheck": "tsc --noEmit",
+    "verify": "npx -y tsx src/mastra/demo/verifyPipeline.ts",
+    "verify:registry": "npx -y tsx src/mastra/demo/verifyRegistry.ts",
+    "verify:workflow": "npx -y tsx src/mastra/demo/runWorkflowDemo.ts",
+    "verify:intelligence": "npx -y tsx src/mastra/demo/verifyIntelligence.ts",
+    "benchmark:sweep": "npx -y tsx src/mastra/demo/benchmarkSweep.ts"
   },
   "keywords": [],
   "author": "",

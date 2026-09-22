@@ -1,0 +1,298 @@
+import type { RawContent } from "../schemas/rawContent";
+import type { Source } from "../schemas/source";
+
+function hoursAgo(h: number): string {
+  return new Date(Date.now() - h * 3_600_000).toISOString();
+}
+
+export const MOCK_SOURCES: Source[] = [
+  {
+    id: "rss:openai-blog",
+    name: "OpenAI Blog",
+    type: "rss",
+    role: "official",
+    url: "https://openai.com/blog/rss.xml",
+    authorityScore: 95,
+    topics: ["LLMs", "Generative AI"],
+    active: true,
+  },
+  {
+    id: "rss:techcrunch-ai",
+    name: "TechCrunch AI",
+    type: "rss",
+    role: "news",
+    url: "https://techcrunch.com/category/artificial-intelligence/feed/",
+    authorityScore: 80,
+    topics: ["AI Startups", "LLMs"],
+    active: true,
+  },
+  {
+    id: "newsletter:ai-creator",
+    name: "AI Creator Weekly",
+    type: "newsletter",
+    role: "signal_creator",
+    authorityScore: 55,
+    topics: ["LLMs", "AI Agents"],
+    active: true,
+  },
+  {
+    id: "blog:anthropic-research",
+    name: "Anthropic Research Blog",
+    type: "blog",
+    role: "official",
+    url: "https://www.anthropic.com/research",
+    authorityScore: 92,
+    topics: ["AI Research", "AI Agents"],
+    active: true,
+  },
+  {
+    id: "github:vllm",
+    name: "vLLM releases",
+    type: "github",
+    role: "official",
+    url: "https://github.com/vllm-project/vllm",
+    authorityScore: 85,
+    topics: ["AI Infrastructure", "Open Source AI"],
+    active: true,
+  },
+  {
+    id: "news:mistral",
+    name: "Mistral Newsroom",
+    type: "news",
+    role: "official",
+    url: "https://mistral.ai/news",
+    authorityScore: 88,
+    topics: ["AI Startups", "LLMs"],
+    active: true,
+  },
+  {
+    id: "blog:dev-tutorials",
+    name: "Dev Tutorials Blog",
+    type: "blog",
+    role: "community",
+    url: "https://example.com/dev-tutorials",
+    authorityScore: 45,
+    topics: ["AI Coding"],
+    active: true,
+  },
+  {
+    id: "news:sports-daily",
+    name: "Sports Daily",
+    type: "news",
+    role: "news",
+    url: "https://example.com/sports",
+    authorityScore: 40,
+    active: true,
+  },
+];
+
+/**
+ * 14 realistic mock items, no external APIs needed:
+ * - Story A: GPT-6 announcement + 2 related posts (URL dup + content-hash dup included)
+ * - Story B: Anthropic agent-planning research + newsletter coverage
+ * - Story C: vLLM GitHub release
+ * - Story D: Mistral $500M funding (news + official blog)
+ * - Singletons: NVIDIA GPUs, AI coding tutorial, sports (irrelevant), opinion piece
+ */
+export const MOCK_RAW_ITEMS: RawContent[] = [
+  {
+    id: "mock-a1",
+    sourceId: "rss:openai-blog",
+    sourceName: "OpenAI Blog",
+    sourceType: "rss",
+    url: "https://openai.com/blog/introducing-gpt-6",
+    title: "Introducing GPT-6: our most capable model for agents",
+    content:
+      "Today OpenAI is announcing GPT-6, our most capable LLM for AI agents and AI coding. GPT-6 sets a new state of the art on agent benchmarks, with 3x lower inference cost and native GPU-efficient serving. Developers can try it in the API today.",
+    author: { name: "OpenAI" },
+    publishedAt: hoursAgo(3),
+    collectedAt: hoursAgo(2),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-a2",
+    sourceId: "rss:techcrunch-ai",
+    sourceName: "TechCrunch AI",
+    sourceType: "rss",
+    url: "https://techcrunch.com/2026/09/21/openai-unveils-gpt-6-agent-model/",
+    title: "OpenAI unveils GPT-6, an agent-optimized model with cheaper inference",
+    content:
+      "OpenAI unveiled GPT-6 on Monday, a new LLM optimized for AI agents that the company claims beats Claude and Gemini on planning benchmarks while cutting inference costs. The launch intensifies competition with Anthropic and Google.",
+    author: { name: "TechCrunch" },
+    publishedAt: hoursAgo(4),
+    collectedAt: hoursAgo(2),
+    engagement: { likes: 1200, comments: 340, shares: 890 },
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-a2b",
+    sourceId: "rss:techcrunch-ai",
+    sourceName: "TechCrunch AI",
+    sourceType: "rss",
+    // Exact URL duplicate of mock-a2 (Level-1 dedup case).
+    url: "https://techcrunch.com/2026/09/21/openai-unveils-gpt-6-agent-model/?utm_source=feed&utm_medium=rss",
+    title: "OpenAI unveils GPT-6, an agent-optimized model with cheaper inference",
+    content:
+      "OpenAI unveiled GPT-6 on Monday, a new LLM optimized for AI agents that the company claims beats Claude and Gemini on planning benchmarks while cutting inference costs. The launch intensifies competition with Anthropic and Google.",
+    author: { name: "TechCrunch" },
+    publishedAt: hoursAgo(4),
+    collectedAt: hoursAgo(1),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-a3",
+    sourceId: "newsletter:ai-creator",
+    sourceName: "AI Creator Weekly",
+    sourceType: "newsletter",
+    url: "https://example.com/newsletter/gpt-6-first-tests",
+    title: "I tested GPT-6 for coding agents — here's what changed",
+    content:
+      "I spent the weekend testing OpenAI's new GPT-6 model for AI coding workflows. Inference feels dramatically faster and agent tool-use is far more reliable than GPT-5. Full benchmark numbers inside, plus GPU cost comparisons.",
+    author: { name: "Creator", handle: "@aicreator" },
+    publishedAt: hoursAgo(6),
+    collectedAt: hoursAgo(2),
+    engagement: { likes: 420, shares: 150 },
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-a5",
+    sourceId: "rss:openai-blog",
+    sourceName: "OpenAI Blog (mirror)",
+    sourceType: "rss",
+    // Same normalized content as mock-a1 under a different URL (Level-2 case).
+    url: "https://openai.com/index/blog/mirror-introducing-gpt-6",
+    title: "Introducing GPT-6: our most capable model for agents",
+    content:
+      "Today OpenAI is announcing GPT-6, our most capable LLM for AI agents and AI coding. GPT-6 sets a new state of the art on agent benchmarks, with 3x lower inference cost and native GPU-efficient serving. Developers can try it in the API today.",
+    author: { name: "OpenAI" },
+    publishedAt: hoursAgo(3),
+    collectedAt: hoursAgo(2),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-b1",
+    sourceId: "blog:anthropic-research",
+    sourceName: "Anthropic Research Blog",
+    sourceType: "blog",
+    url: "https://www.anthropic.com/research/mechanistic-agent-planning",
+    title: "Mechanistic interpretability of planning in Claude agents",
+    content:
+      "In this research paper we study how Claude plans multi-step tasks. Our peer-reviewed experiments show interpretable planning circuits emerging in large models, with new benchmark results on long-horizon agent tasks.",
+    author: { name: "Anthropic Research" },
+    publishedAt: hoursAgo(30),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-b2",
+    sourceId: "newsletter:ai-creator",
+    sourceName: "AI Creator Weekly",
+    sourceType: "newsletter",
+    url: "https://example.com/newsletter/anthropic-planning-paper",
+    title: "Anthropic's new paper explains how Claude agents plan",
+    content:
+      "Anthropic published a fascinating study on mechanistic planning in Claude. If you build AI agents, the benchmark section is essential reading — it changes how we think about long-horizon reliability.",
+    author: { name: "Creator", handle: "@aicreator" },
+    publishedAt: hoursAgo(26),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-c1",
+    sourceId: "github:vllm",
+    sourceName: "vLLM releases",
+    sourceType: "github",
+    url: "https://github.com/vllm-project/vllm/releases/tag/v0.9.2",
+    title: "vLLM v0.9.2: faster inference for open source AI",
+    content:
+      "Release notes for v0.9.2: 40% faster LLM inference on NVIDIA GPUs, new disaggregated serving mode, bugfixes for agent serving workloads. See the changelog and migration guide before upgrading.",
+    author: { name: "vllm-project" },
+    publishedAt: hoursAgo(50),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo", tag: "v0.9.2" },
+  },
+  {
+    id: "mock-d1",
+    sourceId: "rss:techcrunch-ai",
+    sourceName: "TechCrunch AI",
+    sourceType: "rss",
+    url: "https://techcrunch.com/2026/09/20/mistral-500m-raise/",
+    title: "Mistral raises $500M to scale open source AI infrastructure",
+    content:
+      "French AI startup Mistral has raised a $500M funding round led by top investors, valuing the company at $6B. The money will fund GPU clusters and open source LLM development to compete with OpenAI.",
+    author: { name: "TechCrunch" },
+    publishedAt: hoursAgo(28),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-d2",
+    sourceId: "news:mistral",
+    sourceName: "Mistral Newsroom",
+    sourceType: "news",
+    url: "https://mistral.ai/news/series-c-500m",
+    title: "Announcing our $500M Series C to build open AI infrastructure",
+    content:
+      "We're announcing a $500M funding round to expand our AI infrastructure across Europe. This lets Mistral train frontier open source models and serve inference at scale for developers.",
+    author: { name: "Mistral AI" },
+    publishedAt: hoursAgo(27),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-e1",
+    sourceId: "news:mistral",
+    sourceName: "Mistral Newsroom",
+    sourceType: "news",
+    url: "https://example.com/news/nvidia-inference-gpus",
+    title: "NVIDIA announces next-gen GPUs for LLM inference",
+    content:
+      "NVIDIA announced next-generation GPUs promising 2x LLM inference throughput for AI infrastructure providers. Microsoft and Meta are among the first cloud customers.",
+    author: { name: "Wire Desk" },
+    publishedAt: hoursAgo(80),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-f1",
+    sourceId: "blog:dev-tutorials",
+    sourceName: "Dev Tutorials Blog",
+    sourceType: "blog",
+    url: "https://example.com/dev-tutorials/ai-coding-setup-guide",
+    title: "How to set up an AI coding assistant: step-by-step tutorial",
+    content:
+      "This step-by-step guide walks through setting up an AI coding assistant with GPT and Claude, from API keys to editor plugins. A practical getting-started tutorial for developers.",
+    author: { name: "Tutorial Team" },
+    publishedAt: hoursAgo(200),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-g1",
+    sourceId: "news:sports-daily",
+    sourceName: "Sports Daily",
+    sourceType: "news",
+    url: "https://example.com/sports/premier-league-results",
+    title: "Premier League results: late winner decides derby",
+    content:
+      "A stoppage-time goal decided Saturday's football derby. Match report, transfer news and league standings inside.",
+    author: { name: "Sports Desk" },
+    publishedAt: hoursAgo(10),
+    collectedAt: hoursAgo(5),
+    metadata: { collector: "demo" },
+  },
+  {
+    id: "mock-h1",
+    sourceId: "rss:techcrunch-ai",
+    sourceName: "TechCrunch AI",
+    sourceType: "rss",
+    url: "https://techcrunch.com/2026/09/19/ai-bubble-opinion/",
+    title: "Opinion: the AI bubble is about to burst",
+    content:
+      "In my opinion, the current wave of AI startup funding looks like a bubble. GPU spending is out of control and inference margins are collapsing. Hot take, but investors should be cautious.",
+    author: { name: "Guest Columnist" },
+    publishedAt: hoursAgo(60),
+    collectedAt: hoursAgo(20),
+    metadata: { collector: "demo" },
+  },
+];
