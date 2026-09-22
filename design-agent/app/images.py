@@ -19,6 +19,7 @@ from typing import Any
 
 import httpx
 import websockets
+from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
@@ -317,16 +318,84 @@ class ComfyUIClient:
             )
 
 
+def cover_slot_id(manifest: TemplateManifest) -> str | None:
+    """Return the first prompt_slot image slot id (the cover hero), if any."""
+    for img_slot in manifest.image_slots:
+        if img_slot.prompt_slot:
+            return img_slot.id
+    return None
+
+
+async def download_url_to_image(
+    url: str,
+    dest: Path,
+    timeout_s: int = 30,
+    max_bytes: int = 15_000_000,
+) -> Path:
+    """Download a user-provided image URL to dest as PNG, validating it decodes (spec §11).
+
+    Raises:
+        ImageGenerationError: On transport failure, oversize payload, or non-image content.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=timeout_s, follow_redirects=True) as client:
+            res = await client.get(url)
+        if res.status_code != httpx.codes.OK:
+            raise ImageGenerationError(
+                f"Cover image URL returned HTTP {res.status_code}: {url}",
+                details={"status_code": res.status_code, "url": str(url)},
+            )
+    except httpx.HTTPError as exc:
+        raise ImageGenerationError(
+            f"Failed to download cover image URL {url}: {exc}",
+            details={"url": str(url), "error": str(exc)},
+        ) from exc
+
+    content = res.content
+    if len(content) > max_bytes:
+        raise ImageGenerationError(
+            f"Cover image URL payload ({len(content)} bytes) exceeds {max_bytes} byte cap.",
+            details={"url": str(url)},
+        )
+
+    content_type = res.headers.get("content-type", "").split(";")[0].strip().lower()
+    if content_type and not content_type.startswith("image/"):
+        raise ImageGenerationError(
+            f"Cover image URL did not return image content (content-type: {content_type or 'missing'}).",
+            details={"url": str(url), "content_type": content_type},
+        )
+
+    import io as _io
+
+    try:
+        img = Image.open(_io.BytesIO(content))
+        img.load()
+    except Exception as exc:
+        raise ImageGenerationError(
+            f"Cover image URL content is not a decodable image: {exc}",
+            details={"url": str(url)},
+        ) from exc
+
+    dest = dest.with_suffix(".png")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGB")
+    img.save(dest, format="PNG")
+    return dest
+
+
 async def generate_images_for_post(
     post_plan: PostPlan,
     manifest: TemplateManifest,
     output_dir: Path,
     comfy_client: ComfyUIClient | None = None,
     workflows_dir: Path | str | None = None,
+    skip: set[tuple[int, str]] | None = None,
 ) -> dict[tuple[int, str], Path]:
     """Generate all images required for prompt_slot=True image slots across all slides (spec §11).
 
     Saves images to output_dir and returns mapping from (slide_idx, slot_id) to image file path.
+    Entries in `skip` (e.g. cover overridden by a provided URL) are not generated.
     """
     client = comfy_client or ComfyUIClient()
     target_width, target_height = post_plan.aspect_ratio.dimensions
@@ -337,6 +406,9 @@ async def generate_images_for_post(
     for slide_idx, slide in enumerate(post_plan.slides):
         for img_slot in manifest.image_slots:
             if not img_slot.prompt_slot:
+                continue
+
+            if skip and (slide_idx, img_slot.id) in skip:
                 continue
 
             if not img_slot.comfy_workflow:

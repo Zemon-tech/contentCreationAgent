@@ -13,6 +13,7 @@ async function main() {
   let topic = '';
   let format: 'single' | 'carousel' = 'single';
   let template = 'tech-announcement';
+  let coverImageUrl: string | undefined;
 
   const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i++) {
@@ -21,6 +22,8 @@ async function main() {
       format = (args[++i] as any) || 'single';
     } else if (arg === '--template' || arg === '-t') {
       template = args[++i] || 'tech-announcement';
+    } else if (arg === '--cover-url' || arg === '-c') {
+      coverImageUrl = args[++i] || undefined;
     } else if (!arg.startsWith('-')) {
       topic = topic ? `${topic} ${arg}` : arg;
     }
@@ -35,6 +38,7 @@ async function main() {
   console.log(`    Topic    : ${topic}`);
   console.log(`    Format   : ${format}`);
   console.log(`    Template : ${template}`);
+  console.log(`    Cover URL: ${coverImageUrl || '(AI generated)'}`);
   console.log('==================================================\n');
 
   const run = await newsToPostWorkflow.createRun();
@@ -45,6 +49,7 @@ async function main() {
       template_id: template as any,
       aspect_ratio: '4:5',
       max_slides: 5,
+      ...(coverImageUrl ? { cover_image_url: coverImageUrl } : {}),
     },
   });
 

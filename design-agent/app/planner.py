@@ -273,6 +273,7 @@ async def plan_post(
     brand_rules = build_prompt_rules(brand)
     system_prompt = f"""You are the principal editorial writer and art director at KeilHQ.
 Your task is to transform input content into an Instagram post plan matching the '{manifest.name}' template.
+Template brief: {manifest.description}
 
 {brand_rules}
 
@@ -285,6 +286,11 @@ HARD CONSTRAINTS (Strictly Enforced):
 """
 
     user_parts = [f"Source Content:\n{request.content}"]
+    if request.cover_image_url:
+        user_parts.append(
+            "Cover image is provided directly by URL and used as-is for slide 1 hero. "
+            "Still write a slide 1 hero prompt describing it (drives alt text and fallback)."
+        )
     if request.language:
         user_parts.append(f"Language hint: {request.language}")
     if request.format:

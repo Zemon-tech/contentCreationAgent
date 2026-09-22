@@ -17,7 +17,7 @@ from app.assembler import assemble_job_output
 from app.compositor import composite_post
 from app.config import Settings, get_settings
 from app.exceptions import JobNotFoundError
-from app.images import ComfyUIClient, generate_images_for_post
+from app.images import ComfyUIClient, cover_slot_id, download_url_to_image, generate_images_for_post
 from app.logging_config import get_logger
 from app.models import (
     CreateJobRequest,
@@ -150,17 +150,46 @@ class JobManager:
 
             images_map: dict[tuple[int, str], Path] = {}
             needs_generation = any(slot.prompt_slot for slot in manifest.image_slots)
+            skip_generation: set[tuple[int, str]] = set()
+
+            # Caller-provided cover image: use as-is for slide 0 hero, skip its generation.
+            if job.request.cover_image_url:
+                cover_slot = cover_slot_id(manifest)
+                if cover_slot is None:
+                    logger.warning(
+                        "cover_image_url_ignored_no_image_slot",
+                        job_id=job_id,
+                    )
+                else:
+                    try:
+                        job_output_dir.mkdir(parents=True, exist_ok=True)
+                        cover_path = await download_url_to_image(
+                            str(job.request.cover_image_url),
+                            job_output_dir / "cover_source",
+                        )
+                        images_map[(0, cover_slot)] = cover_path
+                        skip_generation.add((0, cover_slot))
+                        logger.info("cover_image_downloaded", job_id=job_id)
+                    except Exception as exc:
+                        logger.warning(
+                            "cover_image_download_failed_using_generation",
+                            job_id=job_id,
+                            error=str(exc),
+                        )
 
             if needs_generation:
                 comfy = self.comfy_client or ComfyUIClient()
                 is_reachable = await comfy.check_health()
 
                 if is_reachable:
-                    images_map = await generate_images_for_post(
-                        post_plan=post_plan,
-                        manifest=manifest,
-                        output_dir=job_output_dir,
-                        comfy_client=comfy,
+                    images_map.update(
+                        await generate_images_for_post(
+                            post_plan=post_plan,
+                            manifest=manifest,
+                            output_dir=job_output_dir,
+                            comfy_client=comfy,
+                            skip=skip_generation,
+                        )
                     )
                 else:
                     logger.warning(

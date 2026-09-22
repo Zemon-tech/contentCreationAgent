@@ -227,6 +227,16 @@ def test_create_job_request_validation() -> None:
     assert req.aspect_ratio == AspectRatio.FOUR_BY_FIVE
     assert req.max_slides == 10
     assert req.format is None
+    assert req.cover_image_url is None
+
+    # Optional cover image URL accepted, non-URL rejected
+    req_cover = CreateJobRequest(
+        content="Some source article text",
+        cover_image_url="https://example.com/cover.jpg",  # type: ignore[arg-type]
+    )
+    assert str(req_cover.cover_image_url) == "https://example.com/cover.jpg"
+    with pytest.raises(ValidationError):
+        CreateJobRequest(content="Some source article text", cover_image_url="not-a-url")
 
 
 def test_api_responses() -> None:

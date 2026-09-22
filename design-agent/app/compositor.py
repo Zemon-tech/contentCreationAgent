@@ -246,6 +246,27 @@ async def composite_post(
     shared_jpg = (templates_dir or settings.templates_dir) / "shared.jpg"
     shared_image_uri = image_file_to_data_uri(shared_jpg) if shared_jpg.is_file() else None
 
+    # Template-local brand logos (e.g. RAS by KeilHQ light/dark). Preferred
+    # location is the template dir so templates stay self-contained; falls
+    # back to the repo-level assets/ dir. Exposed as Jinja vars; None when
+    # absent so templates can fall back to a text badge.
+    tmpl_base = templates_dir or settings.templates_dir
+    assets_base = Path(__file__).resolve().parent.parent / "assets"
+    logo_light_candidates = [
+        tmpl_dir / "ras-by-keilhq-light-mode.png",
+        tmpl_base / "ras-by-keilhq-light-mode.png",
+        assets_base / "ras-by-keilhq-light-mode.png",
+    ]
+    logo_dark_candidates = [
+        tmpl_dir / "ras-by-keilhq-dark-mode.png",
+        tmpl_base / "ras-by-keilhq-dark-mode.png",
+        assets_base / "ras-by-keilhq-dark-mode.png",
+    ]
+    logo_light_file = next((p for p in logo_light_candidates if p.is_file()), None)
+    logo_dark_file = next((p for p in logo_dark_candidates if p.is_file()), None)
+    logo_light_uri = image_file_to_data_uri(logo_light_file) if logo_light_file else None
+    logo_dark_uri = image_file_to_data_uri(logo_dark_file) if logo_dark_file else None
+
     all_warnings: list[str] = []
     rendered_slides: list[RenderedSlide] = []
 
@@ -273,6 +294,8 @@ async def composite_post(
                 "text": slide.text,
                 "images": slide_images,
                 "shared_image": shared_image_uri,
+                "logo_light": logo_light_uri,
+                "logo_dark": logo_dark_uri,
                 "brand_name": brand.name,
                 "aspect_ratio": post_plan.aspect_ratio.value,
                 "width": target_width,

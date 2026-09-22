@@ -3,10 +3,11 @@ import path from 'node:path';
 
 export interface CreateJobParams {
   content: string;
-  template_id?: 'tech-announcement' | 'keilhq-editorial' | 'keilhq-text' | 'entrepreneur-post';
+  template_id?: 'tech-announcement' | 'keilhq-editorial' | 'keilhq-text' | 'entrepreneur-post' | '360labs-news';
   format?: 'single' | 'carousel';
   aspect_ratio?: '4:5' | '1:1' | '3:4';
   max_slides?: number;
+  cover_image_url?: string;
 }
 
 export interface SlideManifest {
@@ -72,6 +73,7 @@ export async function submitDesignJob(params: CreateJobParams): Promise<{ job_id
       format: params.format || 'single',
       aspect_ratio: params.aspect_ratio || '4:5',
       max_slides: params.max_slides ?? 5,
+      ...(params.cover_image_url ? { cover_image_url: params.cover_image_url } : {}),
     }),
   });
 

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ text.headline | default("RAS News") }}</title>
+  {% if style_content %}
+  <style>
+    {{ style_content | safe }}
+  </style>
+  {% else %}
+  <link rel="stylesheet" href="style.css">
+  {% endif %}
+  {% if css_colors %}
+  <style>
+    :root {
+      {% for prop, val in css_colors.items() %}
+      {{ prop }}: {{ val }};
+      {% endfor %}
+    }
+  </style>
+  {% endif %}
+</head>
+<body>
+  {# RAS editorial colour worlds (§14): NEWS=vermilion, AI=teal, MONEY=gold, FUTURE=lime, OPPORTUNITY=vermilion-paper #}
+  {% set _eyebrow = ((text and text.eyebrow) or "AI NEWS") | upper %}
+  {% set _cat = "news" %}
+  {% if "MONEY" in _eyebrow or "FUND" in _eyebrow or "RAISE" in _eyebrow %}{% set _cat = "money" %}
+  {% elif "FUTURE" in _eyebrow %}{% set _cat = "future" %}
+  {% elif "OPPORTUNITY" in _eyebrow or "GRANT" in _eyebrow or "HACKATHON" in _eyebrow or "JOB" in _eyebrow %}{% set _cat = "opportunity" %}
+  {% elif "AI" in _eyebrow %}{% set _cat = "ai" %}
+  {% endif %}
+  <div id="canvas" class="aspect-{{ (aspect_ratio | default('4:5')).replace(':', '-') }} {% if (slide_index | default(0)) == 0 %}is-cover{% else %}is-content{% endif %} cat-{{ _cat }}" style="width: {{ width | default(1080) }}px; height: {{ height | default(1350) }}px;">
+    <div class="safe-zone">
+      <!-- Eyebrow with Vermilion signal dot (§10: signal, not default colour) -->
+      <div class="eyebrow-row">
+        <span class="signal-dot" aria-hidden="true"></span>
+        <div class="slot-eyebrow" data-slot="eyebrow">{{ (text and text.eyebrow) or "AI NEWS" }}</div>
+      </div>
+
+      <!-- Main: Signal + Context + Relevance (§5). Headline dominates, tight, short (§18) -->
+      {# COVER vs CONTENT image contract (see PROMPT_GUIDE.md):
+         - slide 0 (is-cover): hero = centered company/product logotype on flat Soft Linen, symmetrical, no people.
+         - slides 1+ (is-content): hero = B&W editorial photo, subject right, copy-space left for overlay badge. #}
+      <main class="editorial-content">
+        {% if text and text.headline %}
+        <h1 class="slot-headline" data-slot="headline">{{ text.headline | safe }}</h1>
+        {% endif %}
+
+        <!-- Hero image card: Soft Linen frame (§9.1), no gradients/glass/neon (§Shared DNA).
+             COVER (slide 0): centered logotype card with viewfinder frame.
+             CONTENT (slides 1+): full-bleed editorial photo, clean (corners only on cover). -->
+        <figure class="hero-card hero-{% if (slide_index | default(0)) == 0 %}cover{% else %}content{% endif %}">
+          {% if images and images.hero %}
+          <img class="hero-img" src="{{ images.hero }}" alt="" />
+          {% endif %}
+          {% if (slide_index | default(0)) == 0 %}
+          <span class="corner tl" aria-hidden="true"></span>
+          <span class="corner tr" aria-hidden="true"></span>
+          <span class="corner bl" aria-hidden="true"></span>
+          <span class="corner br" aria-hidden="true"></span>
+          {% endif %}
+        </figure>
+
+        {% if text and text.body %}
+        <div class="slot-body" data-slot="body">{{ text.body | safe }}</div>
+        {% endif %}
+      </main>
+
+      <!-- Footer: official RAS by KeilHQ lockup (assets/ras-by-keilhq-*-mode.png §19-23). Light canvas -> light-mode (Ink) logo. -->
+      <footer class="news-footer">
+        <div class="footer-rule"></div>
+        <div class="footer-row">
+          {% if logo_light %}
+          <img class="brand-logo" src="{{ logo_light }}" alt="RAS by KeilHQ" />
+          {% else %}
+          <div class="brand-badge" title="Rise &amp; Shine by KeilHQ">[<span>RAS</span><i class="sun" aria-hidden="true"></i>]</div>
+          {% endif %}
+          {% if total_slides and total_slides > 1 %}
+          <div class="slide-indicator">
+            {{ "%02d" | format((slide_index | default(0)) + 1) }} / {{ "%02d" | format(total_slides) }}
+          </div>
+          {% elif text and text.cta %}
+          <div class="slot-cta" data-slot="cta">{{ text.cta }}</div>
+          {% endif %}
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

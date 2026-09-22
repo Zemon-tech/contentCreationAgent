@@ -14,7 +14,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 # ============================================================================
 # Enums
@@ -329,6 +329,10 @@ class CreateJobRequest(BaseModel):
     language: str | None = Field(
         default=None,
         description="Optional BCP-47 language hint, e.g. 'en', 'hi'.",
+    )
+    cover_image_url: HttpUrl | None = Field(
+        default=None,
+        description="Optional direct image URL used as-is for the cover (slide 0) hero instead of AI generation.",
     )
 
     @field_validator("content")

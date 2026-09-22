@@ -1,0 +1,279 @@
+/* RAS News — Rise & Shine editorial carousel per aggregrator/ras-brand-guidelines.md
+   Ink. Paper. Daybreak. (§7) | Editorial Internet (§25) | No gradients / glass / neon (§Shared DNA, §15) */
+
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-SemiBold.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-SemiBold.ttf") format("truetype");
+}
+
+:root {
+  /* RAS palette (§9-11). Hierarchy §12: Paper/Linen 60% / Ink 25% / Vermilion 10% / Gold+Teal 3% / Lime 2% */
+  --paper: #F4F0E6;        /* Daybreak Paper — carousel canvas */
+  --ink: #151615;          /* Midnight Ink — headlines, logo, body */
+  --linen: #E8E3D9;        /* Soft Linen — hero card, info blocks */
+  --frame: #D8D2C4;        /* Linen-darkened hairline for card/rule */
+  --muted: #6B6760;        /* Warm secondary text derived from Ink */
+  --vermilion: #F25C3D;    /* Daybreak Vermilion — signal only (§10) */
+  --gold: #E2A72E;         /* Harvest Gold — MONEY world */
+  --teal: #2F7C74;         /* Signal Teal — AI world */
+  --lime: #C7E84A;         /* Fresh Lime — FUTURE accent, sparing */
+
+  /* Legacy aliases so brand.yaml css_colors cannot break RAS canvas */
+  --color-canvas: var(--paper);
+  --color-ink: var(--ink);
+  --color-body: var(--ink);
+  --color-muted: var(--muted);
+  --color-card: var(--linen);
+  --color-rule: var(--frame);
+  --color-bracket: var(--muted);
+
+  /* Typography §16-18: Satoshi primary, Instrument Serif accent only */
+  --font-sans: "Satoshi", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "Satoshi", "Inter", -apple-system, sans-serif;
+
+  /* Category accent defaults to NEWS/vermilion; .cat-* overrides signal dot */
+  --accent: var(--vermilion);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#canvas {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+
+.cat-ai { --accent: var(--teal); }
+.cat-money { --accent: var(--gold); }
+.cat-future { --accent: var(--lime); }
+.cat-opportunity { --accent: var(--vermilion); }
+.cat-news { --accent: var(--vermilion); }
+
+.safe-zone {
+  width: 928px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 64px 0 52px 0;
+}
+
+/* Eyebrow: Satoshi Medium label (§16), moderate tracking (avoid luxury spacing §Avoid) */
+.eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.signal-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.slot-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 29px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  --min-font-size: 17px;
+}
+
+/* Headline: Satoshi Black/Bold, large + tight + short (§16, §18). Accent never competes (§15) */
+.slot-headline {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.0;
+  color: var(--ink);
+  word-break: break-word;
+  margin-bottom: 44px;
+  font-size: 78px;
+  --min-font-size: 40px;
+}
+
+.is-cover .slot-headline {
+  font-size: 88px;
+  --min-font-size: 44px;
+  line-height: 0.98;
+}
+
+/* Instrument Serif accent: editorial statements / emphasis only (§17) */
+.slot-headline em, .slot-headline i,
+.slot-body em, .slot-body i {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.editorial-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Hero card: Soft Linen surface + hairline (§9.1), flat — no gradients/shadows (§Don't) */
+.hero-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--linen);
+  border: 1.5px solid var(--frame);
+  border-radius: 24px;
+  overflow: hidden;
+  margin-bottom: 44px;
+  flex-shrink: 0;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* COVER (slide 0): contained logotype — never cropped, never grayscaled, framed by corners */
+.hero-cover .hero-img {
+  object-fit: contain;
+  padding: 56px 72px;
+  filter: none;
+}
+
+/* CONTENT (slides 1+): full-bleed B&W editorial photo — fills card, no corners */
+.hero-content .hero-img {
+  object-fit: cover;
+  filter: grayscale(100%);
+}
+
+/* Viewfinder corners in Ink */
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid var(--ink);
+  opacity: 0.75;
+}
+.corner.tl { top: 22px; left: 24px; border-top-width: 2.5px; border-left-width: 2.5px; }
+.corner.tr { top: 22px; right: 24px; border-top-width: 2.5px; border-right-width: 2.5px; }
+.corner.bl { bottom: 22px; left: 24px; border-bottom-width: 2.5px; border-left-width: 2.5px; }
+.corner.br { bottom: 22px; right: 24px; border-bottom-width: 2.5px; border-right-width: 2.5px; }
+
+/* Body: Satoshi Regular (§16), generous leading, strong hierarchy by size/weight first (§18) */
+.slot-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 32px;
+  --min-font-size: 19px;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.slot-body p + p { margin-top: 0.9em; }
+
+.slot-body strong, .slot-body b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Footer */
+.news-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.footer-rule {
+  height: 1.5px;
+  background: var(--frame);
+  margin-bottom: 26px;
+}
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* RAS wordmark: official lockup PNG (§21 light-mode on Paper). Text badge below is offline fallback only. */
+.brand-logo {
+  height: 88px;
+  width: auto;
+  max-width: 400px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-badge {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 46px;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.brand-badge span { color: var(--ink); }
+.brand-badge .sun {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--vermilion);
+  display: inline-block;
+  /* Sunrise: flat horizon cut keeps Rising-A meaning without extra assets */
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 0 62%);
+}
+
+.slide-indicator, .slot-cta {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 27px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  --min-font-size: 16px;
+}
+
+/* Aspect variants */
+.aspect-1-1 .safe-zone { padding: 56px 0 44px 0; }
+.aspect-1-1 .slot-headline { font-size: 68px; margin-bottom: 32px; }
+.aspect-1-1 .is-cover .slot-headline { font-size: 74px; }
+.aspect-1-1 .hero-card { margin-bottom: 32px; border-radius: 20px; }
+.aspect-1-1 .slot-body { font-size: 28px; }
+
+.aspect-3-4 .safe-zone { padding: 72px 0 56px 0; }
+.aspect-3-4 .hero-card { aspect-ratio: 16 / 10.5; }

@@ -54,7 +54,8 @@ When the user asks you to search news and create an Instagram post:
 1. ALWAYS check if they specified their preferred post format ('single' slide or 'carousel') and template.
 2. If they have NOT explicitly specified whether they prefer a single slide or carousel (or template), ask them or use the ask_user tool before proceeding!
    - Formats: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
-   - Templates: 'tech-announcement' (default for tech news), 'keilhq-editorial' (editorial reflections), 'keilhq-text' (clean typography), or 'entrepreneur-post'.
+   - Templates: 'tech-announcement' (default for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'keilhq-editorial' (editorial reflections), 'keilhq-text' (clean typography), or 'entrepreneur-post'.
+   - If the user shares a direct image URL for the cover, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
 3. Once confirmed, invoke the search_news_and_create_post tool with the topic, format, and template.
 4. When finished, present the headline, full caption, hashtags, and the file paths to the generated slides in the workspace.
 

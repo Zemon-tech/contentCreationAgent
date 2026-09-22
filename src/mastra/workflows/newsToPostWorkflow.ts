@@ -12,20 +12,26 @@ import {
 export const NewsToPostInputSchema = z.object({
   topic: z.string().min(1).describe("News topic or query to search, e.g. 'Anthropic Claude' or 'OpenAI'"),
   template_id: z
-    .enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post'])
+    .enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news'])
     .default('tech-announcement')
     .describe("Design template to use. 'tech-announcement' is recommended for tech news."),
   format: z.enum(['single', 'carousel']).default('single').describe('Single slide or multi-slide carousel.'),
   aspect_ratio: z.enum(['4:5', '1:1', '3:4']).default('4:5'),
   max_slides: z.number().int().min(1).max(10).default(5),
+  cover_image_url: z
+    .string()
+    .url()
+    .optional()
+    .describe('Optional direct image URL used as-is for the cover (slide 1) hero instead of AI generation.'),
 });
 
 const ResearchOutputSchema = z.object({
   topic: z.string(),
-  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post']),
+  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news']),
   format: z.enum(['single', 'carousel']),
   aspect_ratio: z.enum(['4:5', '1:1', '3:4']),
   max_slides: z.number(),
+  cover_image_url: z.string().url().optional(),
   articleTitle: z.string(),
   articleUrl: z.string(),
   articlePublishedDate: z.string().nullable(),
@@ -35,10 +41,11 @@ const ResearchOutputSchema = z.object({
 
 const DistillOutputSchema = z.object({
   topic: z.string(),
-  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post']),
+  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news']),
   format: z.enum(['single', 'carousel']),
   aspect_ratio: z.enum(['4:5', '1:1', '3:4']),
   max_slides: z.number(),
+  cover_image_url: z.string().url().optional(),
   articleTitle: z.string(),
   articleUrl: z.string(),
   postContent: z.string(),
@@ -139,6 +146,7 @@ export const researchNewsStep = createStep({
       format: inputData.format,
       aspect_ratio: inputData.aspect_ratio,
       max_slides: inputData.max_slides,
+      cover_image_url: inputData.cover_image_url,
       articleTitle: cleanTitle,
       articleUrl: selected.url,
       articlePublishedDate: selected.publishedDate ?? null,
@@ -174,6 +182,7 @@ Source: ${inputData.articleUrl}
       format: inputData.format,
       aspect_ratio: inputData.aspect_ratio,
       max_slides: inputData.max_slides,
+      cover_image_url: inputData.cover_image_url,
       articleTitle: inputData.articleTitle,
       articleUrl: inputData.articleUrl,
       postContent,
@@ -197,6 +206,7 @@ export const renderPostStep = createStep({
       format: inputData.format,
       aspect_ratio: inputData.aspect_ratio,
       max_slides: inputData.max_slides,
+      ...(inputData.cover_image_url ? { cover_image_url: inputData.cover_image_url } : {}),
     });
 
     console.log(`[newsToPostWorkflow] Job created: ${job_id}. Waiting for rendering...`);

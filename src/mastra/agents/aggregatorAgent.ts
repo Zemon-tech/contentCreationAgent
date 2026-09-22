@@ -142,7 +142,8 @@ When the user asks you to create an Instagram post, visual card, or carousel (e.
    - Check if they specified whether they prefer a 'single' slide or 'carousel' (multi-slide), and if they have a template preference.
    - If not explicitly specified, ask the user to confirm:
      * Format: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
-     * Template: 'tech-announcement' (bold modern layout, recommended for tech news), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
+     * Template: 'tech-announcement' (bold modern layout, recommended for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
+     * Cover image: if the user shares a direct image URL, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
 2. EXECUTE THE DESIGN TOOL:
    - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and template_id.
    - For an existing story, summary, or text already analyzed: call createPostFromContent with content, format, and template_id.

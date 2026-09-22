@@ -14,6 +14,8 @@ from app.exceptions import ImageGenerationError
 from app.images import (
     ComfyUIClient,
     WorkflowMap,
+    cover_slot_id,
+    download_url_to_image,
     generate_images_for_post,
     inject_workflow_params,
     load_workflow,
@@ -275,6 +277,114 @@ async def test_generate_images_for_post_mocked(tmp_path: Path) -> None:
     saved_path = out_map[(0, "background")]
     assert saved_path.is_file()
     assert saved_path.read_bytes() == mock_png_bytes
+
+
+def test_cover_slot_id() -> None:
+    """First prompt_slot image slot is the cover hero; slot-less templates return None."""
+    assert cover_slot_id(get_template("360labs-news")) == "hero"
+    assert cover_slot_id(get_template("keilhq-editorial")) == "background"
+    assert cover_slot_id(get_template("tech-announcement")) is None
+
+
+def _sample_png_bytes() -> bytes:
+    """Generate a tiny valid PNG in-memory for download tests."""
+    import io
+
+    from PIL import Image as PILImage
+
+    buf = io.BytesIO()
+    PILImage.new("RGB", (16, 16), color="#F25C3D").save(buf, format="PNG")
+    return buf.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_download_url_to_image_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Image content-type downloads are saved as PNG and decode cleanly."""
+    png = _sample_png_bytes()
+
+    async def mock_get(self: httpx.AsyncClient, url: str, **kwargs: Any) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=png,
+            headers={"content-type": "image/png"},
+            request=httpx.Request("GET", url),
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+
+    dest = await download_url_to_image("https://example.com/cover.jpg", tmp_path / "cover_source")
+    assert dest.suffix == ".png"
+    assert dest.is_file()
+    assert dest.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+@pytest.mark.asyncio
+async def test_download_url_to_image_rejects_non_image(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Non-image content-type raises ImageGenerationError."""
+
+    async def mock_get(self: httpx.AsyncClient, url: str, **kwargs: Any) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=b"<html>not an image</html>",
+            headers={"content-type": "text/html"},
+            request=httpx.Request("GET", url),
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+
+    with pytest.raises(ImageGenerationError, match="did not return image content"):
+        await download_url_to_image("https://example.com/page", tmp_path / "cover_source")
+
+
+@pytest.mark.asyncio
+async def test_download_url_to_image_http_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """HTTP failures raise ImageGenerationError."""
+
+    async def mock_get(self: httpx.AsyncClient, url: str, **kwargs: Any) -> httpx.Response:
+        return httpx.Response(404, request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+
+    with pytest.raises(ImageGenerationError, match="HTTP 404"):
+        await download_url_to_image("https://example.com/missing.jpg", tmp_path / "cover_source")
+
+
+@pytest.mark.asyncio
+async def test_generate_images_for_post_skip(tmp_path: Path) -> None:
+    """Entries in skip are not generated (cover URL override path)."""
+    post_plan = PostPlan(
+        template_id="keilhq-editorial",
+        format=Format.SINGLE,
+        aspect_ratio=AspectRatio.FOUR_BY_FIVE,
+        slides=[
+            PostPlanSlide(
+                text={"headline": "Test"},
+                images={"background": SlideImagePrompt(prompt="Stone texture")},
+            )
+        ],
+        caption="Caption",
+        hashtags=["tag"],
+        alt_texts=["Alt"],
+    )
+    manifest = get_template("keilhq-editorial")
+
+    mock_client = ComfyUIClient()
+    mock_client.generate_image = AsyncMock(return_value=b"png")  # type: ignore[method-assign]
+
+    out_map = await generate_images_for_post(
+        post_plan=post_plan,
+        manifest=manifest,
+        output_dir=tmp_path,
+        comfy_client=mock_client,
+        skip={(0, "background")},
+    )
+
+    assert out_map == {}
+    mock_client.generate_image.assert_not_called()
 
 
 @pytest.mark.integration

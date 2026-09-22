@@ -13,11 +13,16 @@ export const searchNewsAndCreatePostTool = createTool({
       .enum(["single", "carousel"])
       .describe("Instagram post format: 'single' for a single image, or 'carousel' for multi-slide."),
     template_id: z
-      .enum(["tech-announcement", "keilhq-editorial", "keilhq-text", "entrepreneur-post"])
+      .enum(["tech-announcement", "keilhq-editorial", "keilhq-text", "entrepreneur-post", "360labs-news"])
       .default("tech-announcement")
       .describe("Template to use. 'tech-announcement' is recommended for tech and industry news."),
     aspect_ratio: z.enum(["4:5", "1:1", "3:4"]).default("4:5"),
     max_slides: z.number().int().min(1).max(10).default(5),
+    cover_image_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Optional direct image URL used as-is for the cover (slide 1) hero instead of AI generation."),
   }),
   outputSchema: z.object({
     status: z.string(),
@@ -37,7 +42,7 @@ export const searchNewsAndCreatePostTool = createTool({
     workspaceDir: z.string(),
     copiedFiles: z.array(z.string()),
   }),
-  execute: async ({ topic, format, template_id, aspect_ratio, max_slides }) => {
+  execute: async ({ topic, format, template_id, aspect_ratio, max_slides, cover_image_url }) => {
     const run = await newsToPostWorkflow.createRun();
     const result = await run.start({
       inputData: {
@@ -46,6 +51,7 @@ export const searchNewsAndCreatePostTool = createTool({
         template_id: template_id || "tech-announcement",
         aspect_ratio: aspect_ratio || "4:5",
         max_slides: max_slides || 5,
+        ...(cover_image_url ? { cover_image_url } : {}),
       },
     });
 
@@ -70,11 +76,16 @@ export const createPostFromContentTool = createTool({
       .enum(["single", "carousel"])
       .describe("Instagram post format: 'single' for a single image, or 'carousel' for multi-slide."),
     template_id: z
-      .enum(["tech-announcement", "keilhq-editorial", "keilhq-text", "entrepreneur-post"])
+      .enum(["tech-announcement", "keilhq-editorial", "keilhq-text", "entrepreneur-post", "360labs-news"])
       .default("tech-announcement")
       .describe("Template to use. 'tech-announcement' is recommended for tech and industry news."),
     aspect_ratio: z.enum(["4:5", "1:1", "3:4"]).default("4:5"),
     max_slides: z.number().int().min(1).max(10).default(5),
+    cover_image_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Optional direct image URL used as-is for the cover (slide 1) hero instead of AI generation."),
   }),
   outputSchema: z.object({
     status: z.string(),
@@ -91,13 +102,14 @@ export const createPostFromContentTool = createTool({
     workspaceDir: z.string(),
     copiedFiles: z.array(z.string()),
   }),
-  execute: async ({ content, format, template_id, aspect_ratio, max_slides }) => {
+  execute: async ({ content, format, template_id, aspect_ratio, max_slides, cover_image_url }) => {
     const { job_id } = await submitDesignJob({
       content,
       template_id: template_id || "tech-announcement",
       format: format || "single",
       aspect_ratio: aspect_ratio || "4:5",
       max_slides: max_slides || 5,
+      ...(cover_image_url ? { cover_image_url } : {}),
     });
 
     const job = await waitForDesignJob(job_id);

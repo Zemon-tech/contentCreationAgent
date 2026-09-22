@@ -1,0 +1,57 @@
+{
+  "id": "360labs-news",
+  "name": "RAS News",
+  "description": "Rise & Shine editorial carousel per ras-brand-guidelines.md: Daybreak Paper canvas, Midnight Ink Satoshi type with Instrument Serif accent, RAS by KeilHQ footer logo. Slide 1 of N is the COVER: headline announces the news and its hero image MUST be a centered company/product logotype on flat Soft Linen, symmetrical, no people, no overlay text (rendered contained with viewfinder corners). Slides 2 to N are CONTENT: each hero image MUST be a black-and-white editorial photograph with the subject right-of-center and empty blurred copy-space left for the overlay ID badge — never another logotype card.",
+  "supports": {
+    "formats": ["single", "carousel"],
+    "aspect_ratios": ["4:5", "3:4", "1:1"]
+  },
+  "slides": {
+    "min": 1,
+    "max": 10,
+    "fixed": null
+  },
+  "text_slots": [
+    {
+      "id": "eyebrow",
+      "role": "eyebrow",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    },
+    {
+      "id": "headline",
+      "role": "headline",
+      "max_chars": 110,
+      "min_chars": 1,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "max_chars": 650,
+      "min_chars": 0,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    }
+  ],
+  "image_slots": [
+    {
+      "id": "hero",
+      "fit": "cover",
+      "per_slide": true,
+      "comfy_workflow": "keilhq-bg.json",
+      "prompt_slot": true
+    }
+  ]
+}
