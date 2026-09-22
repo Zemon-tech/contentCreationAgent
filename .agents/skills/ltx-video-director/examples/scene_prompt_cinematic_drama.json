@@ -1,0 +1,248 @@
+{
+  "scene": {
+    "scene_number": 4,
+    "title": "THE MORNING DEPARTURE",
+    "timecode": "00:18-00:24",
+    "duration_seconds": 6,
+    "generation_target": "LTX-2.3 via ComfyUI",
+    "generation_mode": "T2V",
+    "aspect_ratio": "16:9",
+    "purpose": "Establish quiet emotional separation between siblings before departure. Physical micro-gestures replace verbal melodrama.",
+    "emotional_destination": "Bittersweet intimacy and unspoken farewell.",
+    "dominant_visual_idea": "Two figures at a weathered timber kitchen table, early morning light slicing through steam from ceramic mugs.",
+    "brand_landing": "None (Pure Cinematic Narrative)"
+  },
+  "important_generation_architecture": {
+    "reason": "Ensure all physics and character continuity remain grounded; no fast motion or surreal cuts inside the single take.",
+    "generative_boundaries": "Generate the full continuous take via LTX-2.3. Do not attempt on-screen credit titles inside generative diffusion.",
+    "recommended_method": "Native LTX-2.3 T2V with two-stage upscale pass."
+  },
+  "continuity": {
+    "character": {
+      "identity": "Elena, 28-year-old botanist",
+      "hair": "Dark brown hair tied back in a loose, low linen bun with stray strands",
+      "wardrobe": "Worn olive-green heavy wool cardigan over off-white raw cotton henley shirt",
+      "performance": "Quiet, restrained, contemplative, avoiding theatrical expressions"
+    },
+    "secondary_characters": {
+      "identity": "Marcus, her 20-year-old brother",
+      "hair": "Short cropped dark hair",
+      "wardrobe": "Faded navy denim chore jacket over charcoal crew-neck",
+      "performance": "Grounded, slightly hesitant, looking at his mug before glancing up"
+    },
+    "environment": {
+      "location": "Rustic farmhouse kitchen in rural Northern Spain",
+      "furniture": "Handmade rough-hewn oak table with visible wood grain and wear marks",
+      "props": "Two steaming terracotta coffee mugs, vintage brass compass resting on linen cloth"
+    }
+  },
+  "spatial_blocking": {
+    "foreground": "Edge of rough-hewn oak tabletop and out-of-focus rim of a ceramic pitcher on the left edge",
+    "midground": "Elena seated on the left, Marcus seated across from her at 45 degrees, both within focal plane",
+    "background": "Whitewashed stone farmhouse wall, shelf of dried glass specimen jars, soft window light behind Elena",
+    "camera_relation": "Eye-level intimate two-shot at 1.3m camera height, 2.4m distance from subjects"
+  },
+  "action_timeline": [
+    {
+      "time": "00:18.0-00:19.5",
+      "action": "Elena cups both hands around her warm terracotta mug, eyes cast down at the table surface as steam curls upward."
+    },
+    {
+      "time": "00:19.5-00:21.0",
+      "action": "Marcus reaches forward with his right hand, nudging the brass compass two inches across the linen runner toward Elena."
+    },
+    {
+      "time": "00:21.0-00:22.5",
+      "action": "Elena glances at the compass, her fingers gently loosening around the mug; she raises her eyes to meet Marcus's gaze."
+    },
+    {
+      "time": "00:22.5-00:24.0",
+      "action": "A faint, understanding half-smile touches Elena's lips; Marcus gives a slow, reassuring nod as the morning light gently brightens."
+    }
+  ],
+  "performance": {
+    "primary_subject": "Elena's subtle emotional shift from introspection to connection",
+    "micro_actions": "Slow breath, fingers curling around ceramic warmth, unhurried eye-line transition",
+    "emotional_tone": "Warm, restrained, authentic human intimacy",
+    "forbidden": [
+      "no crying or tears",
+      "no dramatic sobbing",
+      "no theatrical gestures",
+      "no looking at camera lens",
+      "no frozen mannequin posture"
+    ]
+  },
+  "camera": {
+    "camera_type": "Full-frame cinema camera on precision fluid head dolly",
+    "lens": "35mm T1.8 Cooke S4 prime lens",
+    "starting_position": "Intimate two-shot framed from waist up",
+    "starting_height": "1.3m eye level",
+    "ending_height": "1.3m maintaining exact level horizon",
+    "depth_of_field": "Moderate shallow depth of field (T2.2) keeping Elena and Marcus sharp while background stone softens",
+    "focus_priority": "Elena's face and hands, racking micro-focus gently to the brass compass during mid-shot",
+    "movement": {
+      "00:18-00:20": "Rock-steady observational hold with subtle organic breathing",
+      "00:20-00:23": "Slow, buttery smooth push-in moving 0.4 meters toward the two characters",
+      "00:23-00:24": "Decelerating to a gentle settle as Marcus nods"
+    },
+    "camera_path": {
+      "start": "2.4m distance from table center",
+      "middle": "smooth straight forward dolly track",
+      "end": "2.0m distance from table center",
+      "travel": "0.4m total forward translation",
+      "speed": "0.13 m/s slow cinematic glide",
+      "acceleration": "feathered ease-in and ease-out"
+    },
+    "constraints": [
+      "no zoom lens action",
+      "no Dutch tilt",
+      "no handheld camera shake",
+      "no rapid cuts",
+      "no camera rotation"
+    ]
+  },
+  "visual_callback": {
+    "thematic_prop": "The brass compass symbolizes ancestral guidance passed down through generations.",
+    "lighting_symbolism": "Cool morning exterior blue transitioning into warm golden interior window light."
+  },
+  "lighting": {
+    "source": "Large east-facing multi-pane stone farmhouse window",
+    "quality": "Soft morning sunlight diffused by linen curtains, with delicate rim light on hair",
+    "temperature": "Split: 3200K warm interior tungsten bounce off wooden table vs 5500K crisp morning window daylight",
+    "direction": "Side-back key light entering from frame left, gentle unbleached muslin fill on frame right",
+    "subject_lighting": "Delicate skin highlights, clear eye catchlights, soft shadow fall-off across cheekbones",
+    "background_lighting": "Softly falling off into deep natural shadows on the rear stone wall",
+    "important_rule": "Warmth must originate naturally from window morning sun and wood bounce, never from artificial orange digital washes.",
+    "forbidden": [
+      "no harsh direct flash",
+      "no artificial lens flare streaks",
+      "no glowing subjects",
+      "no flat high-key lighting",
+      "no blown-out clipped highlights"
+    ]
+  },
+  "color_and_finish": {
+    "style": "Cinematic European narrative realism",
+    "film_character": "Kodak Vision3 500T 35mm motion picture film stock",
+    "grade": "Kodak 2383 print stock LUT emulation with warm earthy tones",
+    "palette": ["#1A1D1A", "#3D3A34", "#8B5E3C", "#C49A6C", "#E8D8C8", "#6A7B66"],
+    "contrast": "Filmic gentle S-curve with deep, breathable shadow toe",
+    "saturation": "Naturalistic, restrained saturation",
+    "grain": "Subtle 35mm organic fine grain structure with natural density fluctuation",
+    "halation": "Mild warm amber halation around hot window edges and ceramic specular reflections",
+    "texture": "Tactile wool knit fibers, worn oak grain, ceramic glaze micro-cracks, natural skin pores",
+    "avoid": [
+      "glossy commercial look",
+      "plastic waxy skin",
+      "oversaturated digital HDR",
+      "digital noise",
+      "heavy vignette"
+    ]
+  },
+  "audio": {
+    "acoustics_and_ambience": "Warm, dry domestic farmhouse acoustics with subtle distant morning birdsong outside the stone walls.",
+    "timeline_foley": {
+      "00:18.0-00:19.5": ["quiet inhalation of breath", "faint liquid steam whisper", "soft wool sweater rustle"],
+      "00:19.5-00:21.0": ["gentle metallic scrape of brass compass sliding across coarse linen table runner"],
+      "00:21.0-00:22.5": ["delicate ceramic mug contact on wood", "soft rustle of hair against collar"],
+      "00:22.5-00:24.0": ["quiet brotherly vocal murmur", "distant timber house creak"]
+    },
+    "dialogue": [
+      {
+        "time": "00:22.8-00:23.8",
+        "speaker": "Marcus",
+        "line": "Take it with you.",
+        "delivery": "Soft, husky, intimate conversational whisper."
+      }
+    ],
+    "voiceover": [],
+    "music": {
+      "entry": "A very quiet, warm acoustic solo cello note enters under the scene at 00:21.0.",
+      "character": "Minimalist, organic, melancholic yet hopeful",
+      "intensity": "Low background bed (-18dB under room tone)",
+      "progression": "Gently sustains into the final frame"
+    }
+  },
+  "negative_prompt": {
+    "anti_cgi": [
+      "video game",
+      "console game",
+      "3D render",
+      "Unreal Engine",
+      "cartoon",
+      "anime",
+      "plastic skin",
+      "waxy skin",
+      "CGI",
+      "oversaturated"
+    ],
+    "anatomy_and_physics": [
+      "deformed hands",
+      "mutated fingers",
+      "extra limbs",
+      "warped facial features",
+      "morphing objects",
+      "floating mug",
+      "rubber limbs"
+    ],
+    "camera_and_artifacts": [
+      "erratic camera shake",
+      "whip pan",
+      "snap zoom",
+      "floating camera",
+      "jitter",
+      "flicker",
+      "digital sensor noise",
+      "abrupt cut"
+    ],
+    "lighting": [
+      "blown-out highlights",
+      "crushed muddy blacks",
+      "artificial neon glow",
+      "lens flare burns",
+      "harsh digital rim light"
+    ],
+    "prohibited_elements": [
+      "no modern electronic devices",
+      "no smartphones",
+      "no text overlays",
+      "no watermarks",
+      "no subtitles generated in video",
+      "no stock footage grins"
+    ]
+  },
+  "ltx_2_3_prompt": "In a rustic Spanish farmhouse kitchen, a 28-year-old botanist woman with dark hair in a loose linen bun and an olive wool cardigan sits at a worn oak table across from her 20-year-old brother in a faded navy denim jacket. The woman holds a warm terracotta mug with both hands as delicate steam rises into the soft morning window daylight; the brother reaches forward and gently slides a vintage brass compass across the linen table runner toward her. She glances down at the compass, lifts her eyes to meet his gaze, and lets a quiet, subtle half-smile form as he nods reassuringly and whispers softly, \\\"Take it with you.\\\" The camera begins on a 35mm cinema lens in a steady eye-level two-shot, maintaining an observational hold before executing a slow, continuous 0.4-meter forward dolly push-in that smoothly settles as their eyes meet, with no zoom, shake, or abrupt cuts. Soft 5500K morning sunlight diffuses through the window onto their faces, balanced by warm 3200K ambient bounce off the oak table, Kodak Vision3 500T film texture with fine 35mm grain, gentle halation, and tangible textures of knitted wool and weathered timber, accompanied by intimate domestic acoustics, delicate metallic compass scrape on linen, faint ceramic clinks, and an understated solo cello bed.",
+  "comfyui_direction": {
+    "workflow": "Native LTX-2.3 T2V Two-Stage Workflow.",
+    "why_mode": "Pure generative text-to-video scene establishing emotional baseline.",
+    "camera_strategy": "Precision geared dolly push-in: 2.4m -> 2.0m distance over 6s at 0.13 m/s.",
+    "audio": "Joint audio-visual latent pass generating dialogue lip sync, foley, and room acoustics simultaneously.",
+    "prompting": "Chronological narrative flow: action first, prop interaction second, eye-line resolution third, camera choreography fourth, lighting and film finish fifth, synchronized audio sixth.",
+    "render_strategy": {
+      "pass_1_base": "640x360 @ 30 FPS, 181 frames (6s * 30 + 1), Euler sampler with 8-step ManualSigmas.",
+      "latent_upscale": "2x spatial latent upscaling via ltx-2.3-spatial-upscaler-x2-1.1.safetensors.",
+      "pass_2_refine": "1280x720 @ 30 FPS, Euler sampler with 3-step ManualSigmas (0.85, 0.725, 0.4219, 0.0)."
+    }
+  },
+  "generation_priority": [
+    "1. Preserve organic human realism and subtle facial micro-expressions.",
+    "2. Ensure physical contact with compass and table is grounded without finger deformation.",
+    "3. Keep camera push-in buttery smooth without wobble.",
+    "4. Maintain Kodak Vision3 500T color harmony and organic 35mm grain.",
+    "5. Synchronize whisper dialogue with brother's mouth movement."
+  ],
+  "quality_control": {
+    "critical_story_test": "Audience must feel the unspoken bond and emotional farewell between brother and sister.",
+    "critical_continuity_test": "Elena's bun, cardigan, and mugs must maintain constant physical form across all frames.",
+    "critical_performance_test": "Elena's reaction must be restrained and authentic, not melodramatic or tearful.",
+    "critical_camera_test": "Dolly move must be linear and grounded on tracks, never floating like an aerial drone.",
+    "failure_conditions": [
+      "compass disappears or morphs",
+      "extra fingers on brother's hand",
+      "mug floats off tabletop",
+      "camera shakes or zooms digitally",
+      "skin looks plastic or airbrushed",
+      "dialogue does not match lip motion"
+    ]
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "scene": {
+    "scene_number": 2,
+    "title": "ARCHITECT AT THE DRAFTING DESK",
+    "timecode": "00:06-00:12",
+    "duration_seconds": 6,
+    "generation_target": "LTX-2.3 via ComfyUI",
+    "generation_mode": "T2V",
+    "aspect_ratio": "16:9",
+    "purpose": "Showcase high-focus creative craftsmanship in modern architectural design. Portray technology as an invisible, harmonious companion rather than an intrusive screen.",
+    "emotional_destination": "Effortless flow state, tactile elegance, and razor-sharp intellect.",
+    "dominant_visual_idea": "Hand holding a drafting pencil hovering over blueprint paper, soft dawn light washing across concrete and warm birch wood.",
+    "brand_landing": "Tactile luxury, focused craftsmanship"
+  },
+  "important_generation_architecture": {
+    "reason": "Avoid rendering animated UI overlays, software dashboards, or floating 3D holographic icons directly in LTX-2.3. All precision software interfaces must be composited in post-production.",
+    "generative_boundaries": "Generate the live-action human interaction, pencil contact, lighting, and camera motion through LTX-2.3.",
+    "recommended_method": "Native LTX-2.3 T2V Two-Stage Workflow."
+  },
+  "continuity": {
+    "character": {
+      "identity": "Kenji, 34-year-old modernist architect",
+      "hair": "Clean, tapered jet-black hair with matte texture",
+      "wardrobe": "Charcoal merino wool mock-neck sweater, minimalist titanium wristwatch with black leather strap",
+      "performance": "Intense yet relaxed focus, deliberate and precise movements, steady hands"
+    },
+    "environment": {
+      "location": "Minimalist Japanese-Scandinavian architecture studio",
+      "furniture": "Solid pale birch drafting table set at a 15-degree incline, polished raw concrete wall in background",
+      "props": "Architectural scale ruler in matte black aluminum, heavy tracing paper roll, mechanical drafting pencil with knurled brass grip, steaming white ceramic espresso cup"
+    }
+  },
+  "spatial_blocking": {
+    "foreground": "Extreme foreground soft edge of a cast-concrete architectural maquette model",
+    "midground": "Kenji's hands, drafting pencil, blueprint paper, and upper torso seated at the drafting table",
+    "background": "Vast floor-to-ceiling glass window overlooking a bamboo garden, soft diffuse morning fog",
+    "camera_relation": "Low-angle medium close-up at 1.1m height, 1.8m distance, looking across the drafting desk"
+  },
+  "action_timeline": [
+    {
+      "time": "00:06.0-00:07.5",
+      "action": "Kenji's right hand smoothly glides the mechanical drafting pencil along the black aluminum straightedge, creating a crisp graphite line on paper."
+    },
+    {
+      "time": "00:07.5-00:09.0",
+      "action": "He lifts the pencil, rotates it slightly between thumb and index finger, and pauses to inspect the precision of the line."
+    },
+    {
+      "time": "00:09.0-00:10.5",
+      "action": "He looks up toward the fog-shrouded bamboo garden outside the studio window, his brow relaxing into a moment of calm realization."
+    },
+    {
+      "time": "00:10.5-00:12.0",
+      "action": "He reaches with his left hand to gently lift the espresso cup, taking a quiet sip as the dawn light softly intensifies."
+    }
+  ],
+  "performance": {
+    "primary_subject": "Kenji's micro-posture of deep flow and deliberate tactile mastery",
+    "micro_actions": "Steady fingertip grip, subtle pencil rotation, calm breathing, unhurried eye lift toward the window",
+    "emotional_tone": "Refined, calm, meditative precision",
+    "forbidden": [
+      "no frantic keyboard typing",
+      "no dramatic eye rolling",
+      "no hurried chaotic movements",
+      "no looking into camera",
+      "no plastic smile"
+    ]
+  },
+  "camera": {
+    "camera_type": "Cinema large-format camera on motorized slider",
+    "lens": "50mm T1.4 Zeiss Supreme Prime",
+    "starting_position": "Low-angle medium close-up tracking shot",
+    "starting_height": "1.1m desk-level height",
+    "ending_height": "1.25m gently rising to frame Kenji's profile against the garden",
+    "depth_of_field": "Shallow depth of field (T2.0) with sharp focus on the pencil tip transitioning to Kenji's eyes",
+    "focus_priority": "Pencil point on paper during drawing, rack focus to Kenji's face as he looks up",
+    "movement": {
+      "00:06-00:09": "Smooth lateral slider track from left to right moving 0.5m across the drafting table",
+      "00:09-00:12": "Gentle upward crane arc rising 15cm while panning 10 degrees to hold his profile against the bamboo window"
+    },
+    "camera_path": {
+      "start": "1.8m distance, left desk edge",
+      "middle": "continuous fluid lateral glide",
+      "end": "1.6m distance, centered on subject profile",
+      "travel": "0.5m slider translation + 0.15m vertical jib rise",
+      "speed": "0.1 m/s slow tactile glide",
+      "acceleration": "seamless, motorized inertia"
+    },
+    "constraints": [
+      "no rapid whip pan",
+      "no digital camera zoom",
+      "no handheld shake",
+      "no wide fisheye distortion"
+    ]
+  },
+  "visual_callback": {
+    "thematic_prop": "The contrast between the precision mechanical pencil and the organic bamboo garden outside.",
+    "lighting_symbolism": "Raw dawn light warming from cool blue fog into warm morning clarity."
+  },
+  "lighting": {
+    "source": "Expansive north-facing studio glass facade",
+    "quality": "Ethereal, diffused morning overcast daylight with subtle directional morning sunbeam",
+    "temperature": "5000K crisp natural daylight with 3000K warm interior wooden bounce",
+    "direction": "Side lighting from camera right, soft bounce off paper onto subject's jawline",
+    "subject_lighting": "Clean rim light along cheekbone and sweater shoulder, deep natural shadows on camera left",
+    "background_lighting": "Soft luminous fog in garden, concrete wall graduating from midtone to dark shadow",
+    "important_rule": "Maintain high-end architectural editorial lighting; shadows must remain clean and transparent, never muddy.",
+    "forbidden": [
+      "no harsh fluorescent tubes",
+      "no rainbow lens flares",
+      "no glowing neon colors",
+      "no overexposed white burn"
+    ]
+  },
+  "color_and_finish": {
+    "style": "High-end Scandinavian-Japanese architectural editorial",
+    "film_character": "Kodak Vision3 250D daylight cinema stock",
+    "grade": "Arri Alexa Rec.709 with custom architectural low-saturation grade",
+    "palette": ["#1F2022", "#4A4E51", "#C7B299", "#EFECE6", "#4E5D52"],
+    "contrast": "Precise, elegant contrast curve with crisp blacks and clean highlight roll-off",
+    "saturation": "Restrained, naturalistic earth tones with muted bamboo greens",
+    "grain": "Extremely fine, cinematic 35mm grain",
+    "halation": "Delicate specular halation around espresso steam and brushed aluminum ruler edges",
+    "texture": "Tactile tooth of heavyweight blueprint paper, knurled metal grip, fine wool weave, smooth concrete patina",
+    "avoid": [
+      "cheap corporate video look",
+      "plastic surfaces",
+      "oversaturated greens",
+      "harsh edge sharpening",
+      "vignette darkening"
+    ]
+  },
+  "audio": {
+    "acoustics_and_ambience": "Quiet, vast high-ceiling architectural studio acoustics with faint ambient morning breeze in bamboo leaves.",
+    "timeline_foley": {
+      "00:06.0-00:07.5": ["crisp, tactile graphite scrape on toothy blueprint paper", "subtle metallic click of mechanical pencil lead"],
+      "00:07.5-00:09.0": ["gentle rotation of metal pencil in hand", "soft rustle of wool sweater sleeve on wood"],
+      "00:09.0-00:10.5": ["slow, calm human exhale", "very distant bamboo stalk creak in wind"],
+      "00:10.5-00:12.0": ["delicate ceramic cup lift from saucer", "subtle liquid sip sound"]
+    },
+    "dialogue": [],
+    "voiceover": [
+      {
+        "time": "00:09.5-00:11.5",
+        "line": "Clarity lives in the details.",
+        "delivery": "Intimate, low-frequency, calm and authoritative voiceover."
+      }
+    ],
+    "music": {
+      "entry": "Pristine, minimal solo piano chord with generous reverb enters at 00:08.0.",
+      "character": "Sophisticated, modern, contemplative, warm",
+      "intensity": "Subtle background bed (-16dB under voiceover)",
+      "progression": "Warm harmonic resonance fading into the cut"
+    }
+  },
+  "negative_prompt": {
+    "anti_cgi": [
+      "video game",
+      "3D architectural render",
+      "Unreal Engine 5",
+      "cartoon",
+      "illustration",
+      "plastic skin",
+      "CGI",
+      "oversaturated"
+    ],
+    "anatomy_and_physics": [
+      "deformed fingers",
+      "mutated hands",
+      "extra thumbs",
+      "pencil bending",
+      "floating ruler",
+      "warped tabletop",
+      "sliding objects"
+    ],
+    "camera_and_artifacts": [
+      "erratic camera shake",
+      "whip pan",
+      "zoom distortion",
+      "floating camera",
+      "frame stutter",
+      "digital noise",
+      "sensor artifacts"
+    ],
+    "lighting": [
+      "flat office fluorescent lighting",
+      "blown-out window blowout",
+      "harsh shadows",
+      "muddy blacks",
+      "artificial neon glow"
+    ],
+    "prohibited_elements": [
+      "no UI mockups",
+      "no floating holograms",
+      "no computer screen graphics",
+      "no text overlays",
+      "no corporate logo watermarks"
+    ]
+  },
+  "ltx_2_3_prompt": "In a sunlit minimalist Tokyo architectural studio with raw concrete walls and pale birch furniture, a 34-year-old Japanese architect wearing a charcoal merino wool sweater sits at a drafting desk, drawing a clean graphite line on heavy blueprint paper with a knurled brass mechanical pencil along a black aluminum ruler. He lifts the pencil, turning it thoughtfully in his fingers, pauses to inspect the crisp line, and gazes toward the floor-to-ceiling glass window where morning fog drifts through green bamboo; he then lifts a steaming white ceramic espresso cup for a calm sip as the dawn light spreads softly across the studio. The camera glides on a smooth desk-level motorized slider from a low 50mm Zeiss prime perspective, tracking laterally 0.5 meters across the blueprint before gently arcing upward to hold the architect's profile against the garden, maintaining rock-solid cinematic stability with no handheld shake or digital zoom. Cool 5000K diffuse morning window light illuminates the tactile tooth of the blueprint paper and fine wool weave, balanced by warm 3000K wood bounce, Kodak Vision3 250D daylight film stock with subtle grain and gentle halation, accompanied by the crisp acoustic scrape of graphite on paper, delicate ceramic clinks, bamboo leaves rustling outside, and a pristine minimalist piano bed under a calm voiceover, \\\"Clarity lives in the details.\\\"",
+  "comfyui_direction": {
+    "workflow": "Native LTX-2.3 T2V Two-Stage Workflow.",
+    "why_mode": "Text-to-video scene establishing brand aesthetic and character mastery.",
+    "camera_strategy": "Motorized slider track + gentle jib arc: 0.5m lateral translation at 0.1 m/s.",
+    "audio": "Joint audio-visual latent pass with crisp foley, voiceover track, and minimalist piano bed.",
+    "prompting": "Emphasize tactile textures (graphite on paper, ceramic, wool) and optical lens physics to avoid plastic AI look.",
+    "render_strategy": {
+      "pass_1_base": "640x360 @ 30 FPS, 181 frames (6s * 30 + 1), Euler sampler with 8-step ManualSigmas.",
+      "latent_upscale": "2x spatial latent upscaling via ltx-2.3-spatial-upscaler-x2-1.1.safetensors.",
+      "pass_2_refine": "1280x720 @ 30 FPS, Euler sampler with 3-step ManualSigmas."
+    }
+  },
+  "generation_priority": [
+    "1. Perfect hand anatomy holding the drafting pencil with natural physics.",
+    "2. Tactile realism of graphite marking on paper without morphing.",
+    "3. Smooth motorized slider glide with zero camera wobble.",
+    "4. Natural architectural lighting through floor-to-ceiling window.",
+    "5. Precise audio synchronization of paper scrape and voiceover."
+  ],
+  "quality_control": {
+    "critical_story_test": "Scene must convey mastery, craftsmanship, and quiet architectural focus.",
+    "critical_continuity_test": "The ruler, pencil, blueprint, and concrete wall must remain geometrically rigid.",
+    "critical_performance_test": "Pencil rotation and head glance must feel completely human and natural.",
+    "critical_camera_test": "Slider movement must have genuine physical inertia without digital acceleration jitters.",
+    "failure_conditions": [
+      "pencil morphs or dissolves into hand",
+      "extra fingers on hand",
+      "tabletop tilts or bends",
+      "digital lens flare artifacts",
+      "voiceover out of sync with mood"
+    ]
+  }
+}

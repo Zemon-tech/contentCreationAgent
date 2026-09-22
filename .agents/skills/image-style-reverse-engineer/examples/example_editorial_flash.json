@@ -1,0 +1,46 @@
+{
+  "meta": { "skill": "image-style-reverse-engineer", "version": "1.0.0", "style_archetype": "editorial-flash-candid" },
+  "source_analysis": {
+    "medium_realism": "digital editorial photograph, photorealism 5/5, direct-flash candid",
+    "composition_geometry": "centered waist-up figure, symmetrical flat-wall framing, eye path: face → hero product accent → hands",
+    "shot_scale": "medium shot, subject fills 60% frame, minimal environment",
+    "optics": { "lens": "35mm f/2.0 normal prime", "dof": "deep flash-frozen focus, wall texture sharp", "focus_priority": "face + hero accent tack-sharp" },
+    "lighting": { "source": "on-camera direct flash with dim ambient room", "quality": "hard frontal key, sharp nose shadow falloff on wall", "temperature_kelvin": "5500K flash over 3200K ambient", "contrast_ratio": "4:1", "shadow_behavior": "crisp hard-edged wall shadow, hotspot on forehead" },
+    "exposure": { "dynamic_range": "compressed flash look", "highlight_rolloff": "hard clipped hotspot", "black_point": "neutral deep" },
+    "palette": ["#F4F1EA", "#D8C7B5", "#C1272D", "#1E293B", "#E3A857"],
+    "palette_names": ["flat gallery white", "warm beige wall", "hero primary red", "slate shadow", "amber skin highlight"],
+    "grade": "neutral flash-balanced with warm skin, Kodak 2383 Print mild",
+    "textures": ["visible skin pores with flash sheen", "ribbed cotton knit weave", "matte drywall wall grain"],
+    "finish": { "film_stock": "iPhone direct-flash digital", "grain": "ultra-fine digital with mild chroma noise in shadows", "halation": "small flash hotspot bloom on forehead", "post_traces": ["dust specks", "round flash catchlights"] },
+    "atmosphere": "clean dry interior air, no haze, snapshot immediacy",
+    "background_logic": "flat seamless-adjacent wall, storytelling suppressed for isolation",
+    "styling_era": "contemporary editorial-candid, 2020s flash-revival",
+    "theme_concept": "unposed status snapshot; ordinariness made iconic by frontal flash",
+    "mood_psychology": "confrontational-candid, playful confidence, voyeuristic closeness",
+    "density_negative_space": "density 2/5, generous flat wall negative space left and right",
+    "instantaneity": "flash-frozen candid instant, micro-blink energy"
+  },
+  "style_profile": {
+    "name": "Editorial Flash Candid",
+    "director_intent": "Attention lands face-first via frontal flash pop, then drops to the single saturated hero accent, then hands. Hard 5500K flash plus normal 35mm lens creates confrontational intimacy that reads honest rather than produced. Flat wall + fine digital grain signals contemporary editorial taste. To reuse: keep frontal flash with wall-shadow falloff, centered medium shot, one hero-color pop; vary everything else.",
+    "transferable_dna": "centered flash-frozen medium shot on flat wall, 35mm deep focus, hard 5500K frontal flash at 4:1, neutral palette with one saturated accent, pores-and-knit tactility, candid snapshot energy",
+    "non_negotiables": ["on-camera direct flash with visible wall shadow", "centered waist-up medium framing", "single saturated hero accent on neutral ground"],
+    "higgsfield_preset_hint": "Subtle flash",
+    "midjourney_cues": ["direct flash photography", "flat white wall shadow", "editorial candid", "--style raw"]
+  },
+  "subject": { "description": "young ceramicist in clay-dusted apron holding a small glazed vase, neutral expression, direct gaze", "preserve_source_identity": false },
+  "master_prompt": "Direct-flash digital editorial photograph of a young ceramicist in a clay-dusted canvas apron holding a small glazed vase at chest height, neutral expression with direct gaze into lens, centered waist-up medium shot against a flat warm-beige gallery wall filling the frame edges. Shot on a 35mm normal prime at f/2.0 with deep flash-frozen focus, face and vase tack-sharp, faint hard-edged shadow thrown onto the wall behind. Hard on-camera flash at 5500K over dim 3200K room ambience, 4:1 contrast with crisp nose-shadow falloff and small hotspot sheen on forehead, round flash catchlights. Neutral flash-balanced grade with warm amber skin, restrained neutrals and one saturated glazed-teal vase accent. Visible skin pores, coarse canvas apron weave, matte drywall grain, ultra-fine digital grain with dust specks, clean dry air, contemporary candid intimacy, generous wall negative space, snapshot-frozen instant.",
+  "higgsfield_soul_block": { "preset_hint": "Subtle flash", "reference_mode": "style", "style_strength": 0.8, "soul_prompt": "Subtle flash preset, young ceramicist in clay-dusted apron holding small glazed teal vase, centered medium shot on flat beige wall, direct gaze, candid editorial flash photo" },
+  "model_variants": {
+    "flux_sdxl": "direct-flash editorial photo, centered waist-up figure against flat beige wall, 35mm f/2.0 deep focus, hard 5500K frontal flash 4:1 with wall shadow, neutral palette + teal accent, skin pores + canvas weave, ultra-fine grain, candid snapshot",
+    "midjourney": "centered waist-up candid portrait, flat beige wall, direct on-camera flash 5500K hard shadow, 35mm f2 deep focus, neutral palette with single teal accent, skin pores canvas texture, editorial flash photography --style raw --ar 4:5"
+  },
+  "negative_prompt": {
+    "anti_cgi": ["3D render", "plastic skin", "airbrushed face", "Unreal Engine"],
+    "anatomy": ["deformed hands", "extra fingers", "warped vase", "melted face"],
+    "artifacts": ["watermark", "sensor banding", "compression mush", "chromatic fringe"],
+    "lighting": ["soft beauty dish", "golden-hour glow", "neon rim light", "blown white wall"],
+    "prohibited": ["same face as reference", "brand logo", "readable text", "exact source outfit"]
+  },
+  "generation_params": { "aspect_ratio": "4:5", "recommended_models": ["Higgsfield Soul 2.0", "Flux 1.1", "SDXL"] }
+}

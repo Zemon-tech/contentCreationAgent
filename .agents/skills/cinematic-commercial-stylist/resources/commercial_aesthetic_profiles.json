@@ -1,0 +1,94 @@
+{
+  "commercial_style_profiles": {
+    "domestic_golden_slat": {
+      "name": "Domestic Golden Slat (ChatGPT Kitchen)",
+      "lens": "35mm documentary cinema prime (Cooke S4)",
+      "framing": "Medium wide interior, kitchen workspace",
+      "dof": "Medium (f/4.0), foreground cookware and subject sharp, soft garden background",
+      "lighting": {
+        "source": "Direct morning sunlight through window blinds at 45 degrees",
+        "temperature": "3200K-3500K warm sunbeam mixed with 5600K ambient daylight",
+        "quality": "Hard linear slat shadows, soft terracotta bounce, natural optical bloom",
+        "contrast_ratio": "2.5:1 warm lifted contrast"
+      },
+      "film_stock": "Kodak Portra 400 analog warm response",
+      "grade": "Warm sepia lifted shadows, rich skin tones, pastel greens",
+      "palette": ["#B86B43", "#E3A857", "#2D4739", "#E85A1E", "#FAF4EC"],
+      "palette_names": ["terracotta tile", "honey pine wood", "deep garden green", "vivid coral accent", "warm linen cream"],
+      "textures": ["glazed ceramic tile", "stainless steel stockpot", "coarse cotton bandana", "culinary steam ribbon", "skin pores"],
+      "avoid": ["plastic skin", "flat digital lighting", "harsh blue LED", "oversaturated digital HDR"]
+    },
+    "moody_transit_intimacy": {
+      "name": "Moody Transit Intimacy (ChatGPT Bus)",
+      "lens": "24mm-28mm wide cinema prime",
+      "framing": "Seated eye-level two-shot framed symmetrically between tall bus headrests",
+      "dof": "Shallow (f/2.2-f/2.8), soft foreground fabric, sharp hands and smiles",
+      "lighting": {
+        "source": "Exterior daylight entering side bus windows",
+        "temperature": "5000K afternoon daylight mixed with cool blue vehicle interior",
+        "quality": "Warm side key grazing hair and cheekbones, moody fall-off into floor",
+        "contrast_ratio": "3:1 moody cinematic ratio"
+      },
+      "film_stock": "Kodak Vision3 500T (5219)",
+      "grade": "Subtle cyan shadow undertone, warm amber skin highlights, fine 35mm grain",
+      "palette": ["#1C2541", "#3A506B", "#4DB8B8", "#D4A373", "#F4F1DE"],
+      "palette_names": ["transit indigo", "slate denim", "pale turquoise cardigan", "warm honey skin", "soft ivory trench"],
+      "textures": ["coarse patterned moquette bus velour", "braided hair scalp lines", "matte plastic phone case", "stainless steel rail"],
+      "avoid": ["video game lighting", "artificial rim lights", "sterile studio look", "plastic textures"]
+    },
+    "athletic_sanctuary": {
+      "name": "Quiet Athletic Sanctuary (ChatGPT Home Workout)",
+      "lens": "28mm-32mm wide prime lens",
+      "framing": "Elevated 1.5m angle, wide environmental portrait of seated athlete",
+      "dof": "Deep focus (f/5.6), sharp sneakers, knurled chrome weights, and background leather",
+      "lighting": {
+        "source": "Soft daylight through white linen window drapes on frame left",
+        "temperature": "5000K natural window light with 3200K warm interior bounce",
+        "quality": "Soft directional key, clean chrome specular glints, soft carpet shadows",
+        "contrast_ratio": "2.5:1 naturalistic contrast"
+      },
+      "film_stock": "Kodak Tri-X / Portra 400 hybrid aesthetic",
+      "grade": "Desaturated earthy interior with a single hyper-saturated chromatic anchor",
+      "palette": ["#7A3E20", "#C89F65", "#E85A1E", "#343A40", "#F8F9FA"],
+      "palette_names": ["cognac leather", "mustard plaster wall", "saturated workout orange", "charcoal shorts", "chrome silver"],
+      "textures": ["knurled chrome dumbbell handle", "plush wool carpet pile", "cracked vintage leather", "sheer linen drape"],
+      "avoid": ["commercial gym lighting", "flat illumination", "oversaturated backgrounds", "digital sharpness"]
+    },
+    "subdued_crowd_focal_pop": {
+      "name": "Subdued Crowd with Focal Pop (Heinz Wimbledon)",
+      "lens": "85mm-105mm medium telephoto lens",
+      "framing": "Medium crowd shot (waist-up), subject anchored dead-center",
+      "dof": "Moderate (f/4.0), subject and bottle razor-sharp, crowd softly blurred",
+      "lighting": {
+        "source": "Diffuse high-altitude overcast open-sky daylight at 65 degrees",
+        "temperature": "5400K natural overcast daylight",
+        "quality": "Shadowless, wrap-around soft light, lifted shadows under cap visors",
+        "contrast_ratio": "1.8:1 gentle commercial contrast"
+      },
+      "film_stock": "Kodak Vision3 250D (5207) Daylight stock",
+      "grade": "Kodak 2383 Print LUT with muted summer neutrals and isolated primary red pop",
+      "palette": ["#D91414", "#00A4D3", "#D8C7B5", "#F2EDE4", "#48535A"],
+      "palette_names": ["Heinz primary red", "teal athletic nylon", "sand beige knit", "cream linen", "muted slate crowd"],
+      "textures": ["ribbed cable knit wool", "nylon zip windbreaker", "glossy plastic condiment bottle", "crusty bread crumb"],
+      "avoid": ["harsh direct sunlight", "deep black shadows", "exaggerated camera moves", "plastic skin"]
+    },
+    "urban_pastoral_whimsy": {
+      "name": "Urban Pastoral Whimsy (Uber Eats Rooftop)",
+      "lens": "35mm cinema prime lens",
+      "framing": "Eye-level 1.4m height, symmetrical wide environmental portrait",
+      "dof": "Moderate (f/4.5), beekeeper and beehives sharp, distant skyline softened",
+      "lighting": {
+        "source": "Diffuse overcast British daylight",
+        "temperature": "5600K overcast daylight balanced",
+        "quality": "Soft wrap-around ambient light with gentle directional falloff",
+        "contrast_ratio": "1.5:1 low commercial contrast"
+      },
+      "film_stock": "Kodak Vision3 250D Daylight",
+      "grade": "Natural earthy warmth punctuated by vivid brand green accent",
+      "palette": ["#06C167", "#C9A04E", "#A04A32", "#EAE6DF", "#4A5568"],
+      "palette_names": ["Uber Eats Kelly green", "aged yellow pine hive", "terracotta clay", "white canvas suit", "slate London sky"],
+      "textures": ["coarse canvas beekeeper suit", "weathered splintered timber", "terracotta pottery", "fresh burger bun", "brass bee smoker"],
+      "avoid": ["sunny artificial highlights", "saturated blue skies", "digital camera jitter", "unnatural poses"]
+    }
+  }
+}

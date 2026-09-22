@@ -1,0 +1,73 @@
+{
+  "archetypes": {
+    "apple_underdogs_kinetic": {
+      "name": "Apple 'The Underdogs' Kinetic Ensemble",
+      "inspiration": "Apple At Work commercial series",
+      "best_for": "Collaborative SaaS, hardware ecosystems, team productivity, creative workflows",
+      "pacing": "Fast, rhythmic, dialogue-driven, comedic friction, naturalistic audio",
+      "narrative_arc": {
+        "01_the_crisis": "High-stakes deadline or logistical mishap lands unexpectedly (0-6s)",
+        "02_the_huddle": "Team scrambling, rapid overlapping dialogue, desks covered in papers and coffee (6-14s)",
+        "03_the_flow": "Products deployed effortlessly; AirDrop, handoff, seamless real-time syncing (14-22s)",
+        "04_the_triumph": "Pitch delivered, crisis averted, grounded humorous celebration (22-28s)",
+        "05_clean_tag": "Minimalist typography and subtle product sound signature (28-30s)"
+      },
+      "cinematography": "Arri Alexa Rec.709, 35mm handheld with natural organic sway, warm commercial daylight, crisp practical foley."
+    },
+    "perplexity_friction_contrast": {
+      "name": "Perplexity Radical Friction-to-Clarity Contrast",
+      "inspiration": "Perplexity Super Bowl & 'Why Search When You Can Know' campaigns",
+      "best_for": "AI search, knowledge intelligence, decision engines, research acceleration",
+      "pacing": "High-contrast split, chaotic sensory overload transitioning to serene cognitive clarity",
+      "narrative_arc": {
+        "01_the_cacophony": "Drowning in 20 open tabs, flashing cookie banners, paywalls, scrolling fatigue (0-8s)",
+        "02_the_interrupt": "Protagonist stops typing, closes eyes in exhaustion; silence drops (8-12s)",
+        "03_the_single_prompt": "A clean, natural question is asked; interface purges all visual garbage (12-18s)",
+        "04_the_breakthrough": "Sourced, synthesized truth appears instantly; protagonist exhales with clarity (18-26s)",
+        "05_provocative_cta": "Provocative tagline: 'Why search when you can know?' (26-30s)"
+      },
+      "cinematography": "High-contrast lighting, 50mm Zeiss prime, starting with cold fluorescent grading and transitioning to warm 5000K daylight, deep bass drop on the pivot."
+    },
+    "openai_poetic_manifesto": {
+      "name": "OpenAI Poetic Awe & Creative Liberation",
+      "inspiration": "OpenAI Sora launch films, ChatGPT brand anthems",
+      "best_for": "Foundation models, breakthrough creative tools, visionary tech platforms",
+      "pacing": "Contemplative, expansive, reverent, philosophical voiceover, large-format visual scale",
+      "narrative_arc": {
+        "01_the_spark": "Intimate micro-shot of a creator or scientist lost in contemplation (0-10s)",
+        "02_the_metaphor": "Mental concepts ripple physically through the real world via photorealistic magic realism (10-25s)",
+        "03_the_human_spectrum": "Global montage across craft, medicine, music, space exploration, and family moments (25-45s)",
+        "04_the_settle": "Grounded human smile of pure connection, unforced wonder (45-56s)",
+        "05_the_whisper": "Minimal wordmark, gentle acoustic tone (56-60s)"
+      },
+      "cinematography": "Large-format 65mm sensor look, 35mm Anamorphic 2.39:1 widescreen, golden hour and twilight illumination, rich filmic grain."
+    },
+    "uber_relatable_absurdity": {
+      "name": "Uber Eats Relatable Absurdity & Honest Truth",
+      "inspiration": "'Get Almost, Almost Anything' campaign by Special US/Australia",
+      "best_for": "On-demand delivery, consumer marketplaces, retail platforms, everyday lifestyle apps",
+      "pacing": "Deadpan comedic timing, visual misdirection, celebrity or relatable actor charm",
+      "narrative_arc": {
+        "01_the_impossible_order": "Character misinterprets a common term literally (orders a 'Medieval Knight' or 'A Second Chance') (0-6s)",
+        "02_the_cinematic_escalation": "The impossible delivery arrives, causing hilarious cinematic chaos (6-16s)",
+        "03_the_reality_reset": "Abrupt cut back to normal everyday reality; character is actually opening groceries or a meal (16-24s)",
+        "04_the_honest_tag": "Deadpan tagline: 'Get Almost, Almost Anything.' (24-30s)"
+      },
+      "cinematography": "Vibrant 35mm commercial lighting, punchy medium shots, snappy cuts, dry acoustic comedic dialogue."
+    },
+    "keilhq_human_life_first": {
+      "name": "KeilHQ 'Work Ends. Life Continues.' Anti-Grind Paradigm",
+      "inspiration": "Premium human-centric SaaS commercials",
+      "best_for": "Modern enterprise software, AI workflow automation, executive productivity tools",
+      "pacing": "Gentle, understated, candid lifestyle realism, emotional maturity",
+      "narrative_arc": {
+        "01_the_mental_overhead": "The subtle weight of unfinished work lingering in a beautiful home (0-8s)",
+        "02_the_silent_resolution": "The system quietly finishes the complex pipeline without frantic user effort (8-16s)",
+        "03_the_closure": "The laptop closes firmly. The desk is physically left behind (16-24s)",
+        "04_the_life_continuation": "Character turns attention fully to child, partner, or dinner table (24-28s)",
+        "05_quiet_landing": "'Your life shouldn't have to feel like work. KeilHQ.' (28-30s)"
+      },
+      "cinematography": "Kodak Portra 400 warmth, 35mm documentary prime, soft natural window light, domestic foley and subtle felt piano."
+    }
+  }
+}

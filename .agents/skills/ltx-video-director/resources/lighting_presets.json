@@ -1,0 +1,54 @@
+{
+  "lighting_presets": {
+    "soft_window_daylight": {
+      "name": "North-Facing Soft Window Daylight",
+      "source": "Large floor-to-ceiling multi-pane window",
+      "quality": "Diffused, wrap-around soft daylight",
+      "temperature": "5400K natural daylight balanced",
+      "direction": "Side lighting at 45 degrees relative to subject",
+      "subject_lighting": "Soft shadow fall-off across cheekbones, clean eye catchlight",
+      "background_lighting": "Gently falling off into natural domestic shadow",
+      "forbidden": ["artificial golden hour wash", "lens flare streaks", "harsh direct sun spots", "HDR glow"]
+    },
+    "intimate_tungsten_evening": {
+      "name": "Intimate Tungsten Practicals",
+      "source": "Warm ceramic table lamp with fabric lampshade and ambient desk glow",
+      "quality": "Warm, localized, inviting soft glow",
+      "temperature": "2700K warm incandescent tungsten",
+      "direction": "Low 30-degree side key with gentle negative fill on shadow side",
+      "subject_lighting": "Golden rim on jaw and shoulder, deep gentle shadows",
+      "background_lighting": "Subtle room ambience with warm bounce off wooden furniture",
+      "forbidden": ["cold fluorescent spill", "overly bright ambient room light", "harsh digital white"]
+    },
+    "dramatic_chiaroscuro_rembrandt": {
+      "name": "Rembrandt Chiaroscuro Drama",
+      "source": "Single elevated directional key light through heavy diffusion",
+      "quality": "High-contrast, dramatic painterly light with distinct shadow shapes",
+      "temperature": "3200K tungsten cinema key",
+      "direction": "45 degrees high and 45 degrees off-axis",
+      "subject_lighting": "Characteristic inverted triangle of light on shadow cheek, deep negative fill on opposing side",
+      "background_lighting": "Deep dark background with subtle separation hairlight",
+      "forbidden": ["flat commercial lighting", "muddy washed-out shadows", "blown-out highlights"]
+    },
+    "moody_blue_hour_overcast": {
+      "name": "Moody Blue Hour / Overcast Twilight",
+      "source": "Overcast post-sunset twilight sky",
+      "quality": "Omnidirectional, shadowless, melancholic diffuse light",
+      "temperature": "6800K cool twilight blue",
+      "direction": "Top-down soft ambient illumination",
+      "subject_lighting": "Pale, cool, delicate skin rendering with soft eye sockets",
+      "background_lighting": "Deep indigo and cool slate environmental perspective",
+      "forbidden": ["warm yellow wash", "harsh direct sun", "cheerful high-key lighting"]
+    },
+    "cyberpunk_bicolor_neon": {
+      "name": "Cyberpunk Split Bi-Color Neon",
+      "source": "Direct neon signage and wet street reflections",
+      "quality": "Hard specular highlights with colored atmospheric diffusion",
+      "temperature": "Split-tone: 4000K cyan key light vs 2000K electric magenta rim light",
+      "direction": "Dual opposing rim and kicker angles",
+      "subject_lighting": "High-contrast edge separation, specular sheen on skin and clothing",
+      "background_lighting": "Hazy steam plumes catching colored light beams",
+      "forbidden": ["flat daylight", "plain neutral lighting", "muddy gray shadows"]
+    }
+  }
+}

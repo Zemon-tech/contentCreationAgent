@@ -1,0 +1,10 @@
+{
+  "media": ["photoeditorial-flash", "analog-35mm", "medium-format-120", "y2k-digicam", "old-smartphone", "studio-seamless", "UE5-render", "octane-render", "gouache", "oil-impasto", "risograph", "xerox-halftone", "anime-cel", "3d-toy-gloss"],
+  "lenses": ["24mm f/2.8 wide", "28mm f/2.0 wide", "35mm f/2.0 normal", "50mm f/1.8 normal", "85mm f/1.4 telephoto", "105mm f/2.8 telephoto compressed", "fisheye 16mm distorted"],
+  "light_rigs": ["on-camera direct flash 5500K hard 4:1", "diffuse overcast 5600K wrap 1.5:1", "warm window slats 3400K directional", "tungsten practical 2700K cozy", "neon-noir mixed 4500K", "high-key studio softbox 5500K 1.5:1", "golden-hour low sun 3800K raking"],
+  "film_stocks": ["Kodak Portra 400", "Kodak Vision3 500T (5219)", "Kodak Vision3 250D (5207)", "Kodak Tri-X 400", "Fuji Eterna 500", "iPhone direct-flash digital", "Y2K digicam sensor", "Xerox halftone print"],
+  "grades": ["Kodak 2383 Print", "matte-faded-blacks", "teal-shadows amber-skin split", "bleach-bypass desat", "high-saturation commercial pop", "warm-sepia lifted shadows", "cyan-shadow undertone"],
+  "eras": ["90s-editorial", "y2k-digicam-night", "contemporary-minimal", "warm-domestic-documentary", "high-fashion-overcast", "grunge-xerox", "frutiger-aero-gloss", "medieval-fantasy", "tokyo-street-candid"],
+  "moods": ["intimate-candid", "aloof-editorial", "eerie-liminal", "euphoric-flash", "clinical-minimal", "nostalgic-warm", "noir-tense", "whimsical-pastoral"],
+  "higgsfield_presets": ["Subtle flash", "Old smartphone", "Warm ambient", "Editorial street style", "Mystique city", "REALISTIC", "Y2K", "EDITORIAL_90S", "GRUNGE", "General"]
+}

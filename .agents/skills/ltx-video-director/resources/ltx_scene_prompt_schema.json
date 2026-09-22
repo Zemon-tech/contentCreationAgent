@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LTX2_3_ScenePromptSchema",
+  "description": "Production-grade schema for LTX-2.3 audio-video scene prompt generation in ComfyUI",
+  "type": "object",
+  "required": [
+    "scene",
+    "important_generation_architecture",
+    "continuity",
+    "spatial_blocking",
+    "action_timeline",
+    "performance",
+    "camera",
+    "lighting",
+    "color_and_finish",
+    "audio",
+    "negative_prompt",
+    "ltx_2_3_prompt",
+    "comfyui_direction",
+    "generation_priority",
+    "quality_control"
+  ],
+  "properties": {
+    "scene": {
+      "type": "object",
+      "required": [
+        "scene_number",
+        "title",
+        "timecode",
+        "duration_seconds",
+        "generation_target",
+        "generation_mode",
+        "aspect_ratio",
+        "purpose",
+        "emotional_destination",
+        "dominant_visual_idea"
+      ],
+      "properties": {
+        "scene_number": { "type": "integer" },
+        "title": { "type": "string" },
+        "timecode": { "type": "string" },
+        "duration_seconds": { "type": "number" },
+        "generation_target": { "type": "string", "default": "LTX-2.3 via ComfyUI" },
+        "generation_mode": { "type": "string", "enum": ["T2V", "I2V", "IA2V"] },
+        "aspect_ratio": { "type": "string", "enum": ["16:9", "9:16", "2.39:1", "4:3", "1:1"] },
+        "purpose": { "type": "string" },
+        "emotional_destination": { "type": "string" },
+        "dominant_visual_idea": { "type": "string" },
+        "brand_landing": { "type": "string" }
+      }
+    },
+    "important_generation_architecture": {
+      "type": "object",
+      "required": ["reason", "generative_boundaries", "recommended_method"],
+      "properties": {
+        "reason": { "type": "string" },
+        "generative_boundaries": { "type": "string" },
+        "recommended_method": { "type": "string" }
+      }
+    },
+    "continuity": {
+      "type": "object",
+      "required": ["character", "environment"],
+      "properties": {
+        "character": { "type": "object" },
+        "secondary_characters": { "type": "object" },
+        "environment": { "type": "object" },
+        "key_props": { "type": "object" }
+      }
+    },
+    "spatial_blocking": {
+      "type": "object",
+      "required": ["foreground", "midground", "background", "camera_relation"],
+      "properties": {
+        "foreground": { "type": "string" },
+        "midground": { "type": "string" },
+        "background": { "type": "string" },
+        "camera_relation": { "type": "string" }
+      }
+    },
+    "action_timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["time", "action"],
+        "properties": {
+          "time": { "type": "string" },
+          "action": { "type": "string" }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "required": ["primary_subject", "micro_actions", "emotional_tone", "forbidden"],
+      "properties": {
+        "primary_subject": { "type": "string" },
+        "micro_actions": { "type": "string" },
+        "emotional_tone": { "type": "string" },
+        "forbidden": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "camera_type",
+        "lens",
+        "starting_position",
+        "starting_height",
+        "ending_height",
+        "depth_of_field",
+        "focus_priority",
+        "movement",
+        "camera_path",
+        "constraints"
+      ],
+      "properties": {
+        "camera_type": { "type": "string" },
+        "lens": { "type": "string" },
+        "starting_position": { "type": "string" },
+        "starting_height": { "type": "string" },
+        "ending_height": { "type": "string" },
+        "depth_of_field": { "type": "string" },
+        "focus_priority": { "type": "string" },
+        "movement": { "type": "object" },
+        "camera_path": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "string" },
+            "middle": { "type": "string" },
+            "end": { "type": "string" },
+            "travel": { "type": "string" },
+            "speed": { "type": "string" },
+            "acceleration": { "type": "string" }
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "visual_callback": {
+      "type": "object"
+    },
+    "lighting": {
+      "type": "object",
+      "required": ["source", "quality", "temperature", "direction", "subject_lighting", "forbidden"],
+      "properties": {
+        "source": { "type": "string" },
+        "quality": { "type": "string" },
+        "temperature": { "type": "string" },
+        "direction": { "type": "string" },
+        "subject_lighting": { "type": "string" },
+        "background_lighting": { "type": "string" },
+        "important_rule": { "type": "string" },
+        "forbidden": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "color_and_finish": {
+      "type": "object",
+      "required": ["style", "film_character", "grade", "palette", "contrast", "saturation", "grain", "halation", "texture", "avoid"],
+      "properties": {
+        "style": { "type": "string" },
+        "film_character": { "type": "string" },
+        "grade": { "type": "string" },
+        "palette": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "contrast": { "type": "string" },
+        "saturation": { "type": "string" },
+        "grain": { "type": "string" },
+        "halation": { "type": "string" },
+        "texture": { "type": "string" },
+        "avoid": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": ["acoustics_and_ambience", "timeline_foley", "dialogue", "music"],
+      "properties": {
+        "acoustics_and_ambience": { "type": "string" },
+        "timeline_foley": { "type": "object" },
+        "dialogue": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "time": { "type": "string" },
+              "speaker": { "type": "string" },
+              "line": { "type": "string" },
+              "delivery": { "type": "string" }
+            }
+          }
+        },
+        "voiceover": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "time": { "type": "string" },
+              "line": { "type": "string" },
+              "delivery": { "type": "string" }
+            }
+          }
+        },
+        "music": {
+          "type": "object",
+          "properties": {
+            "entry": { "type": "string" },
+            "character": { "type": "string" },
+            "intensity": { "type": "string" },
+            "progression": { "type": "string" }
+          }
+        }
+      }
+    },
+    "negative_prompt": {
+      "type": "object",
+      "required": ["anti_cgi", "anatomy_and_physics", "camera_and_artifacts", "lighting", "prohibited_elements"],
+      "properties": {
+        "anti_cgi": { "type": "array", "items": { "type": "string" } },
+        "anatomy_and_physics": { "type": "array", "items": { "type": "string" } },
+        "camera_and_artifacts": { "type": "array", "items": { "type": "string" } },
+        "lighting": { "type": "array", "items": { "type": "string" } },
+        "prohibited_elements": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ltx_2_3_prompt": {
+      "type": "string",
+      "description": "The master unified, chronological, cinematographic flowing narrative paragraph injected into the DiT sampler"
+    },
+    "comfyui_direction": {
+      "type": "object",
+      "required": ["workflow", "why_mode", "camera_strategy", "audio", "prompting", "render_strategy"],
+      "properties": {
+        "workflow": { "type": "string" },
+        "reference_frame": { "type": "string" },
+        "why_mode": { "type": "string" },
+        "camera_strategy": { "type": "string" },
+        "audio": { "type": "string" },
+        "prompting": { "type": "string" },
+        "render_strategy": { "type": "object" }
+      }
+    },
+    "generation_priority": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "quality_control": {
+      "type": "object",
+      "required": ["critical_story_test", "critical_continuity_test", "critical_performance_test", "critical_camera_test", "failure_conditions"],
+      "properties": {
+        "critical_story_test": { "type": "string" },
+        "critical_continuity_test": { "type": "string" },
+        "critical_performance_test": { "type": "string" },
+        "critical_camera_test": { "type": "string" },
+        "failure_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

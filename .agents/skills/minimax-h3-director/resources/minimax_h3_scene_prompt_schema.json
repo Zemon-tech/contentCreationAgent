@@ -1,0 +1,245 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MiniMax H3 Scene Prompt Schema",
+  "description": "Production-grade schema validating MiniMax H3 omni-modal scene prompts with Higgsfield optics and ComfyUI workflow integration.",
+  "type": "object",
+  "required": [
+    "scene",
+    "important_generation_architecture",
+    "higgsfield_optical_rig",
+    "continuity",
+    "spatial_blocking",
+    "action_timeline",
+    "performance",
+    "camera",
+    "lighting",
+    "color_and_finish",
+    "audio",
+    "negative_prompt",
+    "minimax_h3_prompt",
+    "comfyui_direction",
+    "generation_priority",
+    "quality_control"
+  ],
+  "properties": {
+    "scene": {
+      "type": "object",
+      "required": [
+        "scene_number",
+        "title",
+        "timecode",
+        "duration_seconds",
+        "generation_target",
+        "generation_mode",
+        "aspect_ratio",
+        "fps"
+      ],
+      "properties": {
+        "scene_number": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "timecode": { "type": "string" },
+        "duration_seconds": { "type": "number", "minimum": 0.5, "maximum": 15.0 },
+        "generation_target": { "type": "string" },
+        "generation_mode": {
+          "type": "string",
+          "enum": ["T2VA", "I2VA", "FL2VA", "L2VA", "Ref2VA"]
+        },
+        "aspect_ratio": { "type": "string" },
+        "fps": { "type": "integer", "enum": [24] },
+        "frame_count_comfyui": { "type": "integer" },
+        "purpose": { "type": "string" },
+        "emotional_destination": { "type": "string" },
+        "dominant_visual_idea": { "type": "string" },
+        "brand_landing": { "type": "string" }
+      }
+    },
+    "important_generation_architecture": {
+      "type": "object",
+      "required": ["reason", "generative_boundaries", "recommended_method"],
+      "properties": {
+        "reason": { "type": "string" },
+        "generative_boundaries": { "type": "string" },
+        "recommended_method": { "type": "string" }
+      }
+    },
+    "higgsfield_optical_rig": {
+      "type": "object",
+      "required": ["camera_body", "lens_profile", "focal_length", "aperture"],
+      "properties": {
+        "camera_body": { "type": "string" },
+        "lens_profile": { "type": "string" },
+        "sensor_format": { "type": "string" },
+        "focal_length": { "type": "string" },
+        "aperture": { "type": "string" },
+        "shutter_angle": { "type": "string" },
+        "iso_emulation": { "type": "string" }
+      }
+    },
+    "continuity": {
+      "type": "object",
+      "properties": {
+        "character": { "type": "object" },
+        "environment": { "type": "object" }
+      }
+    },
+    "spatial_blocking": {
+      "type": "object",
+      "required": ["foreground", "midground", "background", "camera_relation"],
+      "properties": {
+        "foreground": { "type": "string" },
+        "midground": { "type": "string" },
+        "background": { "type": "string" },
+        "camera_relation": { "type": "string" }
+      }
+    },
+    "action_timeline": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["time", "action"],
+        "properties": {
+          "time": { "type": "string" },
+          "shot": { "type": "integer" },
+          "action": { "type": "string" }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "required": ["primary_subject", "micro_actions", "emotional_tone", "forbidden"],
+      "properties": {
+        "primary_subject": { "type": "string" },
+        "micro_actions": { "type": "string" },
+        "emotional_tone": { "type": "string" },
+        "forbidden": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "required": ["motion_type", "camera_path"],
+      "properties": {
+        "movement_preset": { "type": "string" },
+        "motion_type": { "type": "string" },
+        "amplitude": { "type": "string" },
+        "speed": { "type": "string" },
+        "camera_path": { "type": "string" },
+        "constraints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "required": ["source", "quality", "temperature"],
+      "properties": {
+        "source": { "type": "string" },
+        "quality": { "type": "string" },
+        "temperature": { "type": "string" },
+        "direction": { "type": "string" },
+        "subject_lighting": { "type": "string" },
+        "forbidden": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "color_and_finish": {
+      "type": "object",
+      "required": ["style", "film_character", "grain", "texture"],
+      "properties": {
+        "style": { "type": "string" },
+        "film_character": { "type": "string" },
+        "grade": { "type": "string" },
+        "palette": { "type": "array", "items": { "type": "string" } },
+        "grain": { "type": "string" },
+        "texture": { "type": "string" },
+        "avoid": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": ["overall_soundscape", "non_diegetic_music"],
+      "properties": {
+        "speakers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "voice_character"],
+            "properties": {
+              "id": { "type": "string" },
+              "character": { "type": "string" },
+              "voice_character": { "type": "string" }
+            }
+          }
+        },
+        "dialogue": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["line", "language"],
+            "properties": {
+              "shot": { "type": "integer" },
+              "speaker_id": { "type": "string" },
+              "line": { "type": "string" },
+              "language": { "type": "string" }
+            }
+          }
+        },
+        "timeline_foley": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "overall_soundscape": { "type": "string" },
+        "non_diegetic_music": { "type": "string" }
+      }
+    },
+    "negative_prompt": {
+      "type": "object",
+      "required": [
+        "anti_cgi",
+        "anatomy_and_physics",
+        "camera_and_artifacts",
+        "lighting",
+        "prohibited_elements"
+      ],
+      "properties": {
+        "anti_cgi": { "type": "array", "items": { "type": "string" } },
+        "anatomy_and_physics": { "type": "array", "items": { "type": "string" } },
+        "camera_and_artifacts": { "type": "array", "items": { "type": "string" } },
+        "lighting": { "type": "array", "items": { "type": "string" } },
+        "prohibited_elements": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "minimax_h3_prompt": {
+      "type": "string",
+      "minLength": 50
+    },
+    "comfyui_direction": {
+      "type": "object",
+      "required": ["workflow", "target_node", "frame_rate"],
+      "properties": {
+        "workflow": { "type": "string" },
+        "target_node": { "type": "string" },
+        "frame_rate": { "type": "integer" },
+        "resolution": { "type": "string" },
+        "sampling": { "type": "string" }
+      }
+    },
+    "generation_priority": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "quality_control": {
+      "type": "object",
+      "required": [
+        "critical_story_test",
+        "critical_audio_test",
+        "critical_camera_test",
+        "failure_conditions"
+      ],
+      "properties": {
+        "critical_story_test": { "type": "string" },
+        "critical_audio_test": { "type": "string" },
+        "critical_camera_test": { "type": "string" },
+        "critical_continuity_test": { "type": "string" },
+        "failure_conditions": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
