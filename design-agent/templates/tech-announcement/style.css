@@ -1,0 +1,204 @@
+/* Tech Announcement Template Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@700&display=swap');
+
+/* Local font fallbacks */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-SemiBold.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-SemiBold.ttf") format("truetype");
+}
+
+:root {
+  --color-canvas: #FFFFFF;
+  --color-ink-heavy: #000000;
+  --color-ink-primary: #0A0A0A;
+  --color-ink-body: #242424;
+  --color-divider: #BDBDBD;
+  --color-muted: #737373;
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-brand: "Inter", "Space Grotesk", -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-canvas);
+  color: var(--color-ink-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#canvas {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-canvas);
+  display: flex;
+  flex-direction: column;
+}
+
+.safe-zone {
+  position: relative;
+  width: 928px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 72px 0 60px 0;
+}
+
+/* Header with Branded Badge & Slide Counter */
+.announcement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 72px;
+}
+
+.brand-badge {
+  font-family: var(--font-brand);
+  font-weight: 800;
+  font-size: 54px;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--color-ink-heavy);
+  display: inline-flex;
+  align-items: center;
+}
+
+.slide-indicator {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+/* Main Announcement Body */
+.editorial-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+/* Product / Kicker Tag */
+.slot-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 88px;
+  --min-font-size: 48px;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  color: var(--color-ink-heavy);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  word-break: break-word;
+}
+
+/* Secondary Proposition Headline */
+.slot-headline {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 46px;
+  --min-font-size: 28px;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--color-ink-primary);
+  margin-bottom: 28px;
+  word-break: break-word;
+}
+
+/* Narrative Excerpt / Paragraph */
+.slot-body {
+  font-family: var(--font-sans);
+  font-weight: 350;
+  font-size: 29px;
+  --min-font-size: 18px;
+  line-height: 1.54;
+  letter-spacing: -0.01em;
+  color: var(--color-ink-body);
+  word-break: break-word;
+}
+
+.slot-body strong, .slot-body b {
+  font-weight: 700;
+  color: var(--color-ink-heavy);
+}
+
+/* Bottom CTA Area */
+.announcement-footer {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 36px;
+}
+
+.bottom-divider {
+  width: 100%;
+  height: 1.5px;
+  background-color: var(--color-divider);
+  margin-bottom: 34px;
+}
+
+.slot-cta {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 30px;
+  --min-font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-ink-heavy);
+}
+
+/* Portrait (4:5) Ratio Adjustments */
+.aspect-4-5 .safe-zone,
+.aspect-3-4 .safe-zone {
+  padding: 88px 0 68px 0;
+}
+
+.aspect-4-5 .announcement-header,
+.aspect-3-4 .announcement-header {
+  margin-bottom: 80px;
+}
+
+.aspect-4-5 .slot-eyebrow,
+.aspect-3-4 .slot-eyebrow {
+  font-size: 92px;
+  margin-bottom: 28px;
+}
+
+.aspect-4-5 .slot-headline,
+.aspect-3-4 .slot-headline {
+  font-size: 48px;
+  margin-bottom: 36px;
+}
+
+.aspect-4-5 .slot-body,
+.aspect-3-4 .slot-body {
+  font-size: 31px;
+  line-height: 1.6;
+}

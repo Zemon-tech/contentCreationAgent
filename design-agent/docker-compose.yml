@@ -1,0 +1,20 @@
+services:
+  design-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DESIGN_AGENT_API_KEY=${DESIGN_AGENT_API_KEY:-dev-secret-key}
+      - SARVAM_API_KEY=${SARVAM_API_KEY}
+      - COMFYUI_BASE_URL=${COMFYUI_BASE_URL:-http://host.docker.internal:8188}
+      - COMFYUI_WS_URL=${COMFYUI_WS_URL:-ws://host.docker.internal:8188/ws}
+      - ENVIRONMENT=production
+      - LOG_RENDERER=json
+      - RENDER_CONCURRENCY=2
+      - JOB_WORKERS=1
+    volumes:
+      - ./output:/app/output
+    ipc: host
+    restart: unless-stopped

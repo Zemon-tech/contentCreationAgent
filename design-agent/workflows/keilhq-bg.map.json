@@ -1,0 +1,10 @@
+{
+  "prompt_node": "6",
+  "prompt_input": "text",
+  "seed_node": "3",
+  "seed_input": "seed",
+  "width_node": "5",
+  "width_input": "width",
+  "height_node": "5",
+  "height_input": "height"
+}

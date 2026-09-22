@@ -1,0 +1,28 @@
+{
+  "job_id": "f5027949-f609-48da-8d93-a20096741b8a",
+  "created_at": "2026-09-22T05:35:57.522048Z",
+  "template_id": "tech-announcement",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "A minimalist diagram illustrating a sparse mixture-of-experts architecture, with a central node connecting to a few activated parameter clusters against a textured, neutral background."
+    }
+  ],
+  "caption": "DeepSeek-V3 is now available on Hugging Face. The model contains 671 billion parameters, but its mixture-of-experts architecture activates only a subset for any given task. This design allows for efficient inference while maintaining high performance on complex benchmarks. Early evaluations indicate it outperforms leading open-source models, including Llama 3.1-405B. The release continues a trend of narrowing the gap between open and closed-source AI systems, with implications for the future development of artificial general intelligence.",
+  "hashtags": [
+    "AI",
+    "OpenSource",
+    "DeepLearning",
+    "MachineLearning",
+    "HuggingFace",
+    "DeepSeek",
+    "MixtureOfExperts",
+    "ArtificialIntelligence",
+    "Technology"
+  ],
+  "source_content_sha256": "cd72671db7709a73b980684353c43f1c28cb65aa0d6a7e23bb2607847c413590",
+  "warnings": []
+}

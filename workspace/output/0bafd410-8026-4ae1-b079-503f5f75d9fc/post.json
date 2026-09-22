@@ -1,0 +1,24 @@
+{
+  "job_id": "0bafd410-8026-4ae1-b079-503f5f75d9fc",
+  "created_at": "2026-09-22T05:13:36.435524Z",
+  "template_id": "tech-announcement",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "Pricing announcement for Claude by Anthropic."
+    }
+  ],
+  "caption": "Claude by Anthropic has introduced a new pricing structure. A free tier remains for everyday use. Pro, at $17 per month, adds task handoffs, scheduling, and Claude Code. Max, starting at $100 per month, offers higher usage tiers and priority access.",
+  "hashtags": [
+    "Anthropic",
+    "Claude",
+    "AI",
+    "Pricing",
+    "Tech"
+  ],
+  "source_content_sha256": "38c2cff3e48ce2ea9026eb987b43218c487e398bbcbd19ce48d79c5a1cea7683",
+  "warnings": []
+}

@@ -1,0 +1,57 @@
+{
+  "id": "keilhq-editorial",
+  "name": "KeilHQ Editorial",
+  "description": "Editorial layout for essays, quiet insights, and thought pieces with subtle background imagery.",
+  "supports": {
+    "formats": ["single", "carousel"],
+    "aspect_ratios": ["4:5", "3:4", "1:1"]
+  },
+  "slides": {
+    "min": 1,
+    "max": 10,
+    "fixed": null
+  },
+  "text_slots": [
+    {
+      "id": "eyebrow",
+      "role": "eyebrow",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    },
+    {
+      "id": "headline",
+      "role": "headline",
+      "max_chars": 80,
+      "min_chars": 1,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "max_chars": 350,
+      "min_chars": 0,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    }
+  ],
+  "image_slots": [
+    {
+      "id": "background",
+      "fit": "cover",
+      "per_slide": true,
+      "comfy_workflow": "keilhq-bg.json",
+      "prompt_slot": true
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+/* The Entrepreneur Post — Editorial Article Template Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+/* Fallback local fonts */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-SemiBold.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Bold.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Bold.ttf") format("truetype");
+}
+
+:root {
+  --color-paper: #FFFFFF;
+  --color-ink: #0A0A0A;
+  --color-ink-muted: #333333;
+  --color-slate: #555555;
+  --color-border: #D8D8D8;
+  --color-border-light: #EBEBEB;
+
+  --font-serif: "Playfair Display", "DM Serif Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#canvas {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-paper);
+  display: flex;
+  flex-direction: column;
+}
+
+.safe-zone {
+  position: relative;
+  width: 952px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 0 44px 0;
+}
+
+/* Masthead Header */
+.publication-header {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.masthead-title {
+  font-family: var(--font-serif);
+  font-size: 50px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+  letter-spacing: -0.015em;
+  padding-bottom: 20px;
+  line-height: 1.1;
+}
+
+.nav-divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 52px;
+  padding: 12px 0;
+}
+
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: 19px;
+  font-weight: 500;
+  color: #1A1A1A;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+/* Editorial Body Area */
+.editorial-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Breadcrumbs bar */
+.breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 16px;
+}
+
+.breadcrumbs {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-slate);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 860px;
+}
+
+.breadcrumb-separator {
+  margin: 0 4px;
+  opacity: 0.6;
+}
+
+.slide-indicator {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-slate);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Article Headline */
+.slot-headline {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 58px;
+  --min-font-size: 34px;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-bottom: 18px;
+  word-break: break-word;
+}
+
+/* Article Body / Excerpt */
+.slot-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 25px;
+  --min-font-size: 17px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--color-ink-muted);
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+
+/* Metadata row (Date & Read Time) */
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 22px;
+  margin-bottom: 18px;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--color-slate);
+  letter-spacing: -0.01em;
+}
+
+.meta-icon {
+  width: 17px;
+  height: 17px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Featured Article Image */
+.article-image-wrapper {
+  width: 100%;
+  height: 440px;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: #F0EEEA;
+  margin-bottom: 28px;
+}
+
+.article-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Call to Action */
+.slot-cta {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 38px;
+  --min-font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-bottom: 20px;
+}
+
+/* Footer Section */
+.editorial-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+  padding-top: 8px;
+}
+
+.brand-slug {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+/* Square 1:1 Aspect Ratio Overrides */
+.aspect-1-1 .safe-zone {
+  padding: 34px 0 28px 0;
+}
+
+.aspect-1-1 .publication-header {
+  margin-bottom: 16px;
+}
+
+.aspect-1-1 .masthead-title {
+  font-size: 44px;
+  padding-bottom: 14px;
+}
+
+.aspect-1-1 .nav-bar {
+  padding: 8px 0;
+  gap: 40px;
+}
+
+.aspect-1-1 .nav-link {
+  font-size: 17px;
+}
+
+.aspect-1-1 .breadcrumb-bar {
+  margin-bottom: 10px;
+}
+
+.aspect-1-1 .slot-headline {
+  font-size: 48px;
+  --min-font-size: 30px;
+  margin-bottom: 12px;
+}
+
+.aspect-1-1 .slot-body {
+  font-size: 22px;
+  --min-font-size: 16px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.aspect-1-1 .meta-row {
+  margin-bottom: 12px;
+}
+
+.aspect-1-1 .article-image-wrapper {
+  height: 330px;
+  margin-bottom: 18px;
+}
+
+.aspect-1-1 .slot-cta {
+  font-size: 32px;
+  --min-font-size: 20px;
+  margin-bottom: 12px;
+}
+

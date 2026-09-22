@@ -1,0 +1,241 @@
+/* KeilHQ Editorial Template Stylesheet */
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Medium.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Bold.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-Medium.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../_shared/fonts/Inter-SemiBold.woff2") format("woff2"),
+       url("../_shared/fonts/Inter-SemiBold.ttf") format("truetype");
+}
+
+:root {
+  /* Brand color tokens */
+  --color-warm-ink: #171514;
+  --color-cotton-paper: #F7F4EE;
+  --color-linen: #F1EEE8;
+  --color-limestone: #DDD7CE;
+  --color-weathered-slate: #7E7A74;
+  --color-oxidized-copper: #2B6F6A;
+  --color-monsoon-forest: #1D3429;
+  --color-jaipur-sandstone: #A98563;
+  --color-harvest-marigold: #C68A34;
+  --color-indigo-dye: #31425E;
+  --color-terracotta-clay: #744739;
+
+  /* Typography stacks with Noto Indic fallback */
+  --font-headline: "DM Sans", "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter", "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-cotton-paper);
+  color: var(--color-warm-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* Canvas container: exact target dimensions */
+#canvas {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-cotton-paper);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Background image layer */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+  filter: contrast(1.05) grayscale(20%);
+}
+
+.bg-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 40%,
+    rgba(247, 244, 238, 0.72) 0%,
+    rgba(247, 244, 238, 0.94) 80%,
+    rgba(247, 244, 238, 1) 100%
+  );
+  pointer-events: none;
+}
+
+/* Safe zone wrapper */
+.safe-zone {
+  position: relative;
+  z-index: 1;
+  width: 1012px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 96px 48px;
+}
+
+/* Header bar */
+.editorial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--color-limestone);
+}
+
+.brand-mark {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-warm-ink);
+}
+
+.slide-indicator {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--color-weathered-slate);
+}
+
+/* Content block */
+.editorial-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  gap: 32px;
+  padding: 48px 0;
+}
+
+/* Text slot: Eyebrow */
+.slot-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 20px;
+  --min-font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-weathered-slate);
+  line-height: 1.3;
+}
+
+/* Text slot: Headline */
+.slot-headline {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 68px;
+  --min-font-size: 36px;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--color-warm-ink);
+  word-break: break-word;
+}
+
+/* Text slot: Body */
+.slot-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 32px;
+  --min-font-size: 20px;
+  line-height: 1.52;
+  letter-spacing: -0.005em;
+  color: var(--color-warm-ink);
+  opacity: 0.92;
+  word-break: break-word;
+}
+
+/* Footer bar */
+.editorial-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 28px;
+  border-top: 1px solid var(--color-limestone);
+}
+
+.slot-cta {
+  font-family: var(--font-headline);
+  font-weight: 600;
+  font-size: 22px;
+  --min-font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--color-warm-ink);
+}
+
+.footer-domain {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  color: var(--color-weathered-slate);
+}

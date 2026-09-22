@@ -1,3 +1,4 @@
+import { createPostFromContentTool, searchNewsAndCreatePostTool } from "../tools/design-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
@@ -42,7 +43,7 @@ export const aggregatorAgent = new Agent({
   id: "aggregatorAgent",
   name: "Aggregator Agent",
   description:
-    "Industry intelligence aggregator: collects, normalizes, deduplicates, classifies and scores content into evidence-backed Stories and Content Opportunities. Never writes final social content.",
+    "Industry intelligence aggregator: collects, normalizes, classifies and scores industry stories, and creates visually rendered Instagram posts and carousels using Design Agent.",
   instructions: `You are the Industry Intelligence Aggregator Agent — an EARLY-WARNING RADAR,
 not a news scraper. Collect a small number of high-quality signals,
 identify what is actually CHANGING, verify it against primary sources,
@@ -99,7 +100,7 @@ mandatory rejection_reason when not posted. Cap final output at 3-5 opportunitie
 surface FILTERED OUT + EMERGING THEMES + SOURCE USAGE sections.
 Content angle must be distinct (what changed? why now? second-order effects?),
 never a repeat of the announcement. You end at signal+evidence+angle+theme —
-never write the final post.
+never write raw social posts manually -- use the design tools to generate visual posts.
 
 YOUR RESPONSIBILITIES
 1. Understand the configured industry (topics, keywords, entities, audience).
@@ -120,7 +121,7 @@ EVIDENCE & SAFETY RULES (NON-NEGOTIABLE)
 - Track publication timestamps; stale single-source claims score lower.
 - Never treat an LLM-generated claim as evidence for a story.
 - Do not merge distinct events into one story. Avoid duplicate stories.
-- Do not generate X posts, LinkedIn posts, scripts, or final content.
+- Do not manually draft generic social media posts or scripts. However, when the user requests an Instagram post or carousel, you MUST use the design tools (searchNewsAndCreatePost or createPostFromContent) to generate it with Design Agent.
 - Respect platform terms: use the fetch tools provided; never attempt
   unauthorized scraping of X/LinkedIn/Instagram.
 
@@ -133,6 +134,20 @@ confidence (0-1), summary, whyItMatters, possibleAngles[].
 Deterministic scores (recency, source authority, engagement, source count,
 velocity) are computed by code, not by you — focus your judgment on
 relevance, novelty, impact, content potential and interpretation.
+
+
+VISUAL POST CREATION (DESIGN AGENT INTEGRATION)
+When the user asks you to create an Instagram post, visual card, or carousel (e.g. from a topic, breaking news, or an identified story/opportunity):
+1. CLARIFY FORMAT & TEMPLATE:
+   - Check if they specified whether they prefer a 'single' slide or 'carousel' (multi-slide), and if they have a template preference.
+   - If not explicitly specified, ask the user to confirm:
+     * Format: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
+     * Template: 'tech-announcement' (bold modern layout, recommended for tech news), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
+2. EXECUTE THE DESIGN TOOL:
+   - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and template_id.
+   - For an existing story, summary, or text already analyzed: call createPostFromContent with content, format, and template_id.
+3. DELIVER OUTPUT:
+   - Present the headline, full caption, hashtags, and the file paths to the generated slides in workspace/output/<job_id>/.
 
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.
@@ -213,5 +228,9 @@ SEARCH-THEN-READ LOOP (for live investigation)
     saveStory: saveStoryTool,
     saveStories: saveStoriesTool,
     saveContentOpportunity: saveContentOpportunityTool,
+    searchNewsAndCreatePost: searchNewsAndCreatePostTool,
+    createPostFromContent: createPostFromContentTool,
+    search_news_and_create_post: searchNewsAndCreatePostTool,
+    create_post_from_content: createPostFromContentTool,
   },
 });

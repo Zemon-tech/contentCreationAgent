@@ -1,0 +1,44 @@
+name: KeilHQ
+voice:
+  principles:
+    - "Calm over stimulation, substance over spectacle."
+    - "Whisper, do not shout. The interface disappears; the work is the hero."
+    - "Knowledge done well is careful, not fast. Deliberate, patient, unhurried."
+    - "Restraint and quiet confidence. No hype, no exclamation-driven marketing."
+  prefer:
+    - clear, precise, editorial phrasing
+    - short declarative sentences
+  avoid:
+    - 'hype words: "revolutionary", "game-changer", "unbelievable", "amazing", "🔥"'
+    - exclamation marks in body copy (at most one per post, only if truly warranted)
+    - emoji spam; at most one tasteful emoji per post, none in headlines
+banned_words:
+  - "revolutionary"
+  - "game-changer"
+  - "game changer"
+  - "unbelievable"
+  - "insane"
+  - "🔥"
+colors:
+  warm_ink: "#171514"       # primary text, primary buttons, highest contrast
+  cotton_paper: "#F7F4EE"   # app/background canvas
+  linen: "#F1EEE8"          # surfaces, cards
+  limestone: "#DDD7CE"      # hairline borders, dividers
+  weathered_slate: "#7E7A74" # secondary text, captions
+  # accents — use sparingly, per role
+  oxidized_copper: "#2B6F6A" # AI states ONLY
+  monsoon_forest: "#1D3429"  # team/collaboration/progress
+  jaipur_sandstone: "#A98563" # enterprise/trust/archival
+  harvest_marigold: "#C68A34" # discovery/new-idea, sparingly
+  indigo_dye: "#31425E"       # docs/knowledge/scholarship
+  terracotta_clay: "#744739"  # human warmth, editorial
+typography:
+  headline_font: "DM Sans"
+  body_font: "Inter"
+  rules:
+    - "Words deserve space; never squeeze type."
+    - "Headlines: DM Sans. Product/UI/dense text: Inter."
+color_usage_rules:
+  - "Foundation tones (warm_ink, cotton_paper, linen, limestone, weathered_slate) form 80-90% of any surface."
+  - "oxidized_copper is reserved exclusively for AI-related content."
+  - "Accents signal specific context; do not mix multiple accents on one surface."

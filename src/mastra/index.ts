@@ -19,6 +19,8 @@ import {
   fetchWebPageTool,
 } from './tools/fetch-tools';
 import { exaScrapeTool, exaSearchTool } from './tools/exa-tools';
+import { searchNewsAndCreatePostTool,
+    createPostFromContentTool } from './tools/design-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
 import {
@@ -32,13 +34,14 @@ import {
   saveStoryTool,
 } from './tools/industry-tools';
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
+import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
 
 export const mastra = new Mastra({
   bundler: {
     externals: ['@duckdb/node-bindings'],
   },
   agents: { agent, aggregatorAgent },
-  workflows: { industryAggregationWorkflow },
+  workflows: { industryAggregationWorkflow, newsToPostWorkflow },
   tools: {
     startScheduleTool,
     stopScheduleTool,
@@ -48,6 +51,8 @@ export const mastra = new Mastra({
     extractArticleContentTool,
     exaSearchTool,
     exaScrapeTool,
+    searchNewsAndCreatePostTool,
+    createPostFromContentTool,
     getCurrentTimeTool,
     sweepSourcesTool,
     generateEmbeddingTool,

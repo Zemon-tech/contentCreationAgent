@@ -1,0 +1,49 @@
+{
+  "id": "entrepreneur-post",
+  "name": "The Entrepreneur Post",
+  "description": "Clean, authoritative editorial article layout inspired by The Entrepreneur Post with breadcrumbs, bold serif headline, excerpt, metadata, and featured imagery.",
+  "supports": {
+    "formats": ["single", "carousel"],
+    "aspect_ratios": ["4:5", "3:4", "1:1"]
+  },
+  "slides": {
+    "min": 1,
+    "max": 10,
+    "fixed": null
+  },
+  "text_slots": [
+    {
+      "id": "eyebrow",
+      "role": "eyebrow",
+      "max_chars": 80,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    },
+    {
+      "id": "headline",
+      "role": "headline",
+      "max_chars": 120,
+      "min_chars": 1,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "max_chars": 400,
+      "min_chars": 0,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "max_chars": 60,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    }
+  ],
+  "image_slots": []
+}

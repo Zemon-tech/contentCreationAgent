@@ -43,7 +43,7 @@ async function exaPost<T>(path: string, body: Record<string, unknown>): Promise<
   return json;
 }
 
-const ExaResultSchema = z.object({
+export const ExaResultSchema = z.object({
   id: z.string(),
   title: z.string().nullable().optional(),
   url: z.string(),
@@ -52,6 +52,89 @@ const ExaResultSchema = z.object({
   score: z.number().nullable().optional(),
   text: z.string().nullable().optional(),
 });
+
+export type ExaResult = z.infer<typeof ExaResultSchema>;
+
+export interface SearchExaParams {
+  query: string;
+  numResults?: number;
+  searchType?: "auto" | "fast" | "deep";
+  category?: "news" | "company" | "publication" | "personal site" | "financial report" | "people";
+  startPublishedDate?: string;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  includeText?: boolean;
+}
+
+export interface SearchExaOutput {
+  results: ExaResult[];
+  costDollars: number | null;
+}
+
+export async function searchExa(params: SearchExaParams): Promise<SearchExaOutput> {
+  const json = await exaPost<{
+    results: z.infer<typeof ExaResultSchema>[];
+    costDollars?: { total?: number };
+  }>("/search", {
+    query: params.query,
+    numResults: params.numResults ?? 10,
+    type: params.searchType ?? "auto",
+    ...(params.category ? { category: params.category } : {}),
+    ...(params.startPublishedDate ? { startPublishedDate: params.startPublishedDate } : {}),
+    ...(params.includeDomains ? { includeDomains: params.includeDomains } : {}),
+    ...(params.excludeDomains ? { excludeDomains: params.excludeDomains } : {}),
+    ...(params.includeText ? { contents: { text: { maxCharacters: 2000 } } } : {}),
+  });
+
+  return {
+    results: (json.results ?? []).map((r) => ({
+      id: r.id ?? r.url,
+      title: r.title ?? null,
+      url: r.url,
+      publishedDate: r.publishedDate ?? null,
+      author: r.author ?? null,
+      score: r.score ?? null,
+      text: r.text ?? null,
+    })),
+    costDollars: json.costDollars?.total ?? null,
+  };
+}
+
+export interface ScrapeExaParams {
+  urls: string[];
+  maxCharacters?: number;
+  maxAgeHours?: number;
+}
+
+export interface ScrapeExaOutput {
+  contents: ExaResult[];
+  failedUrls: string[];
+}
+
+export async function scrapeExa(params: ScrapeExaParams): Promise<ScrapeExaOutput> {
+  const json = await exaPost<{ results?: z.infer<typeof ExaResultSchema>[] }>(
+    "/contents",
+    {
+      urls: params.urls,
+      text: { maxCharacters: params.maxCharacters ?? 8000 },
+      maxAgeHours: params.maxAgeHours ?? 24,
+    },
+  );
+  const contents = (json.results ?? []).map((r) => ({
+    id: r.id ?? r.url,
+    title: r.title ?? null,
+    url: r.url,
+    publishedDate: r.publishedDate ?? null,
+    author: r.author ?? null,
+    score: null,
+    text: r.text ?? null,
+  }));
+  const got = new Set(contents.map((c) => c.url));
+  return {
+    contents,
+    failedUrls: params.urls.filter((u) => !got.has(u)),
+  };
+}
 
 export const exaSearchTool = createTool({
   id: "exaSearch",
@@ -93,31 +176,16 @@ export const exaSearchTool = createTool({
     excludeDomains,
     includeText,
   }) => {
-    const json = await exaPost<{
-      results: z.infer<typeof ExaResultSchema>[];
-      costDollars?: { total?: number };
-    }>("/search", {
+    return searchExa({
       query,
       numResults,
-      type: searchType,
-      ...(category ? { category } : {}),
-      ...(startPublishedDate ? { startPublishedDate } : {}),
-      ...(includeDomains ? { includeDomains } : {}),
-      ...(excludeDomains ? { excludeDomains } : {}),
-      ...(includeText ? { contents: { text: { maxCharacters: 2000 } } } : {}),
+      searchType,
+      category,
+      startPublishedDate,
+      includeDomains,
+      excludeDomains,
+      includeText,
     });
-    return {
-      results: (json.results ?? []).map((r) => ({
-        id: r.id ?? r.url,
-        title: r.title ?? null,
-        url: r.url,
-        publishedDate: r.publishedDate ?? null,
-        author: r.author ?? null,
-        score: r.score ?? null,
-        text: r.text ?? null,
-      })),
-      costDollars: json.costDollars?.total ?? null,
-    };
   },
 });
 
@@ -141,27 +209,6 @@ export const exaScrapeTool = createTool({
     failedUrls: z.array(z.string()),
   }),
   execute: async ({ urls, maxCharacters, maxAgeHours }) => {
-    const json = await exaPost<{ results?: z.infer<typeof ExaResultSchema>[] }>(
-      "/contents",
-      {
-        urls,
-        text: { maxCharacters },
-        maxAgeHours,
-      },
-    );
-    const contents = (json.results ?? []).map((r) => ({
-      id: r.id ?? r.url,
-      title: r.title ?? null,
-      url: r.url,
-      publishedDate: r.publishedDate ?? null,
-      author: r.author ?? null,
-      score: null,
-      text: r.text ?? null,
-    }));
-    const got = new Set(contents.map((c) => c.url));
-    return {
-      contents,
-      failedUrls: urls.filter((u) => !got.has(u)),
-    };
+    return scrapeExa({ urls, maxCharacters, maxAgeHours });
   },
 });

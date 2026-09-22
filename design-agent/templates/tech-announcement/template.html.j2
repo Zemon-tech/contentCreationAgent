@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ text.headline | default("Tech Announcement") }}</title>
+  {% if style_content %}
+  <style>
+    {{ style_content | safe }}
+  </style>
+  {% else %}
+  <link rel="stylesheet" href="style.css">
+  {% endif %}
+  {% if css_colors %}
+  <style>
+    :root {
+      {% for prop, val in css_colors.items() %}
+      {{ prop }}: {{ val }};
+      {% endfor %}
+    }
+  </style>
+  {% endif %}
+</head>
+<body>
+  <div id="canvas" class="aspect-{{ (aspect_ratio | default('1:1')).replace(':', '-') }}" style="width: {{ width | default(1080) }}px; height: {{ height | default(1080) }}px;">
+    <div class="safe-zone">
+      <!-- Header -->
+      <header class="announcement-header">
+        <div class="brand-badge">[{{ brand_slug | default(brand_name) | default("360Labs") }}]</div>
+        {% if total_slides and total_slides > 1 %}
+        <div class="slide-indicator">
+          {{ "%02d" | format((slide_index | default(0)) + 1) }} / {{ "%02d" | format(total_slides) }}
+        </div>
+        {% endif %}
+      </header>
+
+      <!-- Main Content -->
+      <main class="editorial-content">
+        {% if text and text.eyebrow %}
+        <div class="slot-eyebrow" data-slot="eyebrow">{{ text.eyebrow }}</div>
+        {% endif %}
+
+        {% if text and text.headline %}
+        <h1 class="slot-headline" data-slot="headline">{{ text.headline }}</h1>
+        {% endif %}
+
+        {% if text and text.body %}
+        <p class="slot-body" data-slot="body">{{ text.body | safe }}</p>
+        {% endif %}
+      </main>
+
+      <!-- Footer CTA -->
+      <footer class="announcement-footer">
+        <div class="bottom-divider"></div>
+        <div class="slot-cta" data-slot="cta">
+          {{ (text and text.cta) or "Read more on our website at 360labs.ai" }}
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

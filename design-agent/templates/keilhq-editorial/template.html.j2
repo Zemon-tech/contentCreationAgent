@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ text.headline | default("KeilHQ Post") }}</title>
+  {% if style_content %}
+  <style>
+    {{ style_content | safe }}
+  </style>
+  {% else %}
+  <link rel="stylesheet" href="style.css">
+  {% endif %}
+  {% if css_colors %}
+  <style>
+    :root {
+      {% for prop, val in css_colors.items() %}
+      {{ prop }}: {{ val }};
+      {% endfor %}
+    }
+  </style>
+  {% endif %}
+</head>
+<body>
+  <div id="canvas" style="width: {{ width | default(1080) }}px; height: {{ height | default(1350) }}px;">
+    <!-- Background layer -->
+    {% if images and images.background %}
+    <div class="bg-layer">
+      <img class="bg-image" src="{{ images.background }}" alt="" />
+      <div class="bg-gradient-overlay"></div>
+    </div>
+    {% endif %}
+
+    <!-- Centered safe zone -->
+    <div class="safe-zone">
+      <!-- Header -->
+      <header class="editorial-header">
+        <div class="brand-mark">{{ brand_name | default("KeilHQ") }}</div>
+        {% if total_slides and total_slides > 1 %}
+        <div class="slide-indicator">
+          {{ "%02d" | format((slide_index | default(0)) + 1) }} / {{ "%02d" | format(total_slides) }}
+        </div>
+        {% endif %}
+      </header>
+
+      <!-- Main Editorial Body -->
+      <main class="editorial-content">
+        {% if text and text.eyebrow %}
+        <div class="slot-eyebrow" data-slot="eyebrow">{{ text.eyebrow }}</div>
+        {% endif %}
+
+        {% if text and text.headline %}
+        <h1 class="slot-headline" data-slot="headline">{{ text.headline }}</h1>
+        {% endif %}
+
+        {% if text and text.body %}
+        <p class="slot-body" data-slot="body">{{ text.body }}</p>
+        {% endif %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="editorial-footer">
+        <div class="slot-cta" data-slot="cta">
+          {{ (text and text.cta) or "Read more at keilhq.com" }}
+        </div>
+        <div class="footer-domain">keilhq.com</div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

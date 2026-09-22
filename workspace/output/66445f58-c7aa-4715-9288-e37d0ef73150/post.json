@@ -1,0 +1,64 @@
+{
+  "job_id": "66445f58-c7aa-4715-9288-e37d0ef73150",
+  "created_at": "2026-09-22T05:36:47.643794Z",
+  "template_id": "tech-announcement",
+  "format": "carousel",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "A minimalist editorial layout with the text 'Claude 3.7 Sonnet' and a short description of a hybrid reasoning model that produces both instant responses and extended step-by-step thinking."
+    },
+    {
+      "index": 1,
+      "file": "slide_02.jpg",
+      "alt_text": "A minimalist editorial layout with the text 'Claude Code' and a short description of a command line tool for agentic coding, available as a limited research preview."
+    },
+    {
+      "index": 2,
+      "file": "slide_03.jpg",
+      "alt_text": "A minimalist editorial layout with the text 'Pricing' and a short description of the model's token pricing, noting that thinking tokens are included in the output rate."
+    },
+    {
+      "index": 3,
+      "file": "slide_04.jpg",
+      "alt_text": "A minimalist editorial layout with the text 'Availability' and a short description of where the model is now live across various platforms and plans."
+    },
+    {
+      "index": 4,
+      "file": "slide_05.jpg",
+      "alt_text": "A minimalist editorial layout with the text 'Frontier reasoning made practical' and a closing statement about the model's design philosophy."
+    }
+  ],
+  "caption": "Claude 3.7 Sonnet. A single model for two modes of thought. Near-instant responses, or extended, step-by-step reasoning. Both are visible to you. API users control the duration of the thinking. Claude Code is a command line tool for agentic coding. Delegate substantial engineering tasks directly from your terminal. Available as a limited research preview. Extended thinking mode is available on all surfaces except the free tier. Pricing remains the same: Input: $3 / million tokens. Output: $15 / million tokens. Thinking tokens are included. Claude 3.7 Sonnet is now live. Free, Pro, Team, and Enterprise plans. Also on the Claude Developer Platform, Amazon Bedrock, and Google Cloud Vertex AI. Frontier reasoning made practical. No separate model for speed or depth. Just one interface, two modes of thought, and the work as the hero.",
+  "hashtags": [
+    "Claude",
+    "Claude3",
+    "Anthropic",
+    "AI",
+    "AIModel",
+    "MachineLearning",
+    "LLM",
+    "AIResearch",
+    "TechNews",
+    "DeveloperTools",
+    "Coding",
+    "WebDevelopment",
+    "AIModelRelease",
+    "Claude3",
+    "ClaudeCode",
+    "ReasoningModel",
+    "AgenticAI",
+    "TechUpdate",
+    "AIModelPricing",
+    "Claude37",
+    "TechAnnouncement",
+    "ProductLaunch",
+    "DeveloperPlatform",
+    "AmazonBedrock",
+    "GoogleCloud"
+  ],
+  "source_content_sha256": "0db89436134b7fbcda2d5542cdc3a8628c647cf77cb097b2a5ff49e42602feae",
+  "warnings": []
+}

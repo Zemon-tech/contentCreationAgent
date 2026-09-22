@@ -1,0 +1,49 @@
+{
+  "id": "keilhq-text",
+  "name": "KeilHQ Text",
+  "description": "Pure typography and editorial layout with no imagery slots. Ideal for insights, essays, rules, and quotes.",
+  "supports": {
+    "formats": ["single", "carousel"],
+    "aspect_ratios": ["4:5", "3:4", "1:1"]
+  },
+  "slides": {
+    "min": 1,
+    "max": 10,
+    "fixed": null
+  },
+  "text_slots": [
+    {
+      "id": "eyebrow",
+      "role": "eyebrow",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    },
+    {
+      "id": "headline",
+      "role": "headline",
+      "max_chars": 90,
+      "min_chars": 1,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "max_chars": 450,
+      "min_chars": 0,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    }
+  ],
+  "image_slots": []
+}
