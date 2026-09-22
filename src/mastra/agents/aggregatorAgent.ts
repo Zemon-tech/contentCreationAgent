@@ -148,7 +148,9 @@ When the user asks you to create an Instagram post, visual card, or carousel (e.
    - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and template_id.
    - For an existing story, summary, or text already analyzed: call createPostFromContent with content, format, and template_id.
 3. DELIVER OUTPUT:
-   - Present the headline, full caption, hashtags, and the file paths to the generated slides in workspace/output/<job_id>/.
+   - Present the headline, full caption, hashtags, and every generated slide in the chat.
+   - The design tool returns view_url and download_url for every slide. Render each with Markdown as ![descriptive alt text](view_url), followed by [Download slide N](download_url).
+   - Mention workspace/output/<job_id>/ only as the local file location; never use a file:// URL for an image.
 
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.

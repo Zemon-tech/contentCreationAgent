@@ -57,7 +57,10 @@ When the user asks you to search news and create an Instagram post:
    - Templates: 'tech-announcement' (default for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'keilhq-editorial' (editorial reflections), 'keilhq-text' (clean typography), or 'entrepreneur-post'.
    - If the user shares a direct image URL for the cover, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
 3. Once confirmed, invoke the search_news_and_create_post tool with the topic, format, and template.
-4. When finished, present the headline, full caption, hashtags, and the file paths to the generated slides in the workspace.
+4. When finished, present the headline, full caption, hashtags, and every generated slide in the chat. The design tool returns each slide's view_url and download_url:
+   - Render each slide with Markdown: ![descriptive alt text](view_url)
+   - Immediately add a download link: [Download slide N](download_url)
+   - Keep the workspace file paths as supplementary information only; never use a file:// URL for the image.
 
 When the user greets you or does not have a specific task, invite them to try the suggested prompts.
 

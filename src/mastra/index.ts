@@ -35,10 +35,14 @@ import {
 } from './tools/industry-tools';
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
+import { postAssetRoute } from './routes/post-assets';
 
 export const mastra = new Mastra({
   bundler: {
     externals: ['@duckdb/node-bindings'],
+  },
+  server: {
+    apiRoutes: [postAssetRoute],
   },
   agents: { agent, aggregatorAgent },
   workflows: { industryAggregationWorkflow, newsToPostWorkflow },
