@@ -23,7 +23,7 @@ test:
 check: lint typecheck test
 
 run:
-	uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+	uv run uvicorn app.main:app --host 0.0.0.0 --port 8001
 
 precommit:
 	uvx pre-commit install

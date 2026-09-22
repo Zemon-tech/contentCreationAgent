@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/playwright/python:v1.49.1-noble
 ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
     UV_SYSTEM_PYTHON=1 \
-    PORT=8000
+    PORT=8001
 
 # Install Noto fallback fonts (spec.md §15: fonts-noto-core, fonts-noto-cjk, fonts-noto-color-emoji)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,7 +36,7 @@ COPY brand.yaml ./
 # Create output directory
 RUN mkdir -p output
 
-EXPOSE 8000
+EXPOSE 8001
 
 # Run with standard production flags
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]

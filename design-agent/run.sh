@@ -26,7 +26,7 @@ COMFYUI_BASE_URL=http://localhost:8188
 COMFYUI_WS_URL=ws://localhost:8188/ws
 ENVIRONMENT=development
 LOG_RENDERER=console
-PORT=8000
+PORT=8001
 EOF
     fi
 fi
@@ -47,5 +47,5 @@ echo "[init] Checking Playwright Chromium browser..."
 uv run playwright install chromium
 
 # 5. Start the FastAPI server
-echo "[run] Design Agent listening on http://0.0.0.0:8000"
-exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+echo "[run] Design Agent listening on http://0.0.0.0:8001"
+exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8001

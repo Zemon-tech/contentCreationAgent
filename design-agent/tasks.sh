@@ -33,7 +33,7 @@ case "$TASK" in
     uv run pytest --cov
     ;;
   run)
-    exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+    exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8001
     ;;
   precommit)
     uvx pre-commit install

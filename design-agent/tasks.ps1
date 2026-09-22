@@ -19,6 +19,6 @@ switch ($Task) {
     "typecheck" { uv run mypy }
     "test"      { uv run pytest --cov }
     "check"     { uv run ruff check .; uv run mypy; uv run pytest --cov }
-    "run"       { uv run uvicorn app.main:app }
+    "run"       { uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 }
     "precommit" { uvx pre-commit install }
 }

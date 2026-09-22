@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
       - DESIGN_AGENT_API_KEY=${DESIGN_AGENT_API_KEY:-dev-secret-key}
       - SARVAM_API_KEY=${SARVAM_API_KEY}
