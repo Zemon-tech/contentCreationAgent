@@ -4,12 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerApiRoute } from '@mastra/core/server';
 
-function findPostOutputRoot(): string {
-  // `mastra dev` executes the bundled server from .mastra/output, while the
-  // source project keeps its workspace at the project root. Walk upwards so
-  // this works in both development and a normal production process.
-  // Mastra changes process.cwd() to src/mastra/public while it serves Studio,
-  // so derive the search from this module's location instead.
+function findProjectPostOutputRoot(): string {
+  // The development bundle is under .mastra/output; search upward from it to
+  // retain access to posts produced before Studio began using its own cwd.
   const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
   let directory = moduleDirectory;
 
@@ -27,7 +24,13 @@ function findPostOutputRoot(): string {
   }
 }
 
-const POST_OUTPUT_ROOT = findPostOutputRoot();
+// Studio runs the server with src/mastra/public as cwd. This is also the
+// location used by copyDeliverablesToWorkspace(), so it must be searched
+// first. The project root remains a fallback for already-saved posts.
+const POST_OUTPUT_ROOTS = [
+  path.resolve(process.cwd(), 'workspace', 'output'),
+  findProjectPostOutputRoot(),
+].filter((value, index, values) => values.indexOf(value) === index);
 const JOB_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SLIDE_FILENAME_PATTERN = /^slide_\d+\.jpe?g$/i;
 
@@ -46,25 +49,29 @@ export const postAssetRoute = registerApiRoute('/post-assets/:jobId/:filename', 
       return c.text('Post asset not found', 404);
     }
 
-    const assetPath = path.resolve(POST_OUTPUT_ROOT, jobId, filename);
-    const jobOutputDir = path.resolve(POST_OUTPUT_ROOT, jobId);
+    for (const outputRoot of POST_OUTPUT_ROOTS) {
+      const assetPath = path.resolve(outputRoot, jobId, filename);
+      const jobOutputDir = path.resolve(outputRoot, jobId);
 
-    // Defense in depth: keep route parameters from escaping this job folder.
-    if (!assetPath.startsWith(`${jobOutputDir}${path.sep}`)) {
-      return c.text('Post asset not found', 404);
+      // Defense in depth: keep route parameters from escaping this job folder.
+      if (!assetPath.startsWith(`${jobOutputDir}${path.sep}`)) {
+        continue;
+      }
+
+      try {
+        const asset = await readFile(assetPath);
+        const download = c.req.query('download') === '1';
+
+        return c.body(asset, 200, {
+          'Content-Type': 'image/jpeg',
+          'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
+          'X-Content-Type-Options': 'nosniff',
+        });
+      } catch {
+        // Try the legacy workspace location before reporting a missing asset.
+      }
     }
 
-    try {
-      const asset = await readFile(assetPath);
-      const download = c.req.query('download') === '1';
-
-      return c.body(asset, 200, {
-        'Content-Type': 'image/jpeg',
-        'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
-        'X-Content-Type-Options': 'nosniff',
-      });
-    } catch {
-      return c.text('Post asset not found', 404);
-    }
+    return c.text('Post asset not found', 404);
   },
 });
