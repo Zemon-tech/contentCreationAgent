@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "neoclassical_editorial_image",
+  "type": "object",
+  "required": ["meta", "creative_brief", "art_direction", "visual_spec", "style_constraints", "reference_strategy", "prompt_strategy", "prompts", "negative_prompt", "generation_parameters", "validation"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schema_version", "skill", "style_system", "target_model", "task_type", "prompt_complexity"],
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0" },
+        "skill": { "type": "string", "const": "neoclassical-editorial-image" },
+        "style_system": { "type": "string", "const": "contemporary-neoclassical-editorial-collage" },
+        "target_model": { "type": "string", "enum": ["general", "midjourney", "openai", "flux", "google"] },
+        "task_type": { "type": "string", "const": "text_to_image" },
+        "prompt_complexity": { "type": "string", "enum": ["concise", "standard", "detailed"] }
+      }
+    },
+    "creative_brief": {
+      "type": "object",
+      "required": ["topic", "thesis", "visual_metaphor"],
+      "properties": {
+        "source": { "type": "string" },
+        "topic": { "type": "string", "minLength": 3 },
+        "thesis": { "type": "string", "minLength": 10 },
+        "abstract_concept": { "type": "string" },
+        "visual_metaphor": { "type": "string", "minLength": 10 },
+        "image_goal": { "type": "string" }
+      }
+    },
+    "art_direction": {
+      "type": "object",
+      "required": ["style_name", "style_archetype", "historical_language", "contemporary_language", "medium", "rendering_language", "composition_language", "color_strategy", "texture_strategy", "mood"],
+      "properties": {
+        "style_name": { "type": "string", "const": "Contemporary Neoclassical Editorial Collage" },
+        "style_archetype": { "type": "string", "const": "neoclassical-pop-editorial" },
+        "historical_language": { "type": "string", "minLength": 5 },
+        "contemporary_language": { "type": "string", "minLength": 5 },
+        "medium": { "type": "string", "minLength": 5 },
+        "rendering_language": { "type": "string", "minLength": 5 },
+        "composition_language": { "type": "string", "minLength": 5 },
+        "color_strategy": { "type": "string", "minLength": 5 },
+        "texture_strategy": { "type": "string", "minLength": 5 },
+        "mood": { "type": "string", "minLength": 3 }
+      }
+    },
+    "visual_spec": {
+      "type": "object",
+      "required": ["hero_subject", "supporting_elements", "environment", "composition", "lighting", "color_palette", "color_hierarchy", "materials", "textures", "typography"],
+      "properties": {
+        "hero_subject": { "type": "string", "minLength": 10 },
+        "supporting_elements": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "environment": { "type": "string" },
+        "composition": { "type": "string", "minLength": 10 },
+        "spatial_relationships": { "type": "string" },
+        "perspective": { "type": "string" },
+        "lighting": { "type": "string" },
+        "color_palette": { "type": "array", "minItems": 2, "maxItems": 5, "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" } },
+        "color_hierarchy": { "type": "string" },
+        "materials": { "type": "array", "items": { "type": "string" } },
+        "textures": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "atmosphere": { "type": "string" },
+        "negative_space": { "type": "string" },
+        "typography": { "type": "string" }
+      }
+    },
+    "style_constraints": {
+      "type": "object",
+      "required": ["non_negotiables", "preferred", "avoid"],
+      "properties": {
+        "non_negotiables": { "type": "array", "minItems": 3, "items": { "type": "string" } },
+        "preferred": { "type": "array", "items": { "type": "string" } },
+        "avoid": { "type": "array", "minItems": 2, "items": { "type": "string" } }
+      }
+    },
+    "reference_strategy": {
+      "type": "object",
+      "required": ["references_present"],
+      "properties": {
+        "references_present": { "type": "boolean" },
+        "reference_roles": { "type": "array", "items": { "type": "string" } },
+        "style_reference": { "type": "string" },
+        "composition_reference": { "type": "string" },
+        "content_reference": { "type": "string" },
+        "reference_strength": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+    "prompt_strategy": {
+      "type": "object",
+      "required": ["complexity", "reason"],
+      "properties": {
+        "complexity": { "type": "string", "enum": ["concise", "standard", "detailed"] },
+        "reason": { "type": "string" },
+        "prompt_structure": { "type": "array", "items": { "type": "string" } },
+        "model_specific_strategy": { "type": "string" }
+      }
+    },
+    "prompts": {
+      "type": "object",
+      "required": ["primary", "compact", "model_specific"],
+      "properties": {
+        "primary": { "type": "string", "minLength": 200 },
+        "compact": { "type": "string", "minLength": 40 },
+        "model_specific": { "type": "string", "minLength": 40 }
+      }
+    },
+    "negative_prompt": {
+      "type": "object",
+      "required": ["enabled", "content"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "content": { "type": "string" }
+      }
+    },
+    "generation_parameters": {
+      "type": "object",
+      "properties": {
+        "aspect_ratio": { "type": "string" },
+        "width": { "type": ["integer", "null"] },
+        "height": { "type": ["integer", "null"] },
+        "resolution": { "type": ["string", "null"] },
+        "quality": { "type": ["string", "null"] },
+        "stylization": { "type": ["number", "null"] },
+        "seed": { "type": ["integer", "null"] },
+        "model_parameters": { "type": "object" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["valid", "checks"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "checks": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "missing_information": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
