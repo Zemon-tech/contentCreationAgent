@@ -44,7 +44,7 @@ Recurring schedules continue to use model tokens until you pause them. Ask the a
 
 ## Making it yours
 
-- Edit `src/mastra/agents/agent.ts` to change the model, instructions, memory, workspace, or approval policy.
+- Edit `src/mastra/agents/aggregatorAgent.ts` to change the model, instructions, memory, or intelligence rules.
 - Edit `src/mastra/tools/` to customize scheduling.
 - Edit `src/mastra/index.ts` to change storage and observability.
 - Add files or reusable skills under `workspace/` for the agent to use.

@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep Dive: Mastra Aggregator Agent & Design Agent Connection</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --card-hover: #192238;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --accent-primary: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --code-bg: #030712;
+      --code-border: #1e293b;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', Menlo, Consolas, Monaco, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    /* Sticky Navigation */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+      color: white;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 64px 0 40px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-lead {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 850px;
+      margin-bottom: 24px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .meta-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .meta-val {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: #e2e8f0;
+      word-break: break-all;
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 48px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 24px;
+      background: var(--accent-primary);
+      border-radius: 2px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 28px;
+    }
+
+    /* Architecture Visualizer */
+    .arch-diagram {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+
+    .diagram-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 900px;
+      gap: 16px;
+    }
+
+    .diagram-node {
+      flex: 1;
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .diagram-node:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-primary);
+    }
+
+    .diagram-node.active-node {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+    }
+
+    .node-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .badge-mastra { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4); }
+    .badge-bridge { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-python { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+
+    .node-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .node-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .node-tools {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--card-border);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #cbd5e1;
+    }
+
+    .connector-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      text-align: center;
+      width: 80px;
+    }
+
+    .connector-arrow svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--accent-primary);
+    }
+
+    /* Grid & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 850px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      overflow-x: auto;
+      color: #e2e8f0;
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+
+    .hl-kw { color: #f43f5e; }
+    .hl-fn { color: #60a5fa; }
+    .hl-str { color: #34d399; }
+    .hl-prop { color: #a78bfa; }
+    .hl-comm { color: #64748b; font-style: italic; }
+
+    /* Interactive Simulation Sandbox */
+    .sim-container {
+      background: #0c1220;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 40px;
+    }
+
+    .sim-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sim-select, .sim-btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: var(--font-sans);
+    }
+
+    .sim-select {
+      background: #111827;
+      color: #fff;
+      border: 1px solid #374151;
+      cursor: pointer;
+    }
+
+    .sim-btn {
+      background: var(--accent-primary);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .sim-btn:hover { background: #4f46e5; }
+    .sim-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .sim-btn.secondary {
+      background: #1f2937;
+      border: 1px solid #374151;
+    }
+    .sim-btn.secondary:hover { background: #374151; }
+
+    .pipeline-track {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .pipeline-track { grid-template-columns: 1fr; }
+    }
+
+    .step-box {
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+      transition: all 0.3s ease;
+      opacity: 0.6;
+    }
+
+    .step-box.active {
+      opacity: 1;
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .step-box.done {
+      opacity: 1;
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .step-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .sim-display {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .sim-display { grid-template-columns: 1fr; }
+    }
+
+    .terminal-box {
+      background: #030712;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      height: 320px;
+      overflow-y: auto;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .terminal-line {
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
+    .terminal-line.info { color: #38bdf8; }
+    .terminal-line.success { color: #4ade80; }
+    .terminal-line.warn { color: #fbbf24; }
+    .terminal-line.error { color: #f87171; }
+
+    .preview-box {
+      background: #111827;
+      border: 1px solid #1f293b;
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .mock-slide {
+      width: 220px;
+      height: 275px;
+      background: linear-gradient(145deg, #1e1b4b, #0f172a);
+      border: 1px solid #4338ca;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .mock-tag {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      background: #4f46e5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+
+    .mock-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      text-align: left;
+      line-height: 1.25;
+      margin: 10px 0;
+    }
+
+    .mock-footer {
+      font-size: 0.65rem;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 8px;
+    }
+
+    /* Comparison Table */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 28px;
+      font-size: 0.9rem;
+    }
+
+    .comp-table th, .comp-table td {
+      border: 1px solid var(--card-border);
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .comp-table th {
+      background: #0d1322;
+      color: #cbd5e1;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .comp-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .pill-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .pill-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .pill-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+    /* Inefficiencies & Audit Section */
+    .audit-card {
+      border-left: 4px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.04);
+      padding: 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+    }
+
+    .audit-card.severe {
+      border-left-color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.04);
+    }
+
+    .audit-card.good {
+      border-left-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.04);
+    }
+
+    .audit-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Navigation -->
+  <nav class="top-nav">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+      <span>Mastra Architecture Explorer</span>
+      <span class="brand-badge">aggregatorAgent</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#summary">Overview</a></li>
+      <li><a href="#architecture">Bridge Architecture</a></li>
+      <li><a href="#lifecycle">Execution Lifecycle</a></li>
+      <li><a href="#simulator">Live Simulation</a></li>
+      <li><a href="#tools">Tool Register</a></li>
+      <li><a href="#audit">Engineering Audit</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+
+    <!-- Hero Section -->
+    <header class="hero" id="summary">
+      <div class="hero-tag">System Deep Dive & Technical Analysis</div>
+      <h1>Mastra Aggregator Agent & Design Agent Connection</h1>
+      <p class="hero-lead">
+        An exhaustive architectural dissection of how the <code>aggregatorAgent</code> functions as an autonomous intelligence radar within Mastra, and how it crosses process boundaries over an HTTP tool bridge to orchestrate visual carousel rendering via the external FastAPI <strong>Design Agent</strong>.
+      </p>
+
+      <div class="meta-grid">
+        <div class="meta-card">
+          <div class="meta-label">Primary Agent File</div>
+          <div class="meta-val">src/mastra/agents/aggregatorAgent.ts</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Bridge Tool Handlers</div>
+          <div class="meta-val">src/mastra/tools/design-tools.ts</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">HTTP Client Driver</div>
+          <div class="meta-val">src/mastra/lib/design-agent-client.ts</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">External Design Subsystem</div>
+          <div class="meta-val">design-agent/ (Python 3.12 / FastAPI)</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Architecture Section -->
+    <section id="architecture">
+      <h2 class="section-title">End-to-End System Topology</h2>
+      <p class="section-desc">
+        The Aggregator Agent resides in the Mastra Node.js engine, while the Design Agent runs in an isolated Python/ComfyUI environment. They communicate strictly over a decoupled REST interface with workspace artifact synchronization.
+      </p>
+
+      <div class="arch-diagram">
+        <div class="diagram-flex">
+          
+          <!-- Node 1: Mastra Aggregator Agent -->
+          <div class="diagram-node active-node">
+            <span class="node-badge badge-mastra">Node.js / Mastra Agent</span>
+            <div class="node-title">aggregatorAgent</div>
+            <div class="node-desc">
+              Early-warning intelligence radar. Scans RSS, Exa, GitHub; filters out stale noise; enforces strict primary-source hierarchies.
+            </div>
+            <div class="node-tools">
+              <strong>Model:</strong> local vLLM / Sarvam<br>
+              <strong>Max Tokens:</strong> 8000 (AI SDK v5)<br>
+              <strong>Memory:</strong> 20 turns (stateless radar)
+            </div>
+          </div>
+
+          <!-- Arrow 1 -->
+          <div class="connector-arrow">
+            <span>Calls Tool</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Zod Input</span>
+          </div>
+
+          <!-- Node 2: Design Tools Bridge -->
+          <div class="diagram-node">
+            <span class="node-badge badge-bridge">Mastra Tool Bridge</span>
+            <div class="node-title">design-tools.ts</div>
+            <div class="node-desc">
+              Exposes <code>createPostFromContent</code> & <code>searchNewsAndCreatePost</code>. Triggers client or runs <code>newsToPostWorkflow</code>.
+            </div>
+            <div class="node-tools">
+              <strong>Workflow:</strong> research-news → distill → render<br>
+              <strong>Client:</strong> design-agent-client.ts
+            </div>
+          </div>
+
+          <!-- Arrow 2 -->
+          <div class="connector-arrow">
+            <span>HTTP POST /jobs</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Polling (2s)</span>
+          </div>
+
+          <!-- Node 3: Python Design Agent -->
+          <div class="diagram-node">
+            <span class="node-badge badge-python">FastAPI :8000</span>
+            <div class="node-title">Design Agent (Python)</div>
+            <div class="node-desc">
+              Autonomous multi-stage rendering worker. Uses Sarvam for copy planning, ComfyUI for GPU generation, and Playwright for HTML canvas snapshotting.
+            </div>
+            <div class="node-tools">
+              <strong>ComfyUI:</strong> GPU lock queue<br>
+              <strong>Playwright:</strong> Headless Chromium<br>
+              <strong>Pillow:</strong> sRGB JPEG <= 1.4MB
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Execution Lifecycle Section -->
+    <section id="lifecycle">
+      <h2 class="section-title">Step-by-Step Execution Lifecycle</h2>
+      <p class="section-desc">
+        How an industry event transitions from raw internet data to verified intelligence, and finally into a polished Instagram carousel.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="badge-pill pill-blue">Phase 1: Ingestion & Radar Triage</span>
+          </div>
+          <p style="font-size:0.88rem; color:#cbd5e1; margin-bottom:10px;">
+            The <code>aggregatorAgent</code> runs with a strict "Search-Then-Read" loop:
+          </p>
+          <ul style="font-size:0.84rem; color:var(--text-muted); margin-left:18px; line-height:1.6;">
+            <li>Calls <code>getCurrentTimeTool</code> first to establish strict ground-truth date.</li>
+            <li>Sweeps RSS feeds and searches Exa with category: <code>news</code>.</li>
+            <li>Enforces <strong>Freshness Hierarchy</strong>: <code>event_at</code> vs <code>discovered_at</code>. An old article found today is marked <code>STALE</code> (capped at score ≤ 40).</li>
+            <li>Enforces <strong>Evidence Tiers</strong>: <code>T0_PRIMARY</code> (official releases/blogs) down to <code>T3_COMMUNITY</code> (Twitter/Reddit discovery only).</li>
+            <li>Executes strict Decision Gate: <code>POST_NOW</code> | <code>WORTH_COVERING</code> | <code>MONITOR</code> | <code>DO_NOT_POST</code>.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="badge-pill pill-green">Phase 2: Hand-off to Design Agent</span>
+          </div>
+          <p style="font-size:0.88rem; color:#cbd5e1; margin-bottom:10px;">
+            When a user requests a post or a story achieves <code>POST_NOW</code>:
+          </p>
+          <ul style="font-size:0.84rem; color:var(--text-muted); margin-left:18px; line-height:1.6;">
+            <li>Agent is forbidden from writing raw manual social posts in chat.</li>
+            <li>Selects <code>createPostFromContent</code> (if story text exists) or <code>searchNewsAndCreatePost</code> (if only a topic was provided).</li>
+            <li>Passes layout format (<code>single</code> vs <code>carousel</code>) and template (e.g. <code>tech-announcement</code>, <code>360labs-news</code>).</li>
+            <li>The tool bridges to <code>submitDesignJob()</code> firing a <code>POST /jobs</code> request to the Python FastAPI daemon.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 32px;">
+        <div class="card-header">
+          <span class="card-title">Code Verification: The Dispatch & Delivery Pipeline</span>
+          <span class="badge-pill pill-yellow">design-tools.ts : lines 116-142</span>
+        </div>
+        <div class="code-block">
+<span class="hl-kw">execute</span>: <span class="hl-kw">async</span> ({ content, format, template_id, aspect_ratio, max_slides, cover_image_url }) => {
+  <span class="hl-comm">// 1. Submit asynchronous job payload to FastAPI daemon</span>
+  <span class="hl-kw">const</span> { job_id } = <span class="hl-kw">await</span> <span class="hl-fn">submitDesignJob</span>({
+    content,
+    template_id: template_id || <span class="hl-str">"tech-announcement"</span>,
+    format: format || <span class="hl-str">"single"</span>,
+    aspect_ratio: aspect_ratio || <span class="hl-str">"4:5"</span>,
+    max_slides: max_slides || 5,
+    ...(cover_image_url ? { cover_image_url } : {}),
+  });
+
+  <span class="hl-comm">// 2. Poll GET /jobs/{job_id} until status === 'done' (timeout 120s)</span>
+  <span class="hl-kw">const</span> job = <span class="hl-kw">await</span> <span class="hl-fn">waitForDesignJob</span>(job_id);
+
+  <span class="hl-comm">// 3. Ingest files from Python output folder to Mastra workspace/output/{job_id}</span>
+  <span class="hl-kw">const</span> deliverables = <span class="hl-kw">await</span> <span class="hl-fn">copyDeliverablesToWorkspace</span>(job);
+
+  <span class="hl-comm">// 4. Rewrite URLs to route through Mastra API server for sandboxed display</span>
+  <span class="hl-kw">return</span> {
+    status: <span class="hl-str">"success"</span>,
+    job_id,
+    caption: deliverables.caption,
+    hashtags: deliverables.hashtags,
+    slides: deliverables.slides.map((slide) => ({
+      ...slide,
+      view_url: <span class="hl-str">`/post-assets/${job_id}/${encodeURIComponent(slide.file)}`</span>,
+      download_url: <span class="hl-str">`/post-assets/${job_id}/${encodeURIComponent(slide.file)}?download=1`</span>,
+    })),
+    workspaceDir: deliverables.destDir,
+    copiedFiles: deliverables.copiedFiles,
+  };
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Simulation Sandbox -->
+    <section id="simulator">
+      <h2 class="section-title">Interactive Runtime Simulation Sandbox</h2>
+      <p class="section-desc">
+        Simulate how the Mastra Aggregator Agent intercepts an event, evaluates the radar gates, dispatches the HTTP payload to the Design Agent, and streams progress back.
+      </p>
+
+      <div class="sim-container">
+        <div class="sim-controls">
+          <label style="font-size:0.85rem; color:var(--text-muted);">Incoming Scenario:</label>
+          <select id="scenarioSelect" class="sim-select">
+            <option value="breaking">Breaking: OpenAI Launches GPT-5.4 Architecture</option>
+            <option value="stale">Stale Feed: 2023 Paper Discovered Today</option>
+            <option value="unverified">Community Rumor: Unconfirmed X Leak</option>
+          </select>
+
+          <button id="runBtn" class="sim-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Trigger Pipeline
+          </button>
+          <button id="resetBtn" class="sim-btn secondary">Reset State</button>
+          
+          <label style="margin-left:auto; display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); cursor:pointer;">
+            <input type="checkbox" id="errorToggle"> Simulate ComfyUI GPU OOM
+          </label>
+        </div>
+
+        <div class="pipeline-track">
+          <div class="step-box" id="step1">
+            <div class="step-num">STAGE 01</div>
+            <div class="step-name">Radar Collection</div>
+          </div>
+          <div class="step-box" id="step2">
+            <div class="step-num">STAGE 02</div>
+            <div class="step-name">Decision Gate</div>
+          </div>
+          <div class="step-box" id="step3">
+            <div class="step-num">STAGE 03</div>
+            <div class="step-name">Tool Hand-off</div>
+          </div>
+          <div class="step-box" id="step4">
+            <div class="step-num">STAGE 04</div>
+            <div class="step-name">Design Agent Exec</div>
+          </div>
+          <div class="step-box" id="step5">
+            <div class="step-num">STAGE 05</div>
+            <div class="step-name">Deliverable Serving</div>
+          </div>
+        </div>
+
+        <div class="sim-display">
+          <div class="terminal-box" id="simLogs">
+            <div class="terminal-line info">// Mastra Aggregator Agent Simulation Sandbox Initialized</div>
+            <div class="terminal-line">// Select a scenario and click 'Trigger Pipeline' to observe agent state flow...</div>
+          </div>
+
+          <div class="preview-box" id="previewArea">
+            <div style="color:var(--text-muted); font-size:0.85rem;" id="previewPlaceholder">
+              Awaiting Stage 5 completion to render generated Instagram asset...
+            </div>
+            <div class="mock-slide" id="mockSlideCard" style="display: none;">
+              <span class="mock-tag" id="slideTag">TECH ANNOUNCEMENT</span>
+              <div class="mock-title" id="slideHeadline">GPT-5.4 Architecture Released</div>
+              <p style="font-size:0.68rem; color:#cbd5e1; line-height:1.3;" id="slideSnippet">
+                OpenAI announces autonomous reasoning pipelines with native multi-modal verification loops.
+              </p>
+              <div class="mock-footer">
+                <span>Slide 1/5</span>
+                <span>@360labs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Registered Tools Table -->
+    <section id="tools">
+      <h2 class="section-title">Aggregator Agent Tool Inventory</h2>
+      <p class="section-desc">
+        Complete catalog of capabilities injected into the <code>aggregatorAgent</code> in <code>src/mastra/agents/aggregatorAgent.ts</code>.
+      </p>
+
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Tool Identifier</th>
+            <th>Type / Boundary</th>
+            <th>Operational Purpose</th>
+            <th>Downstream Side-Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>createPostFromContent</code></td>
+            <td><span class="badge-pill pill-green">Design Bridge</span></td>
+            <td>Submits analyzed story directly to Python Design Agent</td>
+            <td>Spawns async job on <code>:8000/jobs</code>; awaits polling</td>
+          </tr>
+          <tr>
+            <td><code>searchNewsAndCreatePost</code></td>
+            <td><span class="badge-pill pill-green">Design Bridge</span></td>
+            <td>Invokes <code>newsToPostWorkflow</code> with Exa live search</td>
+            <td>Automated Search → Distill → Design Agent execution</td>
+          </tr>
+          <tr>
+            <td><code>sweepSources</code></td>
+            <td><span class="badge-pill pill-blue">Internal Radar</span></td>
+            <td>Concurrent fanout collection over catalog sources</td>
+            <td>Bypasses turn-by-turn LLM polling; fast HTTP ingest</td>
+          </tr>
+          <tr>
+            <td><code>exaSearch</code> / <code>exaScrape</code></td>
+            <td><span class="badge-pill pill-blue">Exa API</span></td>
+            <td>Live web search & clean DOM markdown extraction</td>
+            <td>Primary evidence harvesting for emerging stories</td>
+          </tr>
+          <tr>
+            <td><code>saveStories</code></td>
+            <td><span class="badge-pill pill-yellow">Database</span></td>
+            <td>Batched persistence of shortlisted stories (max 5/call)</td>
+            <td>Writes to LibSQL/Turso <code>mastra.db</code> database</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Engineering Audit & Critique -->
+    <section id="audit">
+      <h2 class="section-title">Architectural Critique & Production Inefficiencies</h2>
+      <p class="section-desc">
+        An unvarnished assessment of the current design patterns, latency bottlenecks, and optimization opportunities.
+      </p>
+
+      <div class="audit-card severe">
+        <div class="audit-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          1. Tight Filesystem Coupling in Cross-Process Deliverables
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:8px;">
+          <strong>Issue:</strong> In <code>copyDeliverablesToWorkspace()</code>, the Mastra server relies on direct local disk access (<code>fs.copyFileSync</code>) pointing to <code>S:/tmp/design-agent/output</code>.
+        </p>
+        <p style="font-size:0.85rem; color:#cbd5e1;">
+          <strong>Risk:</strong> This assumption instantly breaks if the Design Agent container runs on an independent cloud node, GPU cluster (e.g. RunPod), or remote host. The Mastra tool fails with <code>ENOENT</code> because it expects local filesystem path parity.
+        </p>
+        <p style="font-size:0.85rem; color:var(--accent-emerald); margin-top:6px;">
+          <strong>Remedy:</strong> The Design Agent's <code>GET /jobs/{id}</code> endpoint should return pre-signed S3/Blob URLs or serve the artifacts as direct HTTP streams rather than forcing local folder copy operations.
+        </p>
+      </div>
+
+      <div class="audit-card">
+        <div class="audit-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          2. Synchronous Polling Loop in Agent Tool Execution
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:8px;">
+          <strong>Issue:</strong> <code>waitForDesignJob()</code> executes a blocking <code>while</code> loop with <code>setTimeout(..., 2000)</code> for up to 180 seconds within the Mastra tool execution handler.
+        </p>
+        <p style="font-size:0.85rem; color:#cbd5e1;">
+          <strong>Risk:</strong> During heavy ComfyUI diffusion runs (e.g., rendering 5 carousel slides), the Mastra agent execution thread is kept hanging. If an upstream proxy or client has a 30s or 60s gateway timeout, the connection is dropped mid-generation.
+        </p>
+        <p style="font-size:0.85rem; color:var(--accent-emerald); margin-top:6px;">
+          <strong>Remedy:</strong> Adopt Server-Sent Events (SSE) or webhook callbacks: have the tool register a callback URL on Mastra, return an immediate acknowledgment, and notify Mastra upon completion.
+        </p>
+      </div>
+
+      <div class="audit-card good">
+        <div class="audit-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          3. Token Budgeting & Sandboxed Serving Route (Positive Pattern)
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted);">
+          Setting <code>maxOutputTokens: 8000</code> specifically prevents completion truncation during batched schema serialization (<code>saveStories</code>). Furthermore, registering <code>postAssetRoute</code> with regex validation (<code>JOB_ID_PATTERN</code> and <code>SLIDE_FILENAME_PATTERN</code>) properly protects against path-traversal attacks while serving rendered images in Studio.
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    const runBtn = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const simLogs = document.getElementById('simLogs');
+    const scenarioSelect = document.getElementById('scenarioSelect');
+    const errorToggle = document.getElementById('errorToggle');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const mockSlideCard = document.getElementById('mockSlideCard');
+    const slideHeadline = document.getElementById('slideHeadline');
+    const slideSnippet = document.getElementById('slideSnippet');
+
+    const steps = [
+      document.getElementById('step1'),
+      document.getElementById('step2'),
+      document.getElementById('step3'),
+      document.getElementById('step4'),
+      document.getElementById('step5')
+    ];
+
+    function log(msg, type = '') {
+      const line = document.createElement('div');
+      line.className = `terminal-line ${type}`;
+      const time = new Date().toLocaleTimeString();
+      line.textContent = `[${time}] ${msg}`;
+      simLogs.appendChild(line);
+      simLogs.scrollTop = simLogs.scrollHeight;
+    }
+
+    function setStep(index, status) {
+      if (index >= 0 && index < steps.length) {
+        if (status === 'active') {
+          steps[index].className = 'step-box active';
+        } else if (status === 'done') {
+          steps[index].className = 'step-box done';
+        } else {
+          steps[index].className = 'step-box';
+        }
+      }
+    }
+
+    function resetSimulation() {
+      steps.forEach((s) => s.className = 'step-box');
+      simLogs.innerHTML = `
+        <div class="terminal-line info">// Mastra Aggregator Agent Simulation Sandbox Initialized</div>
+        <div class="terminal-line">// Select a scenario and click 'Trigger Pipeline' to observe agent state flow...</div>
+      `;
+      mockSlideCard.style.display = 'none';
+      previewPlaceholder.style.display = 'block';
+      runBtn.disabled = false;
+    }
+
+    resetBtn.addEventListener('click', resetSimulation);
+
+    runBtn.addEventListener('click', async () => {
+      runBtn.disabled = true;
+      const scenario = scenarioSelect.value;
+      const simulateError = errorToggle.checked;
+
+      // STAGE 1: Radar Collection
+      setStep(0, 'active');
+      log("Aggregator Agent waking up via Mastra runtime...", "info");
+      await new Promise(r => setTimeout(r, 600));
+      log("Calling getCurrentTimeTool() -> 2026-09-22T22:21:00Z");
+      log(`Scanning active sources for topic: "${scenarioSelect.options[scenarioSelect.selectedIndex].text}"`);
+      await new Promise(r => setTimeout(r, 700));
+      setStep(0, 'done');
+
+      // STAGE 2: Decision Gate
+      setStep(1, 'active');
+      log("Evaluating Freshness and Evidence Hierarchy...", "info");
+      await new Promise(r => setTimeout(r, 800));
+
+      if (scenario === 'stale') {
+        log("CLASSIFICATION: STALE / BACKGROUND. Published in 2023. No material change.", "warn");
+        log("Radar gate applied cap: score <= 40. Decision: DO_NOT_POST", "warn");
+        log("Handoff aborted. Pipeline finished early due to Radar quality gate.", "info");
+        setStep(1, 'done');
+        runBtn.disabled = false;
+        return;
+      }
+
+      if (scenario === 'unverified') {
+        log("EVIDENCE CHECK: T3_COMMUNITY_SIGNAL only (X rumor). Unconfirmed.", "warn");
+        log("Radar gate: Confidence < 0.5 -> Score capped at 59. Decision: MONITOR", "warn");
+        log("Story logged to DB via saveStoryTool. No Instagram post created.", "info");
+        setStep(1, 'done');
+        runBtn.disabled = false;
+        return;
+      }
+
+      log("EVIDENCE CHECK: T0_PRIMARY confirmed via official release.", "success");
+      log("Scores -> Relevance: 9/10, Impact: 9/10, Novelty: 8/10. Overall: 88/100", "success");
+      log("Decision: POST_NOW. Content angle synthesized.", "info");
+      setStep(1, 'done');
+
+      // STAGE 3: Tool Hand-off
+      setStep(2, 'active');
+      log("User requested Instagram carousel -> Executing createPostFromContentTool()", "info");
+      await new Promise(r => setTimeout(r, 700));
+      log("Sending payload to FastAPI endpoint: POST http://127.0.0.1:8000/jobs");
+      log("Payload: { template_id: 'tech-announcement', format: 'carousel', max_slides: 5 }");
+      setStep(2, 'done');
+
+      // STAGE 4: Design Agent Exec
+      setStep(3, 'active');
+      log("Design Agent received job [job_id: 8f9b1c20-d3e4-4a5f-9e12-887766554433]", "info");
+      await new Promise(r => setTimeout(r, 800));
+      log("Design Agent: Sarvam AI generated slide plan and copy tokens.");
+      log("Design Agent: Acquiring single-slot GPU lock for ComfyUI...");
+      await new Promise(r => setTimeout(r, 1000));
+
+      if (simulateError) {
+        log("ERROR: ComfyUI image engine threw CUDA OOM during diffusion!", "error");
+        log("Design Agent job 8f9b1c20 failed: GPU memory exhausted.", "error");
+        log("waitForDesignJob() caught error -> Tool threw exception to Aggregator Agent.", "error");
+        setStep(3, 'active');
+        steps[3].style.borderColor = 'var(--accent-rose)';
+        runBtn.disabled = false;
+        return;
+      }
+
+      log("Design Agent: ComfyUI imagery generated. Compositing via Playwright Chromium...");
+      await new Promise(r => setTimeout(r, 800));
+      log("Design Agent: Pillow normalized sRGB JPEG files written to output/ directory.", "success");
+      setStep(3, 'done');
+
+      // STAGE 5: Deliverables
+      setStep(4, 'active');
+      log("waitForDesignJob() detected status === 'done'", "success");
+      log("Executing copyDeliverablesToWorkspace() -> copied 5 slide images to workspace/output/8f9b1c20/...");
+      await new Promise(r => setTimeout(r, 600));
+      log("Mapped URLs: /post-assets/8f9b1c20/slide_01.jpg", "info");
+      log("Aggregator Agent received final slide manifest and presents markdown in chat.", "success");
+      setStep(4, 'done');
+
+      // Update Preview
+      previewPlaceholder.style.display = 'none';
+      mockSlideCard.style.display = 'flex';
+      slideHeadline.textContent = "GPT-5.4 Architecture Released";
+      slideSnippet.textContent = "Autonomous reasoning pipelines with native multi-modal verification loops unveiled.";
+      runBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

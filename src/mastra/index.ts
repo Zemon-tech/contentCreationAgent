@@ -8,7 +8,7 @@ import {
   Observability,
   SensitiveDataFilter,
 } from '@mastra/observability';
-import { agent } from './agents/agent';
+
 import { aggregatorAgent } from './agents/aggregatorAgent';
 import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
 import { findSimilarContentTool, generateEmbeddingTool } from './tools/analysis-tools';
@@ -44,7 +44,7 @@ export const mastra = new Mastra({
   server: {
     apiRoutes: [postAssetRoute],
   },
-  agents: { agent, aggregatorAgent },
+  agents: { aggregatorAgent },
   workflows: { industryAggregationWorkflow, newsToPostWorkflow },
   tools: {
     startScheduleTool,
