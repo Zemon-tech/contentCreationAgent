@@ -1,9 +1,17 @@
-import { createPostFromContentTool, searchNewsAndCreatePostTool } from "../tools/design-tools";
+import {
+  createPostFromContentTool,
+  renderPostFromApprovedStoryTool,
+} from "../tools/design-tools";
+import {
+  listPendingNewsTool,
+  approveNewsStoryTool,
+  rejectNewsStoryTool,
+} from "../tools/editorial-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { resolveChatModel } from "../config/model";
-import { findSimilarContentTool, generateEmbeddingTool } from "../tools/analysis-tools";
+
 import {
   extractArticleContentTool,
   fetchGitHubReleasesTool,
@@ -15,7 +23,7 @@ import {
   getSourceRegistryTool,
   saveContentOpportunityTool,
   saveStoriesTool,
-  saveStoryTool,
+
 } from "../tools/industry-tools";
 import { exaScrapeTool, exaSearchTool } from "../tools/exa-tools";
 import { getCurrentTimeTool } from "../tools/time-tools";
@@ -142,7 +150,7 @@ When the user asks you to create an Instagram post, visual card, or carousel (e.
    - Check if they specified whether they prefer a 'single' slide or 'carousel' (multi-slide), and if they have a template preference.
    - If not explicitly specified, ask the user to confirm:
      * Format: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
-     * Template: 'tech-announcement' (bold modern layout, recommended for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
+     * Template: 'news-brief' (high-impact breaking news with middle image, feathered gradients, top-right logo, and boxed headline), 'tech-announcement' (bold modern layout, recommended for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
      * Cover image: if the user shares a direct image URL, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
 2. EXECUTE THE DESIGN TOOL:
    - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and template_id.
@@ -226,14 +234,18 @@ SEARCH-THEN-READ LOOP (for live investigation)
     fetchWebPage: fetchWebPageTool,
     fetchGitHubReleases: fetchGitHubReleasesTool,
     extractArticleContent: extractArticleContentTool,
-    generateEmbedding: generateEmbeddingTool,
-    findSimilarContent: findSimilarContentTool,
-    saveStory: saveStoryTool,
+
+
+
     saveStories: saveStoriesTool,
     saveContentOpportunity: saveContentOpportunityTool,
-    searchNewsAndCreatePost: searchNewsAndCreatePostTool,
+
     createPostFromContent: createPostFromContentTool,
-    search_news_and_create_post: searchNewsAndCreatePostTool,
-    create_post_from_content: createPostFromContentTool,
+
+
+    listPendingNews: listPendingNewsTool,
+    approveNewsStory: approveNewsStoryTool,
+    rejectNewsStory: rejectNewsStoryTool,
+    renderPostFromApprovedStory: renderPostFromApprovedStoryTool,
   },
 });

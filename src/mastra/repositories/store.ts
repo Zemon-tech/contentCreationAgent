@@ -174,3 +174,34 @@ export async function resetAllRepositories(): Promise<void> {
     signalCardRepository.clear(),
   ]);
 }
+
+/**
+ * Phase 3 (HITL): List candidate stories waiting for human approval.
+ */
+export async function listPendingStories(): Promise<Story[]> {
+  const all = await storyRepository.list();
+  return all.filter(
+    (s) =>
+      s.editorial_status === "PENDING_REVIEW" ||
+      (!s.editorial_status && (s.decision === "POST_NOW" || s.decision === "WORTH_COVERING")),
+  );
+}
+
+/**
+ * Phase 3 (HITL): Update editorial review status of a story.
+ */
+export async function updateStoryEditorialStatus(
+  storyId: string,
+  status: "DISCOVERED" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "SENT_TO_DESIGN" | "PUBLISHED",
+  notes?: string,
+): Promise<Story | undefined> {
+  const story = await storyRepository.get(storyId);
+  if (!story) return undefined;
+  const updated: Story = {
+    ...story,
+    editorial_status: status,
+    ...(notes ? { editorial_notes: notes } : {}),
+  };
+  await storyRepository.save(updated);
+  return updated;
+}

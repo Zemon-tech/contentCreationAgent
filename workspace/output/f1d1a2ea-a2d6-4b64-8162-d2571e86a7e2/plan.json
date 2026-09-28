@@ -1,0 +1,41 @@
+{
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "text": {
+        "eyebrow": "BREAKING",
+        "headline": "Series A, B, C funding surges for Accel, Benchmark, Claude, Gemini, Llama, Copilot",
+        "body": "Capital flowing to these names signals sustained momentum across the startup ecosystem."
+      },
+      "images": {
+        "hero": {
+          "prompt": "Minimalist editorial hero image: a single sheet of thick cream paper resting on a dark news crimson surface, textured and slightly crumpled, with soft directional light from the upper left creating subtle shadows. No text, no logos, no objects. Restrained, quiet, confident. 4:5 portrait composition."
+        }
+      }
+    }
+  ],
+  "caption": "Capital flowing to Accel, Benchmark, Claude, Gemini, Llama, Copilot signals momentum in Series A, Series B, Series C. The startup ecosystem is seeing sustained investment across the board.",
+  "hashtags": [
+    "SeriesA",
+    "SeriesB",
+    "SeriesC",
+    "LLMs",
+    "LlamaIndex",
+    "StartupEcosystem",
+    "VentureCapital",
+    "Accel",
+    "Benchmark",
+    "Claude",
+    "Gemini",
+    "Llama",
+    "Copilot",
+    "FundingRound",
+    "TechNews",
+    "Editorial"
+  ],
+  "alt_texts": [
+    "Minimalist editorial hero image: a single sheet of thick cream paper resting on a dark news crimson surface, textured and slightly crumpled, with soft directional light from the upper left creating subtle shadows. No text, no logos, no objects. Restrained, quiet, confident. 4:5 portrait composition."
+  ]
+}

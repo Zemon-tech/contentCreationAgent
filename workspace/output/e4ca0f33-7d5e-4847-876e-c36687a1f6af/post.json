@@ -1,0 +1,43 @@
+{
+  "job_id": "e4ca0f33-7d5e-4847-876e-c36687a1f6af",
+  "created_at": "2026-09-28T05:45:10.475537Z",
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "Editorial cover image on a rich crimson canvas with seamless gradient feathering and a single centered abstract geometric form representing a neural node, textured matte finish, calm and deliberate"
+    }
+  ],
+  "caption": "Accel, GPT, Copilot reshape venture capital. New capability in growth capital, tech investments, and AI startup valuations. Developers need to know what changed and how to use it. Source: Fortune.",
+  "hashtags": [
+    "fortune",
+    "tech",
+    "venturecapital",
+    "ai",
+    "startup",
+    "growthcapital",
+    "valuations",
+    "accel",
+    "gpt",
+    "copilot",
+    "innovation",
+    "editorial",
+    "news",
+    "breaking",
+    "capital",
+    "techinvestments",
+    "developers",
+    "industry",
+    "insight",
+    "fortunecom",
+    "technews",
+    "trends"
+  ],
+  "source_content_sha256": "a1e89422d3b75108abdc4156c5d4f85b726284cbcea766b8a3d446109dcfcc29",
+  "warnings": [
+    "Slot 'headline' overflows container despite reducing font-size to floor (14px)."
+  ]
+}

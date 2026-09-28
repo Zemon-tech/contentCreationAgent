@@ -81,11 +81,88 @@ export const AI_INDUSTRY_CONFIG: IndustryConfig = {
 };
 
 /**
+ * Funding & Venture Capital Industry Configuration:
+ * Tracks startup funding rounds, venture capital investments, Seed to Series C+,
+ * M&A, valuations, and venture deals.
+ */
+export const FUNDING_INDUSTRY_CONFIG: IndustryConfig = {
+  name: "Funding",
+  description:
+    "Startup funding rounds, venture capital investments, Seed to Series C+, M&A, valuations, and venture deals",
+  topics: [
+    "Venture Capital",
+    "Startup Funding",
+    "Seed Rounds",
+    "Series A",
+    "Series B",
+    "Series C",
+    "Growth Capital",
+    "M&A",
+    "Tech Investments",
+    "Valuations",
+    "Unicorns",
+    "AI Startups",
+  ],
+  keywords: [
+    "raised",
+    "funding",
+    "Series A",
+    "Series B",
+    "Series C",
+    "Seed round",
+    "pre-seed",
+    "valuation",
+    "venture capital",
+    "lead investor",
+    "participated in",
+    "closed round",
+    "growth round",
+    "acquired",
+    "acquisition",
+    "unicorn",
+    "million",
+    "billion",
+    "$M",
+    "$B",
+  ],
+  entities: [
+    "Sequoia",
+    "a16z",
+    "Andreessen Horowitz",
+    "Y Combinator",
+    "Accel",
+    "Benchmark",
+    "Lightspeed",
+    "Founders Fund",
+    "Khosla Ventures",
+    "General Catalyst",
+    "Index Ventures",
+    "Bessemer",
+    "Tiger Global",
+    "Coatue",
+    "Thrive Capital",
+  ],
+  audience: "investors, startup founders, operators, and tech leaders",
+  scoring: {
+    impactWeight: 0.25,
+    authorityWeight: 0.2,
+    noveltyWeight: 0.2,
+    relevanceWeight: 0.15,
+    velocityWeight: 0.1,
+    audienceInterestWeight: 0.05,
+    contentPotentialWeight: 0.05,
+  },
+};
+
+/**
  * Registry of industry configs. Add new industries here or load from
  * storage/env later — never hardcode a single industry in the pipeline.
  */
 export const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
   AI: AI_INDUSTRY_CONFIG,
+  Funding: FUNDING_INDUSTRY_CONFIG,
+  "Funding News": FUNDING_INDUSTRY_CONFIG,
+  "funding-news": FUNDING_INDUSTRY_CONFIG,
 };
 
 export function getIndustryConfig(name?: string): IndustryConfig {

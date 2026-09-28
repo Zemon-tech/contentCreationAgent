@@ -10,8 +10,6 @@ import {
 } from '@mastra/observability';
 
 import { aggregatorAgent } from './agents/aggregatorAgent';
-import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
-import { findSimilarContentTool, generateEmbeddingTool } from './tools/analysis-tools';
 import {
   extractArticleContentTool,
   fetchGitHubReleasesTool,
@@ -19,22 +17,24 @@ import {
   fetchWebPageTool,
 } from './tools/fetch-tools';
 import { exaScrapeTool, exaSearchTool } from './tools/exa-tools';
-import { searchNewsAndCreatePostTool,
-    createPostFromContentTool } from './tools/design-tools';
+import {
+  createPostFromContentTool,
+  renderPostFromApprovedStoryTool,
+} from './tools/design-tools';
+import {
+  listPendingNewsTool,
+  approveNewsStoryTool,
+  rejectNewsStoryTool,
+} from './tools/editorial-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
 import {
   getIndustryConfigTool,
   getSourceRegistryTool,
   saveContentOpportunityTool,
-  saveNormalizedContentTool,
-  saveRawContentTool,
-  saveSourcesTool,
   saveStoriesTool,
-  saveStoryTool,
 } from './tools/industry-tools';
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
-import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
 import { postAssetRoute } from './routes/post-assets';
 
 export const mastra = new Mastra({
@@ -45,30 +45,25 @@ export const mastra = new Mastra({
     apiRoutes: [postAssetRoute],
   },
   agents: { aggregatorAgent },
-  workflows: { industryAggregationWorkflow, newsToPostWorkflow },
+  workflows: { industryAggregationWorkflow },
   tools: {
-    startScheduleTool,
-    stopScheduleTool,
+    sweepSourcesTool,
+    exaSearchTool,
+    exaScrapeTool,
+    getCurrentTimeTool,
+    getIndustryConfigTool,
+    getSourceRegistryTool,
+    saveStoriesTool,
+    saveContentOpportunityTool,
+    listPendingNewsTool,
+    approveNewsStoryTool,
+    rejectNewsStoryTool,
+    renderPostFromApprovedStoryTool,
+    createPostFromContentTool,
     fetchRSSTool,
     fetchWebPageTool,
     fetchGitHubReleasesTool,
     extractArticleContentTool,
-    exaSearchTool,
-    exaScrapeTool,
-    searchNewsAndCreatePostTool,
-    createPostFromContentTool,
-    getCurrentTimeTool,
-    sweepSourcesTool,
-    generateEmbeddingTool,
-    findSimilarContentTool,
-    getIndustryConfigTool,
-    getSourceRegistryTool,
-    saveRawContentTool,
-    saveNormalizedContentTool,
-    saveSourcesTool,
-    saveStoryTool,
-    saveStoriesTool,
-    saveContentOpportunityTool,
   },
   storage: new MastraCompositeStore({
     id: 'composite-storage',

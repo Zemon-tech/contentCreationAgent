@@ -1,0 +1,47 @@
+{
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "text": {
+        "eyebrow": "BREAKING",
+        "headline": "Accel, GPT, Copilot reshape venture capital",
+        "body": "New capability in growth capital, tech investments, and AI startup valuations. Developers need to know what changed and how to use it. Source: Fortune. Cover image provided directly by URL. Still write a slide 1 hero prompt describing it (drives alt text and fallback)."
+      },
+      "images": {
+        "hero": {
+          "prompt": "Minimalist editorial cover image with rich crimson canvas, seamless top and bottom gradient feathering, a single centered abstract geometric form representing a neural node, textured matte finish, calm and deliberate, no text, no logos, high-resolution, 4:5 aspect ratio"
+        }
+      }
+    }
+  ],
+  "caption": "Accel, GPT, Copilot reshape venture capital. New capability in growth capital, tech investments, and AI startup valuations. Developers need to know what changed and how to use it. Source: Fortune.",
+  "hashtags": [
+    "fortune",
+    "tech",
+    "venturecapital",
+    "ai",
+    "startup",
+    "growthcapital",
+    "valuations",
+    "accel",
+    "gpt",
+    "copilot",
+    "innovation",
+    "editorial",
+    "news",
+    "breaking",
+    "capital",
+    "techinvestments",
+    "developers",
+    "industry",
+    "insight",
+    "fortunecom",
+    "technews",
+    "trends"
+  ],
+  "alt_texts": [
+    "Editorial cover image on a rich crimson canvas with seamless gradient feathering and a single centered abstract geometric form representing a neural node, textured matte finish, calm and deliberate"
+  ]
+}

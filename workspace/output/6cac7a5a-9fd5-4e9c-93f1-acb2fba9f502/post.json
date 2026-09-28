@@ -1,0 +1,41 @@
+{
+  "job_id": "6cac7a5a-9fd5-4e9c-93f1-acb2fba9f502",
+  "created_at": "2026-09-28T05:44:58.753768Z",
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "A minimalist editorial illustration of capital flowing through a tech ecosystem in deep crimson and charcoal tones."
+    }
+  ],
+  "caption": "Capital continues to flow toward AI infrastructure. Series A, B, and C rounds from top-tier firms signal sustained momentum. The ecosystem is building.",
+  "hashtags": [
+    "a16z",
+    "accel",
+    "ai",
+    "startups",
+    "funding",
+    "seriesa",
+    "seriesb",
+    "seriesc",
+    "venturecapital",
+    "technology",
+    "ecosystem",
+    "aiinfrastructure",
+    "generativeai",
+    "claudemodel",
+    "llamodel",
+    "gpt",
+    "cursor",
+    "replicate",
+    "editorial",
+    "news"
+  ],
+  "source_content_sha256": "00d06a71b838f366ce6a73d73ebbcae69c4e6d7f316112bf02d4dad85d894942",
+  "warnings": [
+    "Slot 'headline' overflows container despite reducing font-size to floor (14px)."
+  ]
+}

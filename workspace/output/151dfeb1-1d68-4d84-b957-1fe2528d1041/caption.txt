@@ -1,0 +1,3 @@
+OpenAI, Google, Meta, and others have updated their LLM and AI agent infrastructure. This affects coding, research, and open source models. Developers should review the changes and adapt their workflows.
+
+#AI #LLM #OpenAI #Google #Meta #AIagents #AICoding #AInfrastructure #Research #OpenSourceAI

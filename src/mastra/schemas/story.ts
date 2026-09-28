@@ -92,6 +92,18 @@ export const ContentDecisionSchema = z.enum([
 
 export type ContentDecision = z.infer<typeof ContentDecisionSchema>;
 
+/** Phase 3: Human-in-the-loop review workflow status */
+export const EditorialStatusSchema = z.enum([
+  "DISCOVERED",
+  "PENDING_REVIEW",
+  "APPROVED",
+  "REJECTED",
+  "SENT_TO_DESIGN",
+  "PUBLISHED",
+]);
+
+export type EditorialStatus = z.infer<typeof EditorialStatusSchema>;
+
 export const SourceRelationshipSchema = z.enum([
   "ORIGINAL",
   "INDEPENDENT_REPORT",
@@ -222,6 +234,8 @@ export const StorySchema = z.object({
   decision: ContentDecisionSchema.optional(),
   rejection_reason: z.string().optional(),
   theme_ids: z.array(z.string()).optional(),
+  editorial_status: EditorialStatusSchema.default("DISCOVERED").optional(),
+  editorial_notes: z.string().optional(),
 });
 
 export type Story = z.infer<typeof StorySchema>;

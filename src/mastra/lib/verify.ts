@@ -18,6 +18,7 @@ import {
   resolveEvidenceTier,
 } from "./evidence";
 import { canonicalToLegacy } from "./decision";
+import { searchExa } from "../tools/exa-tools";
 
 /**
  * RADAR STAGES 5-6 (+ overrides) — verify BEFORE scoring.
@@ -407,3 +408,137 @@ export function applyOverrides(
 function confidence01To100(c: number): number {
   return Math.round(c * 100);
 }
+
+function isRootDomain(url: string): boolean {
+  return /^https?:\/\/[^\/]+\/?$/.test(url);
+}
+
+function extractPublisherFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    const name = host.split(".")[0] || host;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  } catch {
+    return "News Outlet";
+  }
+}
+
+/**
+ * Phase 1: Unify Radar Discovery + Live Exa Verification.
+ * For promising candidate stories, searches live news via Exa to corroborate
+ * claims, attach independent high-signal evidence, and update verification confidence.
+ */
+export async function enrichStoriesWithExa<T extends Story & { evidence: StoryEvidence }>(
+  stories: T[],
+  opts?: {
+    maxStories?: number;
+    searchFn?: typeof searchExa;
+  },
+): Promise<T[]> {
+  const apiKey = process.env["EXA_API_KEY"];
+  if (!apiKey && !opts?.searchFn) {
+    return stories;
+  }
+  const search = opts?.searchFn ?? searchExa;
+  const maxStories = opts?.maxStories ?? 5;
+  const out: T[] = [];
+
+  for (const story of stories) {
+    if (out.length >= maxStories || story.scores.relevance < 4 || story.freshness === "STALE") {
+      out.push(story);
+      continue;
+    }
+
+    try {
+      const query = story.entities.length > 0
+        ? `${story.entities.slice(0, 2).join(" ")} ${story.title}`
+        : story.title;
+
+      const searchRes = await search({
+        query: query.slice(0, 150),
+        category: "news",
+        numResults: 4,
+        searchType: "auto",
+      });
+
+      const existingUrls = new Set(story.sources);
+      const newItems = (searchRes?.results ?? []).filter(
+        (r) => r.url && !existingUrls.has(r.url) && !isRootDomain(r.url)
+      );
+
+      if (newItems.length === 0) {
+        out.push(story);
+        continue;
+      }
+
+      const existingEvidence = story.evidence ?? {
+        supportingSources: [],
+        socialSignals: [],
+        independentSources: 1,
+        verificationStatus: "unverified" as const,
+        contradictions: [],
+      };
+
+      const newEvidenceSources: EvidenceSource[] = newItems.map((r) => ({
+        url: r.url,
+        publisher: r.author || extractPublisherFromUrl(r.url),
+        title: r.title ?? undefined,
+        published_at: r.publishedDate ?? undefined,
+        evidence_tier: "T1_HIGH_SIGNAL",
+        source_type: "news",
+        is_primary: false,
+        primary_rationale: "Live corroborating news coverage discovered via Exa search",
+        source_relationship: "INDEPENDENT_REPORT",
+        supports_claims: [story.title],
+      }));
+
+      const mergedEvidenceSources = [
+        ...(existingEvidence.evidenceSources ?? []),
+        ...newEvidenceSources,
+      ];
+
+      const additionalIndependent = newEvidenceSources.filter(
+        (e) => e.source_relationship === "INDEPENDENT_REPORT" || e.source_relationship === "ORIGINAL"
+      ).length;
+
+      const totalIndependent = existingEvidence.independentSources + additionalIndependent;
+      const hasPrimary = mergedEvidenceSources.some((e) => e.is_primary);
+      const hasT1 = mergedEvidenceSources.some((e) => e.evidence_tier === "T1_HIGH_SIGNAL");
+
+      const canonical = determineVerificationStatus({
+        hasPrimaryConfirmation: hasPrimary,
+        independentCount: totalIndependent,
+        singleReliable: !hasPrimary && (hasT1 || totalIndependent === 1),
+        hasConflict: existingEvidence.contradictions.length > 0,
+        hasAnyReport: mergedEvidenceSources.length > 0,
+      });
+
+      const updatedEvidence: StoryEvidence = {
+        ...existingEvidence,
+        supportingSources: [
+          ...new Set([...existingEvidence.supportingSources, ...newItems.map((r) => r.url)]),
+        ],
+        independentSources: totalIndependent,
+        canonicalStatus: canonical.status,
+        verificationStatus: canonicalToLegacy(canonical.status),
+        verificationConfidence: canonical.confidence,
+        evidenceSources: mergedEvidenceSources,
+      };
+
+      out.push({
+        ...story,
+        sources: [...new Set([...story.sources, ...newItems.map((r) => r.url)])],
+        source_count: story.sources.length + newItems.length,
+        independent_source_count: totalIndependent,
+        evidence: updatedEvidence,
+        verification_status: canonical.status,
+        verification_confidence: canonical.confidence,
+      });
+    } catch {
+      out.push(story);
+    }
+  }
+
+  return out;
+}
+

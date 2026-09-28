@@ -3,7 +3,7 @@ import path from 'node:path';
 
 export interface CreateJobParams {
   content: string;
-  template_id?: 'tech-announcement' | 'keilhq-editorial' | 'keilhq-text' | 'entrepreneur-post' | '360labs-news';
+  template_id?: 'tech-announcement' | 'keilhq-editorial' | 'keilhq-text' | 'entrepreneur-post' | '360labs-news' | 'news-brief';
   format?: 'single' | 'carousel';
   aspect_ratio?: '4:5' | '1:1' | '3:4';
   max_slides?: number;
@@ -50,7 +50,14 @@ function getApiKey(): string {
 }
 
 function getDesignOutputDir(): string {
-  return process.env.DESIGN_AGENT_OUTPUT_DIR || 'S:/tmp/design-agent/output';
+  if (process.env.DESIGN_AGENT_OUTPUT_DIR && fs.existsSync(process.env.DESIGN_AGENT_OUTPUT_DIR)) {
+    return process.env.DESIGN_AGENT_OUTPUT_DIR;
+  }
+  const localOutput = path.resolve(process.cwd(), 'design-agent/output');
+  if (fs.existsSync(localOutput)) {
+    return localOutput;
+  }
+  return process.env.DESIGN_AGENT_OUTPUT_DIR || localOutput;
 }
 
 /**
