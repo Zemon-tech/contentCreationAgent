@@ -27,11 +27,18 @@ const defaultJudge: JudgeCall = async (prompt, { config, tracingContext }) => {
   // reasoning budget and then throws, discarding the partial JSON. Instead we
   // ask for plain JSON text and parse it ourselves, so the retry loop can see
   // what came back and re-prompt with the exact validation error.
-  // Sarvam disables reasoning when reasoning_effort is null; low/medium/high otherwise.
-  const reasoningEffort = config.sarvamReasoningEffort === "none" ? null : config.sarvamReasoningEffort;
+  // Reasoning eats the completion budget, so we turn it off by default. Sarvam
+  // disables reasoning when reasoning_effort is null; passing that through
+  // Mastra's provider options as a bare value is rejected, so we only send the
+  // option when an explicit low/medium/high is configured, and otherwise omit it.
+  const sarvam: Record<string, string> = {};
+  if (config.sarvamReasoningEffort !== "none") {
+    sarvam.reasoningEffort = config.sarvamReasoningEffort;
+    sarvam.reasoning_effort = config.sarvamReasoningEffort;
+  }
   const res = await icpJudgeAgent.generate(prompt, {
     modelSettings: { maxOutputTokens: config.sarvamMaxTokens, temperature: 0.1, maxRetries: 2 },
-    providerOptions: { sarvam: { reasoningEffort, reasoning_effort: reasoningEffort } },
+    ...(Object.keys(sarvam).length ? { providerOptions: { sarvam } } : {}),
     ...(tracingContext ? { tracingContext: tracingContext as never } : {}),
   });
   return { object: extractJson(res.text ?? ""), usage: res.usage };
