@@ -26,6 +26,12 @@ import {
   approveNewsStoryTool,
   rejectNewsStoryTool,
 } from './tools/editorial-tools';
+import {
+  checkInstagramConnectionTool,
+  publishToInstagramTool,
+  publishDesignJobToInstagramTool,
+  publishStoryToInstagramTool,
+} from './tools/instagram-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
 import {
@@ -35,6 +41,9 @@ import {
   saveStoriesTool,
 } from './tools/industry-tools';
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
+import { icpJudgeAgent } from './agents/icpJudgeAgent';
+import { companyResearchWorkflow } from './workflows/companyResearchWorkflow';
+import { leadQualificationWorkflow } from './workflows/leadQualificationWorkflow';
 import { postAssetRoute } from './routes/post-assets';
 
 export const mastra = new Mastra({
@@ -44,8 +53,8 @@ export const mastra = new Mastra({
   server: {
     apiRoutes: [postAssetRoute],
   },
-  agents: { aggregatorAgent },
-  workflows: { industryAggregationWorkflow },
+  agents: { aggregatorAgent, icpJudgeAgent },
+  workflows: { industryAggregationWorkflow, leadQualificationWorkflow, companyResearchWorkflow },
   tools: {
     sweepSourcesTool,
     exaSearchTool,
@@ -60,6 +69,10 @@ export const mastra = new Mastra({
     rejectNewsStoryTool,
     renderPostFromApprovedStoryTool,
     createPostFromContentTool,
+    checkInstagramConnectionTool,
+    publishToInstagramTool,
+    publishDesignJobToInstagramTool,
+    publishStoryToInstagramTool,
     fetchRSSTool,
     fetchWebPageTool,
     fetchGitHubReleasesTool,

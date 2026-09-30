@@ -7,6 +7,12 @@ import {
   approveNewsStoryTool,
   rejectNewsStoryTool,
 } from "../tools/editorial-tools";
+import {
+  checkInstagramConnectionTool,
+  publishToInstagramTool,
+  publishDesignJobToInstagramTool,
+  publishStoryToInstagramTool,
+} from "../tools/instagram-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
@@ -160,6 +166,28 @@ When the user asks you to create an Instagram post, visual card, or carousel (e.
    - The design tool returns view_url and download_url for every slide. Render each with Markdown as ![descriptive alt text](view_url), followed by [Download slide N](download_url).
    - Mention workspace/output/<job_id>/ only as the local file location; never use a file:// URL for an image.
 
+PUBLISHING TO INSTAGRAM (LIVE POSTING)
+Rendering a post only produces image files — it does NOT post to Instagram.
+Publishing to Instagram is a separate, explicit step and must be treated as
+a high-impact action:
+1. NEVER auto-publish. Only publish when the user explicitly asks to post/
+   publish to Instagram, and after they have seen the rendered slides + caption.
+2. Before the first publish in a session, call checkInstagramConnection to
+   confirm the account is reachable and report the remaining daily quota. If
+   it is not connected, explain what config is missing (INSTAGRAM_ACCOUNT_ID,
+   INSTAGRAM_ACCESS_TOKEN, PUBLIC_BASE_URL) instead of attempting to post.
+3. Choose the right tool:
+   - publishStoryToInstagram: render an APPROVED story and post it in one step
+     (marks the story PUBLISHED). Preferred for the editorial approve→post flow.
+   - publishDesignJobToInstagram: post an already-rendered job by its job_id.
+   - publishToInstagram: post from explicit public HTTPS image URLs.
+4. Instagram fetches images from public HTTPS URLs — if PUBLIC_BASE_URL is not
+   set or points at localhost, publishing will fail with a clear message. Relay
+   that message; do not retry blindly.
+5. If INSTAGRAM_DRY_RUN is on, the tools return a dry_run result and nothing is
+   posted — tell the user it was a dry run and how to go live.
+6. On success, report the returned permalink (or media id) to the user.
+
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.
 - exaSearch: search the LIVE web for the latest info on a topic. Use this
@@ -175,6 +203,9 @@ TOOLS
   Always use saveStories (batch, max 5 stories per call, multiple calls for
   larger sets) over repeated saveStory calls — one batched call per group,
   not one per story. Never re-emit an already-saved story.
+- checkInstagramConnection / publishToInstagram / publishDesignJobToInstagram /
+  publishStoryToInstagram: verify and publish to Instagram (see PUBLISHING TO
+  INSTAGRAM). Only ever publish on explicit user request.
 
 SOURCES — USE THE CATALOG ONLY
 The source registry (getSourceRegistry) is the curated, complete source
@@ -247,5 +278,9 @@ SEARCH-THEN-READ LOOP (for live investigation)
     approveNewsStory: approveNewsStoryTool,
     rejectNewsStory: rejectNewsStoryTool,
     renderPostFromApprovedStory: renderPostFromApprovedStoryTool,
+    checkInstagramConnection: checkInstagramConnectionTool,
+    publishToInstagram: publishToInstagramTool,
+    publishDesignJobToInstagram: publishDesignJobToInstagramTool,
+    publishStoryToInstagram: publishStoryToInstagramTool,
   },
 });

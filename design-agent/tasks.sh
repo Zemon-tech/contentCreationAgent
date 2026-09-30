@@ -12,7 +12,7 @@ TASK="${1:-check}"
 case "$TASK" in
   install)
     uv sync
-    uv run playwright install chromium
+    uv run playwright install --with-deps chromium
     ;;
   lint)
     uv run ruff check .
@@ -33,7 +33,7 @@ case "$TASK" in
     uv run pytest --cov
     ;;
   run)
-    exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8001
+    exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
     ;;
   precommit)
     uvx pre-commit install

@@ -16,7 +16,9 @@
     "verify:phase": "npx -y tsx src/mastra/demo/verifyPhase2and3.ts",
     "radar:auto": "npx -y tsx src/mastra/cron/runScheduledRadar.ts",
     "radar:once": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --once",
-    "radar:demo": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --demo --once"
+    "radar:demo": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --demo --once",
+    "leads": "npx -y tsx --env-file=.env src/mastra/cli/leads.ts",
+    "verify:leads": "npx -y tsx src/mastra/demo/verifyLeads.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +33,7 @@
     "@mastra/libsql": "1.23.0",
     "@mastra/memory": "1.30.0",
     "@mastra/observability": "1.17.8",
+    "exa-js": "2.23.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
