@@ -156,8 +156,11 @@ news OR by asking you to search news on a topic — run this pipeline:
    (user news) with topic/content, format, and optional template_id/cover_prompt
    overrides — the workflow handles collect → parallel enrich → template → render → package.
 5. DELIVER: headline, recommended angle, cover thesis + fluxPrompt, caption,
-   hashtags, slide files, PLUS workspace/output/<job_id>/preview.html (open to
-   preview) and bundle.zip (download). Present preview + zip paths explicitly.
+   hashtags, and every generated slide IN THE CHAT. The design tool returns
+   view_url and download_url for every slide: render each as
+   ![descriptive alt text](view_url), followed by [Download slide N](download_url).
+   Also give workspace/output/<job_id>/preview.html and bundle.zip as local file
+   locations; never use a file:// URL for an image.
 
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.

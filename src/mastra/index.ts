@@ -45,14 +45,16 @@ import {
 } from './tools/industry-tools';
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
+import { postAssetRoute } from './routes/post-assets';
 
 export const mastra = new Mastra({
   bundler: {
     externals: ['@duckdb/node-bindings'],
   },
   server: {
-    // Serves rendered Flux images so they display inline in Studio chat.
-    apiRoutes: [fluxOutputRoute],
+    // postAssetRoute: Design Agent slides; fluxOutputRoute: Flux.2 renders.
+    // Both let images display inline in Studio chat.
+    apiRoutes: [postAssetRoute, fluxOutputRoute],
   },
   agents: { agent, aggregatorAgent, imageGenAgent },
   workflows: { industryAggregationWorkflow, newsToPostWorkflow },

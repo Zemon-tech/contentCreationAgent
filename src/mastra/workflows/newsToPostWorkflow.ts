@@ -118,6 +118,8 @@ const RenderOutputSchema = TemplateOutputSchema.extend({
       index: z.number(),
       file: z.string(),
       alt_text: z.string(),
+      view_url: z.string(),
+      download_url: z.string(),
     }),
   ),
   workspaceDir: z.string(),
@@ -379,7 +381,11 @@ ${sourceLine}
       job_id,
       caption: deliverables.caption,
       hashtags: deliverables.hashtags,
-      slides: deliverables.slides,
+      slides: deliverables.slides.map((slide) => ({
+        ...slide,
+        view_url: `/post-assets/${job_id}/${encodeURIComponent(slide.file)}`,
+        download_url: `/post-assets/${job_id}/${encodeURIComponent(slide.file)}?download=1`,
+      })),
       workspaceDir: deliverables.destDir,
       copiedFiles: deliverables.copiedFiles,
     };
