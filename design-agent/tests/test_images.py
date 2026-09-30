@@ -30,15 +30,39 @@ from app.models import (
 from app.templates_loader import get_template
 
 
-def test_load_workflow_and_map() -> None:
-    """Verify loading real keilhq-bg.json workflow and companion map."""
-    workflow, wf_map = load_workflow("keilhq-bg.json")
-    assert "3" in workflow
-    assert "6" in workflow
-    assert wf_map.prompt_node == "6"
-    assert wf_map.seed_node == "3"
-    assert wf_map.width_node == "5"
-    assert wf_map.height_node == "5"
+def test_load_flux2_workflow_and_map() -> None:
+    """Flux 2 Dev workflow loads with prompt/seed/dimension injection points."""
+    workflow, wf_map = load_workflow("flux2-dev.json")
+    assert "98:6" in workflow
+    assert "98:25" in workflow
+    assert "98:47" in workflow
+    assert workflow["98:6"]["class_type"] == "CLIPTextEncode"
+    assert workflow["98:12"]["inputs"]["unet_name"] == "flux2_dev_fp8mixed.safetensors"
+    assert wf_map.prompt_node == "98:6"
+    assert wf_map.seed_node == "98:25"
+    assert wf_map.seed_input == "noise_seed"
+    assert wf_map.width_node == "98:47"
+    assert wf_map.height_node == "98:47"
+    assert "98:48" in wf_map.extra_dimension_nodes
+
+
+def test_inject_flux2_params_syncs_scheduler() -> None:
+    """Dimensions land on both the latent node and the Flux2Scheduler node."""
+    workflow, wf_map = load_workflow("flux2-dev.json")
+    injected = inject_workflow_params(
+        workflow=workflow,
+        wf_map=wf_map,
+        prompt="Test flux cover prompt",
+        seed=123,
+        width=1080,
+        height=1350,
+    )
+    assert injected["98:6"]["inputs"]["text"] == "Test flux cover prompt"
+    assert injected["98:25"]["inputs"]["noise_seed"] == 123
+    assert injected["98:47"]["inputs"]["width"] == 1080
+    assert injected["98:47"]["inputs"]["height"] == 1350
+    assert injected["98:48"]["inputs"]["width"] == 1080
+    assert injected["98:48"]["inputs"]["height"] == 1350
 
 
 def test_load_workflow_missing_files(tmp_path: Path) -> None:
@@ -263,8 +287,15 @@ async def test_generate_images_for_post_mocked(tmp_path: Path) -> None:
     manifest = get_template("keilhq-editorial")
 
     mock_client = ComfyUIClient()
-    mock_png_bytes = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"
-    mock_client.generate_image = AsyncMock(return_value=mock_png_bytes)  # type: ignore[method-assign]
+    # Simulate a Flux VAE-cropped return (1072x1344): the pipeline must
+    # restore the exact 1080x1350 Instagram target before saving.
+    import io as _io
+
+    from PIL import Image as _PILImage
+
+    _buf = _io.BytesIO()
+    _PILImage.new("RGB", (1072, 1344), color="#171514").save(_buf, format="PNG")
+    mock_client.generate_image = AsyncMock(return_value=_buf.getvalue())  # type: ignore[method-assign]
 
     out_map = await generate_images_for_post(
         post_plan=post_plan,
@@ -276,7 +307,8 @@ async def test_generate_images_for_post_mocked(tmp_path: Path) -> None:
     assert (0, "background") in out_map
     saved_path = out_map[(0, "background")]
     assert saved_path.is_file()
-    assert saved_path.read_bytes() == mock_png_bytes
+    with _PILImage.open(saved_path) as saved_img:
+        assert saved_img.size == (1080, 1350)
 
 
 def test_cover_slot_id() -> None:
@@ -397,7 +429,7 @@ async def test_live_comfyui_generation(tmp_path: Path) -> None:
         pytest.skip(f"ComfyUI at {client.base_url} is unreachable; skipping live test.")
 
     png_bytes = await client.generate_image(
-        workflow_filename="keilhq-bg.json",
+        workflow_filename="flux2-dev.json",
         prompt="quiet abstract limestone architectural texture, minimal, editorial",
         width=1080,
         height=1350,

@@ -43,6 +43,10 @@ class WorkflowMap(BaseModel):
     width_input: str | None = Field(default="width")
     height_node: str | None = Field(default=None, description="Node ID for EmptyLatentImage height")
     height_input: str | None = Field(default="height")
+    extra_dimension_nodes: list[str] = Field(
+        default_factory=list,
+        description="Additional node IDs whose width/height inputs mirror the requested dimensions (e.g. Flux2Scheduler alongside the latent node).",
+    )
 
 
 def load_workflow(
@@ -50,7 +54,13 @@ def load_workflow(
     workflows_dir: Path | str | None = None,
 ) -> tuple[dict[str, Any], WorkflowMap]:
     """Load API-format workflow JSON and its companion .map.json file (spec §11.1, §11.2)."""
-    base_dir = Path(workflows_dir) if workflows_dir is not None else Path("workflows")
+    base_dir = (
+        Path(workflows_dir)
+        if workflows_dir is not None
+        # Anchored to the design-agent project dir (same rationale as .env
+        # anchoring in config.py): CWD-independent workflow resolution.
+        else Path(__file__).resolve().parent.parent / "workflows"
+    )
     wf_path = base_dir / workflow_name
     map_name = workflow_name.replace(".json", "") + ".map.json"
     map_path = base_dir / map_name
@@ -108,6 +118,14 @@ def inject_workflow_params(
         injected[wf_map.width_node]["inputs"][wf_map.width_input] = width
     if wf_map.height_node and wf_map.height_input and wf_map.height_node in injected:
         injected[wf_map.height_node]["inputs"][wf_map.height_input] = height
+    # 4. Mirror dimensions into extra nodes (e.g. scheduler sigmas follow resolution)
+    for node_id in wf_map.extra_dimension_nodes:
+        if node_id in injected:
+            inputs = injected[node_id].get("inputs", {})
+            if "width" in inputs:
+                inputs["width"] = width
+            if "height" in inputs:
+                inputs["height"] = height
 
     return injected
 
@@ -384,8 +402,19 @@ async def download_url_to_image(
     return dest
 
 
-async def generate_images_for_post(
-    post_plan: PostPlan,
+def _snap_up_16(value: int) -> int:
+    """Round a dimension up to a multiple of 16 (Flux latent/VAE-safe).
+
+    Proven in production: requesting 1080x1350 from Flux 2 Dev returns a
+    1072x1344 image (latent rounds down, VAE crops), which then trips the
+    assembler's hard 1080-width Instagram constraint. Requesting snapped
+    dimensions and resizing down to the exact target avoids this for any
+    diffusion backend.
+    """
+    return ((value + 15) // 16) * 16
+
+
+async def generate_images_for_post(    post_plan: PostPlan,
     manifest: TemplateManifest,
     output_dir: Path,
     comfy_client: ComfyUIClient | None = None,
@@ -399,37 +428,66 @@ async def generate_images_for_post(
     """
     client = comfy_client or ComfyUIClient()
     target_width, target_height = post_plan.aspect_ratio.dimensions
+    # Snap up so latent grids never round down (see _snap_up_16); the exact
+    # Instagram size is restored by resize below.
+    request_width, request_height = _snap_up_16(target_width), _snap_up_16(target_height)
     output_dir.mkdir(parents=True, exist_ok=True)  # noqa: ASYNC240
 
     generated_map: dict[tuple[int, str], Path] = {}
 
-    for slide_idx, slide in enumerate(post_plan.slides):
-        for img_slot in manifest.image_slots:
-            if not img_slot.prompt_slot:
-                continue
+    for img_slot in manifest.image_slots:
+        if not img_slot.prompt_slot:
+            continue
 
+        if not img_slot.comfy_workflow:
+            raise ImageGenerationError(
+                f"Slot '{img_slot.id}' has prompt_slot=True but no comfy_workflow specified."
+            )
+
+        # generate_once slots (cover heroes): a single ~60s Flux diffusion on
+        # slide 1 whose image is reused across all slides — never N diffusions.
+        slide_indices = [0] if img_slot.generate_once else list(range(len(post_plan.slides)))
+
+        for slide_idx in slide_indices:
             if skip and (slide_idx, img_slot.id) in skip:
                 continue
 
-            if not img_slot.comfy_workflow:
-                raise ImageGenerationError(
-                    f"Slot '{img_slot.id}' has prompt_slot=True but no comfy_workflow specified."
-                )
-
-            slot_prompt = slide.images[img_slot.id].prompt
+            slot_prompt = post_plan.slides[slide_idx].images[img_slot.id].prompt
 
             png_bytes = await client.generate_image(
                 workflow_filename=img_slot.comfy_workflow,
                 prompt=slot_prompt,
-                width=target_width,
-                height=target_height,
+                width=request_width,
+                height=request_height,
                 workflows_dir=workflows_dir,
             )
+
+            import io as _resize_io
+
+            with Image.open(_resize_io.BytesIO(png_bytes)) as img:
+                img.load()
+                if img.size != (target_width, target_height):
+                    img = img.convert("RGB").resize(
+                        (target_width, target_height), Image.LANCZOS
+                    )
+                    buf = _resize_io.BytesIO()
+                    img.save(buf, format="PNG")
+                    png_bytes = buf.getvalue()
 
             file_name = f"slot_{img_slot.id}_slide_{slide_idx + 1:02d}.png"
             file_path = output_dir / file_name
             file_path.write_bytes(png_bytes)
 
             generated_map[(slide_idx, img_slot.id)] = file_path
+
+        if img_slot.generate_once:
+            # Reuse the slide-1 render everywhere (skip-aware: a skipped
+            # cover, e.g. provided URL, stays skipped).
+            first = generated_map.get((0, img_slot.id))
+            if first is not None:
+                for slide_idx in range(1, len(post_plan.slides)):
+                    if skip and (slide_idx, img_slot.id) in skip:
+                        continue
+                    generated_map[(slide_idx, img_slot.id)] = first
 
     return generated_map

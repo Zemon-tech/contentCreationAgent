@@ -1,4 +1,6 @@
 import { createPostFromContentTool, searchNewsAndCreatePostTool } from "../tools/design-tools";
+import { generateCoverPromptTool } from "../tools/cover-tools";
+import { generateAnglePackTool } from "../tools/angle-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
@@ -136,19 +138,26 @@ velocity) are computed by code, not by you — focus your judgment on
 relevance, novelty, impact, content potential and interpretation.
 
 
-VISUAL POST CREATION (DESIGN AGENT INTEGRATION)
-When the user asks you to create an Instagram post, visual card, or carousel (e.g. from a topic, breaking news, or an identified story/opportunity):
-1. CLARIFY FORMAT & TEMPLATE:
-   - Check if they specified whether they prefer a 'single' slide or 'carousel' (multi-slide), and if they have a template preference.
-   - If not explicitly specified, ask the user to confirm:
-     * Format: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
-     * Template: 'tech-announcement' (bold modern layout, recommended for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
-     * Cover image: if the user shares a direct image URL, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
-2. EXECUTE THE DESIGN TOOL:
-   - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and template_id.
-   - For an existing story, summary, or text already analyzed: call createPostFromContent with content, format, and template_id.
-3. DELIVER OUTPUT:
-   - Present the headline, full caption, hashtags, and the file paths to the generated slides in workspace/output/<job_id>/.
+VISUAL POST CREATION (DESIGN AGENT PIPELINE v2)
+When the user asks for an Instagram post/visual card/carousel — either by pasting
+news OR by asking you to search news on a topic — run this pipeline:
+1. COLLECT: user-pasted news is used as-is; otherwise exaSearch + exaScrape the
+   topic and merge ALL relevant results (never just the first snippet).
+2. PARALLEL FAN-OUT on the collected story (same block, independent calls):
+   - generateCoverPrompt with articleTitle + articleText → canonical
+     neoclassical-editorial-image JSON (Flux fluxPrompt drives the slide-1 hero).
+   - generateAnglePack with articleTitle + articleText → viral / controversy /
+     unique angles + recommendedAngle.
+3. TEMPLATE: honor an explicit user template suggestion; otherwise auto-select
+   (controversy/investigation → 360labs-news, tech launch → tech-announcement,
+   founder/startup → entrepreneur-post, general insight → keilhq-editorial) and
+   state the rationale. The newsToPostWorkflow does this automatically.
+4. EXECUTE: call searchNewsAndCreatePost (topic search) or createPostFromContent
+   (user news) with topic/content, format, and optional template_id/cover_prompt
+   overrides — the workflow handles collect → parallel enrich → template → render → package.
+5. DELIVER: headline, recommended angle, cover thesis + fluxPrompt, caption,
+   hashtags, slide files, PLUS workspace/output/<job_id>/preview.html (open to
+   preview) and bundle.zip (download). Present preview + zip paths explicitly.
 
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.
@@ -233,5 +242,7 @@ SEARCH-THEN-READ LOOP (for live investigation)
     createPostFromContent: createPostFromContentTool,
     search_news_and_create_post: searchNewsAndCreatePostTool,
     create_post_from_content: createPostFromContentTool,
+    generateCoverPrompt: generateCoverPromptTool,
+    generateAnglePack: generateAnglePackTool,
   },
 });

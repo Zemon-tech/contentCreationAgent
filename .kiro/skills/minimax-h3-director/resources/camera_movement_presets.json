@@ -1,0 +1,92 @@
+{
+  "camera_movement_presets": [
+    {
+      "id": "higgsfield_dolly_zoom_vertigo",
+      "name": "Higgsfield Dolly Zoom (Vertigo Effect)",
+      "motion_type": "Push In",
+      "amplitude": "with large amplitude",
+      "speed": "at fast speed",
+      "lens_action": "optical focal length zooms out simultaneously",
+      "h3_expression": "The camera pushes in with large amplitude at fast speed while optical focal length zooms out, creating a dramatic Hitchcock vertigo perspective warp behind the subject.",
+      "ideal_lens": "35mm-70mm Cinema Zoom",
+      "dramatic_use": "Moment of psychological realization, dread, or cognitive breakthrough."
+    },
+    {
+      "id": "slow_dolly_push_in",
+      "name": "Slow Intimate Dolly Push-In",
+      "motion_type": "Push In",
+      "amplitude": "with small amplitude",
+      "speed": "at slow speed",
+      "lens_action": "prime lens hold",
+      "h3_expression": "The camera pushes in with small amplitude at slow speed toward the subject's face, drawing focus into her subtle eye expression.",
+      "ideal_lens": "50mm or 85mm Cooke S4/i Prime",
+      "dramatic_use": "Emotional connection, quiet confidence, dialogue delivery."
+    },
+    {
+      "id": "higgsfield_snorricam_tracker",
+      "name": "Higgsfield Snorricam Body Rig",
+      "motion_type": "Tracking Shot",
+      "amplitude": "with small amplitude",
+      "speed": "at fast speed",
+      "lens_action": "body-clamped wide angle",
+      "h3_expression": "A locked-off Snorricam rig holds dead-center framing on the subject's face; his head remains static while the blurred urban background rushes past.",
+      "ideal_lens": "24mm Zeiss Supreme Prime",
+      "dramatic_use": "Adrenaline, urgency, tunnel vision, intense hustle."
+    },
+    {
+      "id": "higgsfield_bullet_time_orbit",
+      "name": "Higgsfield 180° Kinetic Arc Orbit",
+      "motion_type": "Arc Shot",
+      "amplitude": "with large amplitude",
+      "speed": "at moderate speed",
+      "lens_action": "circular track tracking subject center",
+      "h3_expression": "The camera completes an arc shot with large amplitude at moderate speed around the subject, keeping tack-sharp eye focus as background light rolls dynamically across his jaw.",
+      "ideal_lens": "35mm Cooke S4/i Prime",
+      "dramatic_use": "Iconic character reveal, brand hero moment, dramatic transformation."
+    },
+    {
+      "id": "fpv_drone_fly_through",
+      "name": "Higgsfield FPV Dynamic Banking Dive",
+      "motion_type": "Tracking Shot",
+      "amplitude": "with large amplitude",
+      "speed": "at fast speed",
+      "lens_action": "banking tilt and roll",
+      "h3_expression": "The camera dives forward along an FPV flight path at fast speed, banking smoothly through the narrow architectural corridor before leveling out into a low hover.",
+      "ideal_lens": "14mm or 18mm Ultra-Wide Cine Lens",
+      "dramatic_use": "High-octane tech intro, architectural exploration, kinetic commercial energy."
+    },
+    {
+      "id": "low_angle_pedestal_up",
+      "name": "Low-Angle Hero Pedestal Rise",
+      "motion_type": "Pedestal Up",
+      "amplitude": "with large amplitude",
+      "speed": "at slow speed",
+      "lens_action": "upward vertical travel on heavy studio pedestal",
+      "h3_expression": "The camera pedestals up with large amplitude at slow speed from ground level to seated eye height, steadily revealing the workstation and founder.",
+      "ideal_lens": "35mm Zeiss Supreme Prime",
+      "dramatic_use": "Building authority, unveiling scale, opening a sequence with gravitas."
+    },
+    {
+      "id": "smooth_lateral_truck",
+      "name": "Smooth Architectural Lateral Truck",
+      "motion_type": "Truck Right",
+      "amplitude": "with moderate amplitude",
+      "speed": "at slow speed",
+      "lens_action": "horizontal slider travel parallel to desk plane",
+      "h3_expression": "The camera trucks right with moderate amplitude at slow speed parallel to the work table, generating smooth foreground parallax against out-of-focus window mullions.",
+      "ideal_lens": "50mm Cooke S4/i Prime",
+      "dramatic_use": "Systematic workflow, craftsmanship, observational distance."
+    },
+    {
+      "id": "locked_off_studio_pedestal",
+      "name": "Locked-Off Apple/OpenAI Studio Stillness",
+      "motion_type": "Static Shot",
+      "amplitude": "zero amplitude",
+      "speed": "stationary hold",
+      "lens_action": "heavy locked studio pedestal",
+      "h3_expression": "The camera holds a static shot with absolute optical stillness, maintaining dead-center graphic symmetry as Arjun looks into the lens.",
+      "ideal_lens": "85mm Cooke S4/i Prime at f/4.0",
+      "dramatic_use": "Absolute conviction, brand reveal, minimalist call to action."
+    }
+  ]
+}

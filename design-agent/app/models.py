@@ -142,6 +142,10 @@ class ImageSlot(BaseModel):
     per_slide: bool = True
     comfy_workflow: str | None = None
     prompt_slot: bool = True
+    generate_once: bool = Field(
+        default=False,
+        description="When True, only slide 1's prompt is rendered and the resulting image is reused on every slide (one diffusion per post instead of one per slide).",
+    )
 
     @model_validator(mode="after")
     def validate_workflow_requirement(self) -> ImageSlot:
@@ -291,6 +295,14 @@ class PostManifest(BaseModel):
     hashtags: list[str]
     source_content_sha256: str
     warnings: list[str] = Field(default_factory=list)
+    preview_file: str | None = Field(
+        default=None,
+        description="Preview gallery filename inside the job output dir (preview.html).",
+    )
+    bundle_file: str | None = Field(
+        default=None,
+        description="Downloadable bundle filename inside the job output dir (bundle.zip).",
+    )
 
 
 # ============================================================================
@@ -333,6 +345,12 @@ class CreateJobRequest(BaseModel):
     cover_image_url: HttpUrl | None = Field(
         default=None,
         description="Optional direct image URL used as-is for the cover (slide 0) hero instead of AI generation.",
+    )
+    cover_prompt: str | None = Field(
+        default=None,
+        min_length=10,
+        max_length=4000,
+        description="Optional Flux cover prompt (neoclassical-editorial skill JSON 'model_specific' text) overriding the slide-1 hero image prompt.",
     )
 
     @field_validator("content")

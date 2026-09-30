@@ -1,0 +1,11 @@
+{
+  "prompt_node": "98:6",
+  "prompt_input": "text",
+  "seed_node": "98:25",
+  "seed_input": "noise_seed",
+  "width_node": "98:47",
+  "width_input": "width",
+  "height_node": "98:47",
+  "height_input": "height",
+  "extra_dimension_nodes": ["98:48"]
+}

@@ -1,0 +1,86 @@
+{
+  "film_stocks": {
+    "kodak_portra_400": {
+      "name": "Kodak Portra 400",
+      "style": "Candid editorial lifestyle realism",
+      "palette": ["#F5EBE1", "#D5B895", "#8C5E3C", "#3C3F4A", "#657153"],
+      "palette_names": ["warm cream", "caramel", "honey terracotta", "muted slate", "soft sage olive"],
+      "contrast": "Gentle S-curve with lifted, breathable shadows",
+      "saturation": "Restrained, naturalistic skin rendition",
+      "grain": "Subtle, organic 35mm fine grain",
+      "halation": "Mild warm amber halation on highlight boundaries",
+      "texture": "Visible skin pores, loose natural textile fibers, natural wood grain",
+      "avoid": ["plastic skin", "HDR glow", "neon saturation", "harsh digital contrast"]
+    },
+    "kodak_vision3_500t": {
+      "name": "Kodak Vision3 500T (5219)",
+      "style": "Cinematic 35mm narrative feature film",
+      "palette": ["#1C2321", "#3E505B", "#A45A2A", "#E8A87C", "#F4E3D7"],
+      "palette_names": ["deep filmic black", "subtle cyan shadow", "tungsten amber", "warm skin highlight", "creamy specular"],
+      "contrast": "Medium-high filmic curve with deep toe and controlled shoulder",
+      "saturation": "Rich, balanced cinema saturation",
+      "grain": "Moderate organic 35mm grain with natural gate weave",
+      "halation": "Distinct red-orange photonic halation around tungsten bulbs and window edges",
+      "texture": "Tactile micro-contrast on fabrics, wet surfaces, and skin",
+      "avoid": ["video game aesthetic", "clipping highlights", "digital sharpness", "oversaturation"]
+    },
+    "kodak_vision3_250d": {
+      "name": "Kodak Vision3 250D (5207)",
+      "style": "Daylight location cinema & commercial",
+      "palette": ["#5A7D7C", "#DADED4", "#3B3D3B", "#A08A75", "#E39774"],
+      "palette_names": ["natural sky cyan", "neutral cloud gray", "deep carbon", "warm earth", "healthy sunlit skin"],
+      "contrast": "Natural linear-to-soft S-curve",
+      "saturation": "Vibrant yet accurate daylight primaries",
+      "grain": "Very fine, sharp 35mm motion picture grain",
+      "halation": "Subtle golden rim halation",
+      "texture": "Crisp architectural textures, foliage foliage details, skin translucency",
+      "avoid": ["cartoon colors", "oversaturated greens", "blown-out sky"]
+    },
+    "fuji_eterna_500": {
+      "name": "Fuji Eterna 500",
+      "style": "Moody European arthouse & indie drama",
+      "palette": ["#36454F", "#708238", "#C2B280", "#8A9A86", "#E5DCC5"],
+      "palette_names": ["slate charcoal", "moss green", "sand beige", "muted seafoam", "parchment ivory"],
+      "contrast": "Low-contrast, pastel shadow roll-off",
+      "saturation": "Subdued, desaturated greens and cyans",
+      "grain": "Soft, diffused organic 35mm grain",
+      "halation": "Minimal cool-toned highlight bloom",
+      "texture": "Soft matte finishes, aged concrete, wool fabrics",
+      "avoid": ["commercial hyper-vibrancy", "harsh contrast", "warm orange wash"]
+    },
+    "kodak_tri_x_400": {
+      "name": "Kodak Tri-X 400 (Monochrome)",
+      "style": "High-contrast classic film noir & documentary",
+      "palette": ["#080808", "#2E2E2E", "#707070", "#B8B8B8", "#F5F5F5"],
+      "palette_names": ["inky black", "shadow graphite", "neutral midtone gray", "silver highlight", "pure paper white"],
+      "contrast": "Punchy, dynamic black and white contrast curve",
+      "saturation": "Monochrome (Zero Chroma)",
+      "grain": "Pronounced, tactile silver halide grain",
+      "halation": "Soft silver glow around bright highlights",
+      "texture": "Dramatic light and shadow chiaroscuro, heavy textural micro-contrast",
+      "avoid": ["muddy midtones", "digital gray cast", "color fringing"]
+    }
+  },
+  "luts": {
+    "kodak_2383_print": {
+      "name": "Kodak 2383 Print Stock LUT",
+      "look": "Hollywood theatrical release aesthetic",
+      "characteristics": "Subtle teal-cyan shadow split with deep warm gold midtones and clean skin tones."
+    },
+    "bleach_bypass": {
+      "name": "Bleach Bypass / Silver Retention",
+      "look": "Gritty, dystopian, intense thriller",
+      "characteristics": "Retained silver halide producing harsh micro-contrast, desaturated colors, and stark shadows."
+    },
+    "nordic_noir": {
+      "name": "Nordic Noir Scandi Grade",
+      "look": "Melancholic, cold procedural drama",
+      "characteristics": "Desaturated earthy tones, cool cyan-gray ambient wash, pale natural skin."
+    },
+    "technicolor_3_strip": {
+      "name": "Technicolor 3-Strip Vintage",
+      "look": "Classic Hollywood Golden Age (1940s-1950s)",
+      "characteristics": "Rich saturated primary reds, greens, and blues with warm golden highlights and zero modern digital artifacts."
+    }
+  }
+}

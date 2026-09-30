@@ -8,6 +8,8 @@ export interface CreateJobParams {
   aspect_ratio?: '4:5' | '1:1' | '3:4';
   max_slides?: number;
   cover_image_url?: string;
+  /** Flux cover prompt text (from the neoclassical-editorial-image skill) used for the slide-1 hero slot. */
+  cover_prompt?: string;
 }
 
 export interface SlideManifest {
@@ -74,6 +76,7 @@ export async function submitDesignJob(params: CreateJobParams): Promise<{ job_id
       aspect_ratio: params.aspect_ratio || '4:5',
       max_slides: params.max_slides ?? 5,
       ...(params.cover_image_url ? { cover_image_url: params.cover_image_url } : {}),
+      ...(params.cover_prompt ? { cover_prompt: params.cover_prompt } : {}),
     }),
   });
 
@@ -141,6 +144,64 @@ export async function waitForDesignJob(
   }
 
   throw new Error(`Design Agent job ${jobId} timed out after ${timeoutMs / 1000} seconds (last status: ${lastStatus})`);
+}
+
+/**
+ * Fetches the rendered HTML preview gallery for a finished job.
+ * Requires the Design Agent preview endpoint (GET /jobs/{id}/preview).
+ * Returns null when the server predates the endpoint — callers treat
+ * preview as best-effort and continue without it.
+ */
+export async function getPreviewHtml(jobId: string): Promise<string | null> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/jobs/${jobId}/preview`, {
+    method: 'GET',
+    headers: { 'X-API-Key': getApiKey(), Accept: 'text/html' },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Design Agent /jobs/${jobId}/preview returned HTTP ${res.status}`);
+  }
+  return await res.text();
+}
+
+/**
+ * Downloads the deliverables bundle ZIP for a finished job.
+ * Requires the Design Agent bundle endpoint (GET /jobs/{id}/download).
+ * Returns null when the server predates the endpoint.
+ */
+export async function downloadBundleZip(jobId: string): Promise<Buffer | null> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/jobs/${jobId}/download`, {
+    method: 'GET',
+    headers: { 'X-API-Key': getApiKey(), Accept: 'application/zip' },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Design Agent /jobs/${jobId}/download returned HTTP ${res.status}`);
+  }
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * Persists preview.html + bundle.zip next to the copied slide deliverables.
+ */
+export function savePreviewAndBundle(
+  destDir: string,
+  previewHtml: string | null,
+  zipBytes: Buffer | null,
+): { previewFile: string | null; zipFile: string | null } {
+  let previewFile: string | null = null;
+  let zipFile: string | null = null;
+  if (previewHtml) {
+    previewFile = path.join(destDir, 'preview.html');
+    fs.writeFileSync(previewFile, previewHtml, 'utf-8');
+  }
+  if (zipBytes) {
+    zipFile = path.join(destDir, 'bundle.zip');
+    fs.writeFileSync(zipFile, zipBytes);
+  }
+  return { previewFile, zipFile };
 }
 
 /**

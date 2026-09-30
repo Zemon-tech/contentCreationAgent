@@ -1,0 +1,154 @@
+{
+  "scene": {
+    "scene_number": 3,
+    "title": "MORNING RECIPE FLOW",
+    "timecode": "00:12-00:18",
+    "duration_seconds": 6,
+    "generation_target": "LTX-2.3 via ComfyUI",
+    "generation_mode": "T2V",
+    "aspect_ratio": "16:9",
+    "purpose": "Emulate the exact 'Domestic Golden Slat' aesthetic from the ChatGPT commercial: warm morning sun slicing through wooden window blinds, terracotta textures, and unforced domestic sanctuary.",
+    "emotional_destination": "Peaceful domesticity, creative culinary focus, effortless presence.",
+    "dominant_visual_idea": "Young woman in a patterned green bandana holding an orange phone while stirring a steaming stockpot in golden morning sun slats.",
+    "brand_landing": "Natural human assistance"
+  },
+  "important_generation_architecture": {
+    "reason": "Keep human hands, cookware contact, and window blind shadow geometry grounded and persistent without shape warping.",
+    "generative_boundaries": "Generate live-action human cooking and natural lighting through LTX-2.3. Composite screen UI and brand typography in post-production.",
+    "recommended_method": "Native LTX-2.3 T2V Two-Stage Workflow."
+  },
+  "continuity": {
+    "character": {
+      "identity": "Young woman (mid-20s) with brunette hair tied in a green patterned cotton bandana",
+      "wardrobe": "Over-sized blue-and-white vertical striped cotton button-down shirt over a neutral tank top, medium-wash denim jeans",
+      "performance": "Grounded, relaxed, natural unhurried arm movement stirring the pot, quiet focused expression"
+    },
+    "environment": {
+      "location": "Sunlit European apartment kitchen with glazed terracotta tile walls and window facing lush garden trees",
+      "furniture": "Vintage white gas stove, stainless steel sink basin, warm horizontal wooden venetian blinds",
+      "props": "Polished stainless steel stockpot with rising steam, red vintage metal colander in sink, warm ceramic tea canister on window ledge, orange smartphone held casually in hand"
+    }
+  },
+  "spatial_blocking": {
+    "foreground": "Stainless steel sink drainer and red vintage colander occupying the lower left foreground",
+    "midground": "The woman standing beside the white stove, left hand holding the wooden spoon in the pot, right hand holding the phone at chest height",
+    "background": "Large sunlit window with horizontal wooden blinds casting crisp shadow stripes on the wall, lush green leaves visible outside",
+    "camera_relation": "Eye-level medium shot at 1.3m height, 2.2m distance looking across the kitchen counter"
+  },
+  "action_timeline": [
+    {
+      "time": "00:12.0-00:14.5",
+      "action": "The woman gently rotates the wooden spoon in the simmering stockpot, her eyes scanning the warm orange smartphone in her right hand."
+    },
+    {
+      "time": "00:14.5-00:18.0",
+      "action": "Delicate ribbons of culinary steam drift upward through the sunbeam; she lifts the spoon slightly, smiles faintly in culinary realization, and pauses."
+    }
+  ],
+  "performance": {
+    "primary_subject": "Effortless, natural domestic culinary flow",
+    "micro_actions": "Slow wrist rotation, quiet blink, subtle lip relaxation, steam rising across face",
+    "emotional_tone": "Warm, peaceful, grounded",
+    "forbidden": ["no frantic chef chopping", "no exaggerated tasting facial expressions", "no looking at camera", "no frozen pose"]
+  },
+  "camera": {
+    "camera_type": "Full-frame cinema camera on fluid tripod head",
+    "lens": "35mm Cooke S4 prime cinema lens",
+    "starting_position": "Medium interior framing capturing counter, subject, and window blinds",
+    "starting_height": "1.3m eye level",
+    "ending_height": "1.3m maintaining level horizon",
+    "depth_of_field": "Medium depth of field (f/4.0) keeping cookware, subject, and blind slats sharp while garden outside softens",
+    "focus_priority": "Subject's face and the steaming stockpot",
+    "movement": {
+      "00:12-00:15": "Steady observational hold with subtle organic human breathing",
+      "00:15-00:18": "Gentle lateral track of 0.2m to the left, slightly expanding the golden sunbeam pattern on the tiled wall"
+    },
+    "camera_path": {
+      "travel": "0.2m slow lateral glide",
+      "speed": "0.07 m/s",
+      "acceleration": "feathered ease-in and settle"
+    },
+    "constraints": ["no sudden zoom", "no digital shake", "no Dutch tilt"]
+  },
+  "visual_callback": {
+    "thematic_motif": "The golden horizontal light slats turning a simple kitchen routine into a sacred morning ritual.",
+    "color_harmony": "Warm terracotta earth tones energized by the bold orange phone and emerald green bandana."
+  },
+  "lighting": {
+    "source": "Direct morning sunlight streaming through wooden venetian window blinds at a 45-degree angle",
+    "quality": "Crisp directional sunlight projecting sharp horizontal linear slat shadows, balanced by soft warm bounce from terracotta tiles",
+    "temperature": "3200K-3500K warm morning sunlight mixed with soft 5600K ambient daylight",
+    "direction": "Side-back light from camera right, wrapping around subject's face and illuminating culinary steam",
+    "subject_lighting": "Golden rim light along jawline, arm, and striped shirt; warm transparent fill across cheekbones",
+    "background_lighting": "Alternating golden sun stripes and soft warm shadows across the glazed wall tiles",
+    "important_rule": "Shadow slats on the wall and counter must remain sharp and geometrically motivated by the window blinds.",
+    "forbidden": ["no flat fluorescent lighting", "no cool blue LED spill", "no blown-out clipped highlights", "no digital HDR glow"]
+  },
+  "color_and_finish": {
+    "style": "Candid warm cinematic editorial realism (Miles Jay / ChatGPT aesthetic)",
+    "film_character": "Kodak Portra 400 warm 35mm celluloid film response",
+    "grade": "Kodak 2383 Print LUT with warm sepia lifted shadows, creamy skin tones, and rich earthy terracotta",
+    "palette": ["#B86B43", "#E3A857", "#2D4739", "#E85A1E", "#FAF4EC"],
+    "contrast": "Gentle filmic S-curve with lifted, breathable shadow toe",
+    "saturation": "Naturalistic warm saturation with an isolated saturated accent on the orange phone",
+    "grain": "Fine 35mm organic celluloid grain structure with subtle gate texture",
+    "halation": "Delicate golden-red halation blooming softly around the bright window trim and chrome cookware specular glints",
+    "texture": "Glazed ceramic tile grout, stainless steel brush lines, coarse cotton bandana weave, rising steam ribbons, natural skin pores",
+    "avoid": ["plastic skin", "airbrushed textures", "harsh digital edge sharpening", "crushed muddy blacks"]
+  },
+  "audio": {
+    "acoustics_and_ambience": "Dry, warm domestic kitchen acoustics with subtle distant morning birdsong outside the open window.",
+    "timeline_foley": {
+      "00:12.0-00:14.5": ["gentle liquid simmering in pot", "soft wooden spoon scraping stainless steel bottom", "faint cotton shirt rustle"],
+      "00:14.5-00:18.0": ["delicate steam whisper", "quiet human inhalation of culinary aroma", "distant garden leaf flutter"]
+    },
+    "dialogue": [],
+    "voiceover": [],
+    "music": {
+      "entry": "Subtle, intimate acoustic felt piano chord enters at 00:13.5",
+      "character": "Warm, understated, contemplative domestic harmony",
+      "intensity": "Low background bed (-18dB under room tone)",
+      "progression": "Sustaining softly into the scene transition"
+    }
+  },
+  "negative_prompt": {
+    "anti_cgi": ["video game", "CGI", "3D render", "Unreal Engine", "cartoon", "plastic skin", "waxy skin", "oversaturated"],
+    "anatomy_and_physics": ["deformed hands", "mutated fingers", "wooden spoon bending", "pot floating", "warped window blinds", "sliding objects"],
+    "camera_and_artifacts": ["erratic camera shake", "whip pan", "rapid zoom", "jitter", "sensor noise", "digital glitch"],
+    "lighting": ["flat commercial studio light", "harsh fluorescent tubes", "blown-out window blowout", "crushed muddy shadows"],
+    "prohibited_elements": ["no on-screen UI graphics", "no floating text", "no watermarks", "no subtitles generated in video"]
+  },
+  "ltx_2_3_prompt": "In a sunlit European apartment kitchen with glazed terracotta wall tiles and a vintage white stove, a 25-year-old woman wearing a green patterned cotton bandana and an oversized blue-striped shirt gently stirs a simmering stainless steel stockpot with a wooden spoon while casually holding a bright coral-orange smartphone in her other hand. Golden 3400K morning sunlight streams through wooden venetian window blinds at a 45-degree angle, casting sharp, beautiful horizontal slat shadows across the tiled wall and countertop while illuminating delicate ribbons of steam rising from the pot into the warm air. The camera frames her in an intimate 35mm cinema prime medium shot at 1.3m eye level, holding a tranquil observational stance before executing an ultra-subtle 0.2-meter lateral tracking glide that smoothly preserves the level horizon and sharp slat shadow geometry. Warm Kodak Portra 400 35mm celluloid film response renders creamy skin highlights, lifted sepia shadows, fine organic grain, and soft golden halation around the window frame, capturing tactile textures of glazed ceramic tile, polished steel, and cotton weave, accompanied by the gentle sound of simmering soup, soft wooden spoon stirs, and an understated felt piano melody under quiet domestic room tone.",
+  "comfyui_direction": {
+    "workflow": "Native LTX-2.3 T2V Two-Stage Workflow.",
+    "why_mode": "Text-to-video implementation of the Miles Jay / ChatGPT 'Domestic Golden Slat' aesthetic.",
+    "camera_strategy": "Precision fluid tripod hold + 0.2m micro-dolly at 0.07 m/s.",
+    "audio": "Joint audio-visual latent pass generating synchronized liquid simmering, wooden spoon stirs, and felt piano bed.",
+    "prompting": "Emphasize motivated window slat shadow lines, terracotta warmth, and steam dynamics.",
+    "render_strategy": {
+      "pass_1_base": "640x360 @ 30 FPS, 181 frames (6s * 30 + 1), Euler sampler with 8-step ManualSigmas.",
+      "latent_upscale": "2x spatial latent upscaling via ltx-2.3-spatial-upscaler-x2-1.1.safetensors.",
+      "pass_2_refine": "1280x720 @ 30 FPS, Euler sampler with 3-step ManualSigmas."
+    }
+  },
+  "generation_priority": [
+    "1. Preserve sharp horizontal window blind shadow slat geometry across the terracotta tiles.",
+    "2. Grounded natural hand movement stirring the pot without finger distortion.",
+    "3. Organic 35mm Kodak Portra 400 warmth with lifted shadows and delicate halation.",
+    "4. Fluid rising steam physics interacting with morning sunbeams.",
+    "5. Precise audio synchronization of simmering broth and wooden spoon contact."
+  ],
+  "quality_control": {
+    "critical_story_test": "Audience must feel a tranquil, peaceful morning culinary flow state.",
+    "critical_continuity_test": "Bandana pattern, striped shirt, and terracotta tile color must remain rock-solid across all frames.",
+    "critical_performance_test": "Action must feel relaxed and unperformed, avoiding theatrical cooking gestures.",
+    "critical_camera_test": "Camera movement must remain subtle and level without sudden digital acceleration.",
+    "failure_conditions": [
+      "shadow slats on wall flicker or warp",
+      "hand holding phone morphs into pot",
+      "skin looks airbrushed or plastic",
+      "camera shakes or zooms digitally",
+      "steam looks like solid white geometry"
+    ]
+  }
+}

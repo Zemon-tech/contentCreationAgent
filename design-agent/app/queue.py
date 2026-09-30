@@ -24,6 +24,7 @@ from app.models import (
     JobStatus,
     JobStatusResponse,
     PostManifest,
+    SlideImagePrompt,
 )
 from app.planner import plan_post
 from app.sarvam import SarvamClient
@@ -143,6 +144,22 @@ class JobManager:
                 templates_dir=self.settings.templates_dir,
             )
 
+            # Skill cover prompt override: the neoclassical-editorial Flux
+            # prompt replaces the slide-1 hero image prompt (alt text and
+            # composition from the plan are preserved).
+            if job.request.cover_prompt:
+                hero_slot = cover_slot_id(manifest)
+                if hero_slot is not None and post_plan.slides and hero_slot in post_plan.slides[0].images:
+                    first_slide = post_plan.slides[0]
+                    new_images = dict(first_slide.images)
+                    new_images[hero_slot] = SlideImagePrompt(prompt=job.request.cover_prompt)
+                    post_plan = post_plan.model_copy(
+                        update={"slides": [first_slide.model_copy(update={"images": new_images}), *post_plan.slides[1:]]}
+                    )
+                    logger.info("cover_prompt_override_applied", job_id=job_id, slot=hero_slot)
+                else:
+                    logger.warning("cover_prompt_ignored_no_hero_slot", job_id=job_id)
+
             # Stage 2: Image Engine (ComfyUI)
             job.status = JobStatus.GENERATING_IMAGES
             job.updated_at = datetime.now(UTC)
@@ -196,6 +213,15 @@ class JobManager:
                         "comfyui_unreachable_using_placeholders",
                         job_id=job_id,
                     )
+
+            # generate_once slots with a caller-provided cover URL: reuse the
+            # downloaded cover on every slide (mirrors the reuse that
+            # generate_images_for_post does for freshly rendered heroes).
+            for img_slot in manifest.image_slots:
+                if img_slot.generate_once and (0, img_slot.id) in images_map:
+                    cover_file = images_map[(0, img_slot.id)]
+                    for slide_idx in range(len(post_plan.slides)):
+                        images_map.setdefault((slide_idx, img_slot.id), cover_file)
 
             # Stage 3: Compositor
             job.status = JobStatus.COMPOSITING

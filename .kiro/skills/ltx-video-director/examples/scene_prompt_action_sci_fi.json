@@ -1,0 +1,226 @@
+{
+  "scene": {
+    "scene_number": 7,
+    "title": "NEON CORRIDOR EVASION",
+    "timecode": "00:35-00:41",
+    "duration_seconds": 6,
+    "generation_target": "LTX-2.3 via ComfyUI",
+    "generation_mode": "T2V",
+    "aspect_ratio": "2.39:1",
+    "purpose": "Deliver high-tension kinetic pacing without erratic camera work. Grounded cyberpunk atmosphere where physical weight and environmental resistance are paramount.",
+    "emotional_destination": "Hyper-focused survival, relentless forward momentum, atmospheric dread.",
+    "dominant_visual_idea": "A solitary operative in a rain-slicked industrial catwalk, steam erupting from overhead conduits, silhouettes cut by amber warning strobes.",
+    "brand_landing": "None (Cinematic Sci-Fi)"
+  },
+  "important_generation_architecture": {
+    "reason": "Ensure high-motion action maintains anatomical and structural integrity; avoid dream-like morphing or floating limbs during fast walking.",
+    "generative_boundaries": "Generate the continuous atmospheric physical action via LTX-2.3. No 2D HUD overlays or neon text generation inside diffusion.",
+    "recommended_method": "Native LTX-2.3 T2V Two-Stage Workflow."
+  },
+  "continuity": {
+    "character": {
+      "identity": "Vance, 32-year-old covert technician",
+      "hair": "Buzzcut with a wet hairline, rainwater dripping from jawline",
+      "wardrobe": "Weathered matte-black ripstop tactical poncho over charcoal technical harness, fingerless grip gloves",
+      "performance": "Urgent, athletic, low center of gravity, controlled breathing, head swiveling to check catwalk corners"
+    },
+    "environment": {
+      "location": "Upper industrial exhaust gantry of an orbital refinery",
+      "architecture": "Perforated steel catwalk grating with visible depths below, heavy rusted pneumatic pipes, rising white pressurized steam",
+      "props": "Rugged handheld diagnostic terminal secured to tactical chest rig with coiled cable, amber flashing emergency beacon in background"
+    }
+  },
+  "spatial_blocking": {
+    "foreground": "Bursting vertical plume of pressurized white steam on frame left with water droplets splashing on catwalk railing",
+    "midground": "Vance advancing rapidly along the center catwalk axis, boots impacting wet perforated steel",
+    "background": "Vast cavernous exhaust shaft plunging hundreds of meters, crisscrossed by yellow safety pipes and distant rotating ventilation fans",
+    "camera_relation": "Low-angle reverse tracking shot at 0.9m height, maintaining 2.5m distance in front of subject as he advances"
+  },
+  "action_timeline": [
+    {
+      "time": "00:35.0-00:36.5",
+      "action": "Vance strides purposefully forward through the wet catwalk, ducking his head slightly as an overhead pipe vents a violent hiss of white steam."
+    },
+    {
+      "time": "00:36.5-00:38.0",
+      "action": "Water spray catches the side of his face; he wipes his brow with a gloved forearm without breaking his stride."
+    },
+    {
+      "time": "00:38.0-00:39.5",
+      "action": "An amber emergency beacon on the wall flashes into rotation, casting a warm sweeping beam across his poncho and determined eyes."
+    },
+    {
+      "time": "00:39.5-00:41.0",
+      "action": "He reaches down with his right hand, unholstering a magnetic cable clamp and slapping it onto the steel rail as he turns a corner."
+    }
+  ],
+  "performance": {
+    "primary_subject": "Vance's athletic weight, physical resistance against rain and wind, purposeful tactical momentum",
+    "micro_actions": "Heavy heel-to-toe footfalls, neck tensing against cold spray, jaw set in determination, quick scanning eye movements",
+    "emotional_tone": "Grounded visceral suspense, gritty survival",
+    "forbidden": [
+      "no superhero leaping",
+      "no cartoon parkour",
+      "no looking into camera",
+      "no smiles or smirks",
+      "no rubbery foot slippage"
+    ]
+  },
+  "camera": {
+    "camera_type": "Cinema camera mounted on high-speed stabilized tracking rig",
+    "lens": "35mm Anamorphic 2x squeeze lens",
+    "starting_position": "Low-angle dynamic reverse-tracking medium shot in front of subject",
+    "starting_height": "0.9m low knee-to-waist angle looking upward",
+    "ending_height": "0.95m maintaining low empowering perspective",
+    "depth_of_field": "Cinematic shallow depth of field rendering background fans and pipes in rich oval anamorphic bokeh",
+    "focus_priority": "Vance's face and chest rig, with crisp water droplet specular highlights",
+    "movement": {
+      "00:35-00:39": "Smooth backwards tracking at matching walking pace (1.4 m/s) keeping subject centered in frame",
+      "00:39-00:41": "Subtle deceleration and 20-degree pan following subject's turn into the junction"
+    },
+    "camera_path": {
+      "start": "2.5m directly in front of subject on catwalk centerline",
+      "middle": "continuous linear reverse tracking matching subject velocity",
+      "end": "2.2m distance at the gantry corner",
+      "travel": "7.0m total reverse translation",
+      "speed": "1.4 m/s synchronized pacing",
+      "acceleration": "instant smooth engagement, gradual deceleration"
+    },
+    "constraints": [
+      "no wild handheld camera roll",
+      "no digital glitch shakes",
+      "no fisheye warping",
+      "no sudden cuts"
+    ]
+  },
+  "visual_callback": {
+    "thematic_contrast": "The human pulse against relentless industrial machinery.",
+    "lighting_motif": "The pulsing amber beacon rhythmically cutting through cool industrial darkness."
+  },
+  "lighting": {
+    "source": "Flashing amber industrial beacon (2200K) combined with cool overhead mercury vapor catwalk tubes (6000K)",
+    "quality": "High-contrast chiaroscuro with hard specular wet reflections and volumetric light shafts in steam",
+    "temperature": "Split-tone: 2200K tungsten-amber strobe vs 6000K cold industrial blue-cyan ambient",
+    "direction": "Flashing key light sweeping from rear-right to front-left, continuous cool backlight separating shoulders from deep background",
+    "subject_lighting": "Dynamic amber edge highlights dancing across rain-wet poncho, deep transparent shadows on eye sockets",
+    "background_lighting": "Silhouetted massive ventilation blades cutting through backlit steam plumes",
+    "important_rule": "Light must interact realistically with airborne water vapor and reflective wet steel.",
+    "forbidden": [
+      "no generic flat lighting",
+      "no uniform purple/pink neon wash",
+      "no blown-out white burnout",
+      "no muddy shadows"
+    ]
+  },
+  "color_and_finish": {
+    "style": "Gritty industrial cinematic realism",
+    "film_character": "Kodak Vision3 500T 5219 anamorphic 35mm stock",
+    "grade": "Kodak 2383 theatrical LUT with deep saturated blacks and rich amber-cyan separation",
+    "palette": ["#0B0E11", "#1E2A38", "#D97724", "#7F919B", "#F2F5F8"],
+    "contrast": "Punchy filmic contrast with deep blacks and intense specular highlights",
+    "saturation": "Selective saturation: rich industrial amber and cyan against desaturated charcoal steel",
+    "grain": "Prominent, tactile organic 35mm motion picture grain",
+    "halation": "Vivid red-orange photonic halation blooming around the flashing amber beacon and wet steel reflections",
+    "texture": "Wet textured ripstop nylon, cold rusted iron, beaded water on human skin, dense atmospheric vapor",
+    "avoid": [
+      "clean glossy video game look",
+      "plastic CGI textures",
+      "cartoon saturation",
+      "muddy compression artifacts"
+    ]
+  },
+  "audio": {
+    "acoustics_and_ambience": "Vast industrial cavern acoustics with deep low-frequency ventilation rumble and reverberant metallic reflections.",
+    "timeline_foley": {
+      "00:35.0-00:36.5": ["heavy tactical combat boots landing on wet steel grating with resonant hollow clang", "violent pressurized steam venting hiss"],
+      "00:36.5-00:38.0": ["wind and rain spray whipping against nylon poncho", "heavy athletic human breathing"],
+      "00:38.0-00:39.5": ["mechanical rotating servo whine of the flashing emergency beacon", "faint distant electrical hum"],
+      "00:39.5-00:41.0": ["sharp metallic click and magnet thud of cable clamp attaching to railing", "rapid wet boot pivot on iron"]
+    },
+    "dialogue": [],
+    "voiceover": [],
+    "music": {
+      "entry": "Pulsing, low-frequency analog bass synthesizer rhythm enters at 00:36.0.",
+      "character": "Tense, driving, industrial, atmospheric tension",
+      "intensity": "Medium presence (-12dB under foley clangs)",
+      "progression": "Rhythmic pulse accelerating slightly with subject momentum"
+    }
+  },
+  "negative_prompt": {
+    "anti_cgi": [
+      "video game",
+      "CGI",
+      "3D render",
+      "Unreal Engine",
+      "cartoon",
+      "anime",
+      "plastic skin",
+      "rubbery clothes",
+      "oversaturated"
+    ],
+    "anatomy_and_physics": [
+      "sliding feet",
+      "floating character",
+      "deformed hands",
+      "mutated fingers",
+      "warped legs",
+      "morphing steel railing",
+      "disappearing steam"
+    ],
+    "camera_and_artifacts": [
+      "erratic camera shake",
+      "whip pan",
+      "lens glitch",
+      "frame dropping",
+      "flickering geometry",
+      "digital sensor noise"
+    ],
+    "lighting": [
+      "flat lighting",
+      "washed-out contrast",
+      "neon pink wash",
+      "blown-out overexposure",
+      "muddy gray blacks"
+    ],
+    "prohibited_elements": [
+      "no HUD graphics",
+      "no glowing sci-fi UI",
+      "no floating text",
+      "no watermark",
+      "no artificial lens flare burns"
+    ]
+  },
+  "ltx_2_3_prompt": "In the cavernous industrial catwalk of an orbital refinery, a 32-year-old male technician in a wet matte-black ripstop poncho and tactical harness strides forward through cold rain and plumes of pressurized white steam erupting from rusty overhead pipes. Water drips from his jawline as his heavy combat boots rhythmically impact the wet perforated steel grating with resonant clangs; a sweeping amber emergency strobe flashes across the corridor, bathing his focused face and reflective nylon poncho in warm amber light against cool cyan shadows before he reaches down and locks a magnetic cable clamp onto the steel railing with a sharp metallic snap. The camera is locked into a low-angle 0.9-meter reverse tracking shot on a 35mm anamorphic prime lens, smoothly gliding backward at 1.4 m/s in front of the advancing technician with rock-solid stabilized inertia and creamy oval bokeh on the distant rotating ventilation fans. Split-tone lighting contrasts the 2200K rotating amber beacon with 6000K industrial background backlighting, Kodak Vision3 500T 35mm film grain, striking red-orange halation around specular water highlights, tactile wet nylon and rusted iron textures, accompanied by resonant steel footfalls, rushing high-pressure steam, driving rain spray, and a dark pulsing analog bass synthesizer bed.",
+  "comfyui_direction": {
+    "workflow": "Native LTX-2.3 T2V Two-Stage Workflow.",
+    "why_mode": "Text-to-video high-motion cinematic sequence.",
+    "camera_strategy": "Reverse tracking shot: 7m travel at 1.4 m/s at 0.9m height.",
+    "audio": "Joint audio-visual latent generation synchronizing heavy boot clangs on steel with visual foot strikes and steam venting.",
+    "prompting": "Emphasize physical weight, mechanical foley, optical anamorphic characteristics, and split-tone lighting.",
+    "render_strategy": {
+      "pass_1_base": "640x268 @ 30 FPS, 181 frames (6s * 30 + 1), Euler sampler with 8-step ManualSigmas.",
+      "latent_upscale": "2x spatial latent upscaling via ltx-2.3-spatial-upscaler-x2-1.1.safetensors.",
+      "pass_2_refine": "1280x536 @ 30 FPS (2.39:1 aspect ratio), Euler sampler with 3-step ManualSigmas."
+    }
+  },
+  "generation_priority": [
+    "1. Grounded physical foot-to-grate contact without sliding or rubber legs.",
+    "2. High-speed reverse camera tracking with stable horizon and smooth momentum.",
+    "3. Believable steam dynamics interacting with amber strobe lighting.",
+    "4. Saturated Kodak 2383 amber-cyan color separation.",
+    "5. Tight audio synchronization of heavy metallic footfalls with visual steps."
+  ],
+  "quality_control": {
+    "critical_story_test": "Visceral tension and physical struggle against harsh industrial elements.",
+    "critical_continuity_test": "Catwalk grating, poncho wetness, and cable clamp must remain physically solid.",
+    "critical_performance_test": "Athletic forward momentum must feel heavy and human, never like a floating avatar.",
+    "critical_camera_test": "Tracking rig must maintain consistent distance without digital jitter.",
+    "failure_conditions": [
+      "feet slide across grating",
+      "steam looks like solid geometry",
+      "catwalk bends or morphs",
+      "camera rolls erratically",
+      "poncho textures look like smooth plastic"
+    ]
+  }
+}

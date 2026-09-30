@@ -1,0 +1,39 @@
+{
+  "audio_presets": [
+    {
+      "id": "minimalist_tech_studio",
+      "name": "Apple / OpenAI Pristine Studio Vacuum",
+      "overall_soundscape": "Acoustically treated dry studio vacuum with subtle, warm room air presence. Faint organic textile rustle on movement and a crisp tactile switch click.",
+      "non_diegetic_music": "A single resonant acoustic felt-piano chord struck at a slow tempo, decaying naturally over a low sub-bass bed at -14dB into absolute silence.",
+      "dialogue_delivery_style": "Intimate, warm, close-mic proximity effect, measured natural pace."
+    },
+    {
+      "id": "modern_industrial_loft_office",
+      "name": "London / NYC Modern Loft Office",
+      "overall_soundscape": "Spacious interior acoustics of an industrial loft with polished concrete and exposed brick. Distant muted rain taps rhythmically on high double-hung windows while a ceramic mug clinks softly against oiled oak.",
+      "non_diegetic_music": "Sparse analog synthesizer arpeggios at a moderate tempo, layered with warm sustained upright bass notes with gentle high-frequency roll-off.",
+      "dialogue_delivery_style": "Conversational, confident, articulate, authentic founder cadence."
+    },
+    {
+      "id": "sunlit_european_cafe",
+      "name": "Sunlit Outdoor European Café",
+      "overall_soundscape": "Gentle outdoor ambience with distant muffled city murmur and breeze rustling through plane trees. Ceramic saucer clink, silver spoon stir, and light pedestrian footsteps.",
+      "non_diegetic_music": "Gentle fingerpicked nylon-string acoustic guitar at an easy tempo, accompanied by soft brushed percussion that sits cleanly below spoken dialogue.",
+      "dialogue_delivery_style": "Relaxed, warm, grounded, unhurried."
+    },
+    {
+      "id": "high_energy_datacenter",
+      "name": "Server Infrastructure & Datacenter",
+      "overall_soundscape": "Deep, low-frequency hum of industrial server cooling fans and rhythmic airflow through server racks. Faint metallic latch clicks and clean rubber sole steps on raised antistatic floor tiles.",
+      "non_diegetic_music": "A driving, minimalist modular synth pulse at 118 BPM, with muted low-pass filtering that opens slightly during camera movement.",
+      "dialogue_delivery_style": "Focused, precise, technical, quiet intensity."
+    },
+    {
+      "id": "silence_stinger",
+      "name": "Complete Silence / Stinger Ending",
+      "overall_soundscape": "Absolute stillness with only faint natural room air tone.",
+      "non_diegetic_music": "N/A",
+      "dialogue_delivery_style": "Direct, sovereign, final statement."
+    }
+  ]
+}

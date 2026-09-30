@@ -28,7 +28,7 @@ def test_keilhq_editorial_manifest_loads() -> None:
     bg_slot = manifest.image_slots[0]
     assert bg_slot.id == "background"
     assert bg_slot.prompt_slot is True
-    assert bg_slot.comfy_workflow == "keilhq-bg.json"
+    assert bg_slot.comfy_workflow == "flux2-dev.json"
 
 
 def test_keilhq_editorial_html_renders() -> None:

@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "image_style_reverse_engineer_prompt",
+  "type": "object",
+  "required": ["meta", "source_analysis", "style_profile", "subject", "master_prompt", "higgsfield_soul_block", "model_variants", "negative_prompt", "generation_params"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["skill", "version", "style_archetype"],
+      "properties": {
+        "skill": { "type": "string", "const": "image-style-reverse-engineer" },
+        "version": { "type": "string" },
+        "style_archetype": { "type": "string", "description": "kebab-case archetype, e.g. editorial-flash-candid" }
+      }
+    },
+    "source_analysis": {
+      "type": "object",
+      "required": ["medium_realism", "composition_geometry", "shot_scale", "optics", "lighting", "palette", "grade", "textures", "finish", "mood_psychology"],
+      "properties": {
+        "medium_realism": { "type": "string" },
+        "composition_geometry": { "type": "string" },
+        "shot_scale": { "type": "string" },
+        "optics": {
+          "type": "object",
+          "required": ["lens", "dof", "focus_priority"],
+          "properties": {
+            "lens": { "type": "string", "description": "Must name focal length, e.g. 35mm f/2.0" },
+            "dof": { "type": "string" },
+            "focus_priority": { "type": "string" }
+          }
+        },
+        "lighting": {
+          "type": "object",
+          "required": ["source", "quality", "temperature_kelvin", "contrast_ratio"],
+          "properties": {
+            "source": { "type": "string" },
+            "quality": { "type": "string" },
+            "temperature_kelvin": { "type": "string", "description": "Must contain a Kelvin value like 5500K" },
+            "contrast_ratio": { "type": "string" },
+            "shadow_behavior": { "type": "string" }
+          }
+        },
+        "exposure": { "type": "object", "properties": { "dynamic_range": { "type": "string" }, "highlight_rolloff": { "type": "string" }, "black_point": { "type": "string" } } },
+        "palette": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" } },
+        "palette_names": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "string" } },
+        "grade": { "type": "string" },
+        "textures": { "type": "array", "minItems": 3, "items": { "type": "string" } },
+        "finish": {
+          "type": "object",
+          "required": ["film_stock", "grain"],
+          "properties": {
+            "film_stock": { "type": "string" },
+            "grain": { "type": "string" },
+            "halation": { "type": "string" },
+            "post_traces": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "atmosphere": { "type": "string" },
+        "background_logic": { "type": "string" },
+        "styling_era": { "type": "string" },
+        "theme_concept": { "type": "string" },
+        "mood_psychology": { "type": "string" },
+        "density_negative_space": { "type": "string" },
+        "instantaneity": { "type": "string" }
+      }
+    },
+    "style_profile": {
+      "type": "object",
+      "required": ["name", "director_intent", "transferable_dna", "non_negotiables"],
+      "properties": {
+        "name": { "type": "string" },
+        "director_intent": { "type": "string" },
+        "transferable_dna": { "type": "string" },
+        "non_negotiables": { "type": "array", "minItems": 3, "maxItems": 5, "items": { "type": "string" } },
+        "higgsfield_preset_hint": { "type": "string" },
+        "midjourney_cues": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["description", "preserve_source_identity"],
+      "properties": {
+        "description": { "type": "string" },
+        "preserve_source_identity": { "type": "boolean", "const": false }
+      }
+    },
+    "master_prompt": { "type": "string", "minLength": 400, "maxLength": 1500, "description": "Single paragraph 100-180 words, no bullets/newlines" },
+    "higgsfield_soul_block": {
+      "type": "object",
+      "required": ["preset_hint", "reference_mode", "style_strength", "soul_prompt"],
+      "properties": {
+        "preset_hint": { "type": "string" },
+        "reference_mode": { "type": "string", "enum": ["style", "composition"] },
+        "style_strength": { "type": "number", "minimum": 0.7, "maximum": 0.85 },
+        "soul_prompt": { "type": "string" }
+      }
+    },
+    "model_variants": {
+      "type": "object",
+      "required": ["flux_sdxl", "midjourney"],
+      "properties": {
+        "flux_sdxl": { "type": "string" },
+        "midjourney": { "type": "string" }
+      }
+    },
+    "negative_prompt": {
+      "type": "object",
+      "required": ["anti_cgi", "anatomy", "artifacts", "lighting", "prohibited"],
+      "properties": {
+        "anti_cgi": { "type": "array", "items": { "type": "string" } },
+        "anatomy": { "type": "array", "items": { "type": "string" } },
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "lighting": { "type": "array", "items": { "type": "string" } },
+        "prohibited": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "generation_params": {
+      "type": "object",
+      "required": ["aspect_ratio"],
+      "properties": {
+        "aspect_ratio": { "type": "string" },
+        "recommended_models": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

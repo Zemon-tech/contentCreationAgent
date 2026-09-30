@@ -291,6 +291,12 @@ HARD CONSTRAINTS (Strictly Enforced):
             "Cover image is provided directly by URL and used as-is for slide 1 hero. "
             "Still write a slide 1 hero prompt describing it (drives alt text and fallback)."
         )
+    if request.cover_prompt:
+        user_parts.append(
+            "A skill-generated Flux cover prompt is supplied separately and will override "
+            "the slide 1 hero image prompt after planning. Write a coherent slide 1 hero "
+            "prompt anyway (drives alt text), keeping the same subject so art direction stays aligned."
+        )
     if request.language:
         user_parts.append(f"Language hint: {request.language}")
     if request.format:

@@ -10,6 +10,8 @@ import {
 } from '@mastra/observability';
 import { agent } from './agents/agent';
 import { aggregatorAgent } from './agents/aggregatorAgent';
+import { imageGenAgent } from './agents/imageGenAgent';
+import { fluxOutputRoute } from './lib/flux-output-route';
 import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
 import { findSimilarContentTool, generateEmbeddingTool } from './tools/analysis-tools';
 import {
@@ -21,8 +23,16 @@ import {
 import { exaScrapeTool, exaSearchTool } from './tools/exa-tools';
 import { searchNewsAndCreatePostTool,
     createPostFromContentTool } from './tools/design-tools';
+import { generateCoverPromptTool } from './tools/cover-tools';
+import { generateAnglePackTool } from './tools/angle-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
+import {
+  fetchReferenceImageTool,
+  generateFluxImageTool,
+  savePastedImageTool,
+  useInboxReferencesTool,
+} from './tools/flux-tools';
 import {
   getIndustryConfigTool,
   getSourceRegistryTool,
@@ -40,7 +50,11 @@ export const mastra = new Mastra({
   bundler: {
     externals: ['@duckdb/node-bindings'],
   },
-  agents: { agent, aggregatorAgent },
+  server: {
+    // Serves rendered Flux images so they display inline in Studio chat.
+    apiRoutes: [fluxOutputRoute],
+  },
+  agents: { agent, aggregatorAgent, imageGenAgent },
   workflows: { industryAggregationWorkflow, newsToPostWorkflow },
   tools: {
     startScheduleTool,
@@ -53,6 +67,8 @@ export const mastra = new Mastra({
     exaScrapeTool,
     searchNewsAndCreatePostTool,
     createPostFromContentTool,
+    generateCoverPromptTool,
+    generateAnglePackTool,
     getCurrentTimeTool,
     sweepSourcesTool,
     generateEmbeddingTool,
@@ -65,6 +81,10 @@ export const mastra = new Mastra({
     saveStoryTool,
     saveStoriesTool,
     saveContentOpportunityTool,
+    savePastedImageTool,
+    useInboxReferencesTool,
+    fetchReferenceImageTool,
+    generateFluxImageTool,
   },
   storage: new MastraCompositeStore({
     id: 'composite-storage',

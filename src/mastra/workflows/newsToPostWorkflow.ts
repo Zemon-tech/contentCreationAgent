@@ -1,62 +1,116 @@
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
 import { searchExa, scrapeExa } from '../tools/exa-tools';
+import { buildAnglePack } from '../lib/angle-pack';
+import { buildCoverPrompt } from '../lib/cover-prompt';
 import {
   submitDesignJob,
   waitForDesignJob,
   copyDeliverablesToWorkspace,
+  getPreviewHtml,
+  downloadBundleZip,
+  savePreviewAndBundle,
 } from '../lib/design-agent-client';
+
+/**
+ * News → Post pipeline (v2):
+ *
+ *   collect (user news OR live search, all relevant content)
+ *     → PARALLEL fan-out: [cover-prompt via neoclassical-editorial skill,
+ *                          viral/controversy/unique-angle mining]
+ *     → template select (explicit choice wins, else auto)
+ *     → render via Design Agent (cover prompt drives slide-1 hero)
+ *     → package (preview.html + bundle.zip in the workspace)
+ */
+
+const TemplateIdSchema = z.enum([
+  'tech-announcement',
+  'keilhq-editorial',
+  'keilhq-text',
+  'entrepreneur-post',
+  '360labs-news',
+]);
 
 // ---------- Schemas ----------
 
-export const NewsToPostInputSchema = z.object({
-  topic: z.string().min(1).describe("News topic or query to search, e.g. 'Anthropic Claude' or 'OpenAI'"),
-  template_id: z
-    .enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news'])
-    .default('tech-announcement')
-    .describe("Design template to use. 'tech-announcement' is recommended for tech news."),
-  format: z.enum(['single', 'carousel']).default('single').describe('Single slide or multi-slide carousel.'),
-  aspect_ratio: z.enum(['4:5', '1:1', '3:4']).default('4:5'),
-  max_slides: z.number().int().min(1).max(10).default(5),
-  cover_image_url: z
-    .string()
-    .url()
-    .optional()
-    .describe('Optional direct image URL used as-is for the cover (slide 1) hero instead of AI generation.'),
-});
+export const NewsToPostInputSchema = z
+  .object({
+    topic: z.string().min(1).optional().describe("News topic to search, e.g. 'Anthropic Claude'. Omit when content is provided."),
+    content: z
+      .string()
+      .min(10)
+      .optional()
+      .describe('User-provided news text used directly instead of web search.'),
+    template_id: TemplateIdSchema.optional().describe(
+      'Suggested template. Omit for auto-select (controversy/news → 360labs-news, tech launch → tech-announcement, founder → entrepreneur-post).',
+    ),
+    format: z.enum(['single', 'carousel']).default('single').describe('Single slide or multi-slide carousel.'),
+    aspect_ratio: z.enum(['4:5', '1:1', '3:4']).default('4:5'),
+    max_slides: z.number().int().min(1).max(10).default(5),
+    cover_image_url: z
+      .string()
+      .url()
+      .optional()
+      .describe('Optional direct image URL used as-is for the cover (slide 1) hero instead of AI generation.'),
+    cover_prompt: z
+      .string()
+      .min(10)
+      .optional()
+      .describe('Optional explicit Flux cover prompt overriding the skill-generated one.'),
+  })
+  .refine((v) => v.topic || v.content, {
+    message: 'Provide either `topic` (to search news) or `content` (user-provided news).',
+  });
 
-const ResearchOutputSchema = z.object({
+const CollectOutputSchema = z.object({
   topic: z.string(),
-  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news']),
+  template_id: TemplateIdSchema.optional(),
   format: z.enum(['single', 'carousel']),
   aspect_ratio: z.enum(['4:5', '1:1', '3:4']),
   max_slides: z.number(),
   cover_image_url: z.string().url().optional(),
+  cover_prompt: z.string().optional(),
   articleTitle: z.string(),
   articleUrl: z.string(),
   articlePublishedDate: z.string().nullable(),
   articleText: z.string(),
   summary: z.string(),
+  sources: z.array(z.string()),
 });
 
-const DistillOutputSchema = z.object({
-  topic: z.string(),
-  template_id: z.enum(['tech-announcement', 'keilhq-editorial', 'keilhq-text', 'entrepreneur-post', '360labs-news']),
-  format: z.enum(['single', 'carousel']),
-  aspect_ratio: z.enum(['4:5', '1:1', '3:4']),
-  max_slides: z.number(),
-  cover_image_url: z.string().url().optional(),
-  articleTitle: z.string(),
-  articleUrl: z.string(),
-  postContent: z.string(),
+const CoverSchema = z.object({
+  thesis: z.string(),
+  visualMetaphor: z.string(),
+  fluxPrompt: z.string(),
+  compact: z.string(),
+  colorPalette: z.array(z.string()),
+  composition: z.string(),
+  coverPromptJson: z.record(z.string(), z.unknown()),
 });
 
-export const NewsToPostOutputSchema = z.object({
+const AnglesSchema = z.object({
+  stakeholders: z.array(z.string()),
+  moneyAndNumbers: z.array(z.string()),
+  openQuestions: z.array(z.string()),
+  viralAngle: z.string(),
+  controversyAngle: z.string(),
+  uniqueAngle: z.string(),
+  recommendedAngle: z.string(),
+  rationale: z.string(),
+});
+
+const EnrichOutputSchema = CollectOutputSchema.extend({
+  cover: CoverSchema,
+  angles: AnglesSchema,
+});
+
+const TemplateOutputSchema = EnrichOutputSchema.extend({
+  selected_template: TemplateIdSchema,
+  template_rationale: z.string(),
+});
+
+const RenderOutputSchema = TemplateOutputSchema.extend({
   job_id: z.string(),
-  status: z.string(),
-  topic: z.string(),
-  newsTitle: z.string(),
-  newsUrl: z.string(),
   caption: z.string(),
   hashtags: z.array(z.string()),
   slides: z.array(
@@ -70,20 +124,65 @@ export const NewsToPostOutputSchema = z.object({
   copiedFiles: z.array(z.string()),
 });
 
+export const NewsToPostOutputSchema = RenderOutputSchema.extend({
+  status: z.string(),
+  newsTitle: z.string(),
+  newsUrl: z.string(),
+  coverPrompt: z.object({
+    thesis: z.string(),
+    visualMetaphor: z.string(),
+    fluxPrompt: z.string(),
+  }),
+  anglePack: z.object({
+    recommendedAngle: z.string(),
+    viralAngle: z.string(),
+    controversyAngle: z.string(),
+    uniqueAngle: z.string(),
+  }),
+  previewFile: z.string().nullable(),
+  zipFile: z.string().nullable(),
+});
+
 // ---------- Steps ----------
 
 /**
- * Step 1: Search and collect primary news content using Exa.
+ * Step 1: Collect — user-provided news is used as-is; otherwise search Exa
+ * and merge all relevant results (not just the first snippet).
  */
-export const researchNewsStep = createStep({
-  id: 'research-news',
+export const collectNewsStep = createStep({
+  id: 'collect-news',
   inputSchema: NewsToPostInputSchema,
-  outputSchema: ResearchOutputSchema,
+  outputSchema: CollectOutputSchema,
   execute: async ({ inputData }) => {
-    // Focus query on news and announcements if not already specified
-    const hasNewsKeyword = /news|announc|launch|update|release|breakthrough|model/i.test(inputData.topic);
-    const searchQuery = hasNewsKeyword ? inputData.topic : `${inputData.topic} news announcement`;
+    const format = inputData.format || 'single';
 
+    // Direct path: user provided the news.
+    if (inputData.content) {
+      const text = inputData.content.trim();
+      const firstLine = text.split('\n')[0].slice(0, 120).trim();
+      const title = (inputData.topic || firstLine || 'User-provided story').trim();
+      console.log(`[newsToPostWorkflow] Using user-provided news (${text.length} chars).`);
+      return {
+        topic: inputData.topic || title,
+        template_id: inputData.template_id,
+        format,
+        aspect_ratio: inputData.aspect_ratio || '4:5',
+        max_slides: inputData.max_slides || 5,
+        cover_image_url: inputData.cover_image_url,
+        cover_prompt: inputData.cover_prompt,
+        articleTitle: title,
+        articleUrl: '',
+        articlePublishedDate: null,
+        articleText: text,
+        summary: text.slice(0, 600),
+        sources: [],
+      };
+    }
+
+    // Search path: live news via Exa, merging every relevant result.
+    const topic = inputData.topic as string;
+    const hasNewsKeyword = /news|announc|launch|update|release|breakthrough|model/i.test(topic);
+    const searchQuery = hasNewsKeyword ? topic : `${topic} news announcement`;
     console.log(`[newsToPostWorkflow] Searching news for query: "${searchQuery}"...`);
 
     let searchResult;
@@ -96,7 +195,7 @@ export const researchNewsStep = createStep({
         includeText: true,
       });
     } catch (err) {
-      console.warn(`[newsToPostWorkflow] Exa search with category 'news' failed, retrying general search:`, err);
+      console.warn(`[newsToPostWorkflow] Exa news-category search failed, retrying general:`, err);
       searchResult = await searchExa({
         query: searchQuery,
         numResults: 6,
@@ -105,129 +204,179 @@ export const researchNewsStep = createStep({
       });
     }
 
-    const items = searchResult?.results ?? [];
+    const items = (searchResult?.results ?? []).filter(
+      (item) => item.text && item.text.length > 200 && !/^https?:\/\/[^\/]+\/?$/.test(item.url),
+    );
     if (items.length === 0) {
-      throw new Error(`No news found for topic "${inputData.topic}". Try a different or broader search term.`);
+      throw new Error(`No news found for topic "${topic}". Try a different or broader search term.`);
     }
 
-    // Pick top news result that has informative content (avoiding root homepages)
-    const selected =
-      items.find(
-        (item) => item.text && item.text.length > 200 && !/^https?:\/\/[^\/]+\/?$/.test(item.url),
-      ) || items[0];
-
-    let articleText = selected.text || '';
-
-    // If snippet is short (< 300 chars), scrape full content
-    if (articleText.length < 300 && selected.url) {
+    // Scrape thin snippets so every source contributes real content.
+    const thin = items.filter((i) => (i.text || '').length < 800).slice(0, 4);
+    const scrapedByUrl = new Map<string, string>();
+    if (thin.length > 0) {
       try {
-        console.log(`[newsToPostWorkflow] Scraping full text from ${selected.url}...`);
         const scrapeResult = await scrapeExa({
-          urls: [selected.url],
+          urls: thin.map((i) => i.url),
           maxCharacters: 4000,
           maxAgeHours: 24,
         });
-        const scraped = scrapeResult?.contents?.find((c) => c.url === selected.url);
-        if (scraped?.text) {
-          articleText = scraped.text;
+        for (const c of scrapeResult?.contents ?? []) {
+          if (c.text) scrapedByUrl.set(c.url, c.text);
         }
       } catch (err) {
-        console.warn(`[newsToPostWorkflow] Exa scrape failed, using snippet:`, err);
+        console.warn(`[newsToPostWorkflow] Exa scrape failed, using snippets:`, err);
       }
     }
 
-    const cleanTitle = (selected.title || inputData.topic).trim();
-    const cleanText = articleText.trim();
-    const summary = cleanText.slice(0, 600);
+    const primary = items[0];
+    const mergedText = items
+      .slice(0, 3)
+      .map((i) => (scrapedByUrl.get(i.url) || i.text || '').trim())
+      .filter(Boolean)
+      .join('\n\n---\n\n')
+      .slice(0, 6000);
 
     return {
-      topic: inputData.topic,
+      topic,
       template_id: inputData.template_id,
-      format: inputData.format,
-      aspect_ratio: inputData.aspect_ratio,
-      max_slides: inputData.max_slides,
+      format,
+      aspect_ratio: inputData.aspect_ratio || '4:5',
+      max_slides: inputData.max_slides || 5,
       cover_image_url: inputData.cover_image_url,
-      articleTitle: cleanTitle,
-      articleUrl: selected.url,
-      articlePublishedDate: selected.publishedDate ?? null,
-      articleText: cleanText,
-      summary,
+      cover_prompt: inputData.cover_prompt,
+      articleTitle: (primary.title || topic).trim(),
+      articleUrl: primary.url,
+      articlePublishedDate: primary.publishedDate ?? null,
+      articleText: mergedText,
+      summary: mergedText.slice(0, 600),
+      sources: items.slice(0, 3).map((i) => i.url),
     };
   },
 });
 
 /**
- * Step 2: Distill the news facts and takeaways into post-ready text.
+ * Step 2: PARALLEL fan-out — cover JSON prompt (neoclassical-editorial
+ * skill, Flux-adapted) and viral/controversy/unique-angle mining run
+ * concurrently via Promise.all on the same collected story.
  */
-export const distillPostCopyStep = createStep({
-  id: 'distill-post-copy',
-  inputSchema: ResearchOutputSchema,
-  outputSchema: DistillOutputSchema,
+export const enrichParallelStep = createStep({
+  id: 'enrich-parallel',
+  inputSchema: CollectOutputSchema,
+  outputSchema: EnrichOutputSchema,
   execute: async ({ inputData }) => {
-    console.log(`[newsToPostWorkflow] Distilling news story: "${inputData.articleTitle}"...`);
+    console.log(`[newsToPostWorkflow] Fan-out: cover prompt + angle pack in parallel...`);
+    const [cover, angles] = await Promise.all([
+      (async () => buildCoverPrompt(inputData.articleTitle, inputData.articleText, 'flux'))(),
+      (async () => buildAnglePack(inputData.articleTitle, inputData.articleText))(),
+    ]);
 
+    // Explicit caller override wins for the render prompt only.
+    if (inputData.cover_prompt) {
+      cover.fluxPrompt = inputData.cover_prompt;
+      (cover.coverPromptJson as Record<string, Record<string, string>>).prompts = {
+        primary: inputData.cover_prompt,
+        compact: cover.compact,
+        model_specific: inputData.cover_prompt,
+      };
+    }
+
+    console.log(`[newsToPostWorkflow] Cover thesis: ${cover.thesis}`);
+    console.log(`[newsToPostWorkflow] Recommended angle: ${angles.recommendedAngle.slice(0, 120)}...`);
+    return { ...inputData, cover, angles };
+  },
+});
+
+/**
+ * Step 3: Template select — explicit suggestion wins; otherwise auto-pick
+ * from story signals and record the rationale.
+ */
+export const selectTemplateStep = createStep({
+  id: 'select-template',
+  inputSchema: EnrichOutputSchema,
+  outputSchema: TemplateOutputSchema,
+  execute: async ({ inputData }) => {
+    if (inputData.template_id) {
+      return {
+        ...inputData,
+        selected_template: inputData.template_id,
+        template_rationale: 'User-suggested template honored.',
+      };
+    }
+    const text = `${inputData.articleTitle}\n${inputData.articleText}`;
+    let selected: z.infer<typeof TemplateIdSchema>;
+    let rationale: string;
+    if (/controvers|accus|investigat|breach|leak|scandal|vs\.|lawsuit/i.test(text)) {
+      selected = '360labs-news';
+      rationale = 'Auto: controversy/investigation story → 360labs-news editorial carousel (hero + evidence slides).';
+    } else if (/founder|startup|entrepreneur|raise|series [abc]/i.test(text)) {
+      selected = 'entrepreneur-post';
+      rationale = 'Auto: founder/startup story → entrepreneur-post magazine layout.';
+    } else if (inputData.format === 'carousel') {
+      selected = '360labs-news';
+      rationale = 'Auto: carousel requested without preference → 360labs-news multi-slide deck.';
+    } else if (/launch|release|announc|model|introduc/i.test(text)) {
+      selected = 'tech-announcement';
+      rationale = 'Auto: tech launch/announcement → tech-announcement bold single.';
+    } else {
+      selected = 'keilhq-editorial';
+      rationale = 'Auto: general insight story → keilhq-editorial quiet layout.';
+    }
+    console.log(`[newsToPostWorkflow] Template: ${selected} (${rationale})`);
+    return { ...inputData, selected_template: selected, template_rationale: rationale };
+  },
+});
+
+/**
+ * Step 4: Render — angle-enriched copy + skill cover prompt go to Design
+ * Agent; the cover prompt drives the slide-1 hero slot.
+ */
+export const renderPostStep = createStep({
+  id: 'render-post',
+  inputSchema: TemplateOutputSchema,
+  outputSchema: RenderOutputSchema,
+  execute: async ({ inputData }) => {
     const narrative = inputData.articleText.length > 0 ? inputData.articleText.slice(0, 1500) : inputData.summary;
+    const sourceLine =
+      inputData.sources.length > 0
+        ? `Sources: ${inputData.sources.join(', ')}`
+        : inputData.articleUrl
+          ? `Source: ${inputData.articleUrl}`
+          : 'Source: user-provided';
 
     const postContent = `
 ${inputData.articleTitle}
 
+Angle: ${inputData.angles.recommendedAngle}
+
 ${narrative}
 
-Source: ${inputData.articleUrl}
+${sourceLine}
 `.trim();
 
-    return {
-      topic: inputData.topic,
-      template_id: inputData.template_id,
-      format: inputData.format,
-      aspect_ratio: inputData.aspect_ratio,
-      max_slides: inputData.max_slides,
-      cover_image_url: inputData.cover_image_url,
-      articleTitle: inputData.articleTitle,
-      articleUrl: inputData.articleUrl,
-      postContent,
-    };
-  },
-});
-
-/**
- * Step 3: Send post copy to Design Agent, await rendering, and copy deliverables to workspace.
- */
-export const renderPostStep = createStep({
-  id: 'render-post',
-  inputSchema: DistillOutputSchema,
-  outputSchema: NewsToPostOutputSchema,
-  execute: async ({ inputData }) => {
-    console.log(`[newsToPostWorkflow] Submitting job to Design Agent (${inputData.template_id}, ${inputData.format})...`);
-
+    console.log(
+      `[newsToPostWorkflow] Submitting job (${inputData.selected_template}, ${inputData.format}) with skill cover prompt...`,
+    );
     const { job_id } = await submitDesignJob({
-      content: inputData.postContent,
-      template_id: inputData.template_id,
+      content: postContent,
+      template_id: inputData.selected_template,
       format: inputData.format,
       aspect_ratio: inputData.aspect_ratio,
       max_slides: inputData.max_slides,
       ...(inputData.cover_image_url ? { cover_image_url: inputData.cover_image_url } : {}),
+      cover_prompt: inputData.cover.fluxPrompt,
     });
-
-    console.log(`[newsToPostWorkflow] Job created: ${job_id}. Waiting for rendering...`);
 
     const jobStatus = await waitForDesignJob(job_id, {
       timeoutMs: 180_000,
       pollIntervalMs: 2_000,
-      onProgress: (status) => {
-        console.log(`[newsToPostWorkflow] Job ${job_id} status: ${status}`);
-      },
+      onProgress: (status) => console.log(`[newsToPostWorkflow] Job ${job_id} status: ${status}`),
     });
 
-    console.log(`[newsToPostWorkflow] Job completed! Copying deliverables to workspace...`);
     const deliverables = copyDeliverablesToWorkspace(jobStatus);
-
     return {
+      ...inputData,
       job_id,
-      status: 'done',
-      topic: inputData.topic,
-      newsTitle: inputData.articleTitle,
-      newsUrl: inputData.articleUrl,
       caption: deliverables.caption,
       hashtags: deliverables.hashtags,
       slides: deliverables.slides,
@@ -237,16 +386,58 @@ export const renderPostStep = createStep({
   },
 });
 
+/**
+ * Step 5: Package — fetch the HTML preview + bundle ZIP (best-effort for
+ * older Design Agent servers) and save them next to the slides.
+ */
+export const packagePostStep = createStep({
+  id: 'package-post',
+  inputSchema: RenderOutputSchema,
+  outputSchema: NewsToPostOutputSchema,
+  execute: async ({ inputData }) => {
+    let previewHtml: string | null = null;
+    let zipBytes: Buffer | null = null;
+    try {
+      [previewHtml, zipBytes] = await Promise.all([getPreviewHtml(inputData.job_id), downloadBundleZip(inputData.job_id)]);
+    } catch (err) {
+      console.warn(`[newsToPostWorkflow] Preview/zip fetch failed (continuing without):`, err);
+    }
+    const { previewFile, zipFile } = savePreviewAndBundle(inputData.workspaceDir, previewHtml, zipBytes);
+
+    return {
+      ...inputData,
+      status: 'done',
+      newsTitle: inputData.articleTitle,
+      newsUrl: inputData.articleUrl,
+      coverPrompt: {
+        thesis: inputData.cover.thesis,
+        visualMetaphor: inputData.cover.visualMetaphor,
+        fluxPrompt: inputData.cover.fluxPrompt,
+      },
+      anglePack: {
+        recommendedAngle: inputData.angles.recommendedAngle,
+        viralAngle: inputData.angles.viralAngle,
+        controversyAngle: inputData.angles.controversyAngle,
+        uniqueAngle: inputData.angles.uniqueAngle,
+      },
+      previewFile,
+      zipFile,
+    };
+  },
+});
+
 // ---------- Workflow ----------
 
 export const newsToPostWorkflow = createWorkflow({
   id: 'news-to-post-workflow',
   description:
-    'Searches live news using Exa, synthesizes key announcement details, submits to Design Agent, and outputs completed Instagram slide images + caption into the workspace.',
+    'Collects news (user-provided or live Exa search), fans out cover-prompt generation (neoclassical-editorial skill) + angle mining in parallel, auto-selects template, renders via Design Agent, and packages preview.html + bundle.zip.',
   inputSchema: NewsToPostInputSchema,
   outputSchema: NewsToPostOutputSchema,
 })
-  .then(researchNewsStep)
-  .then(distillPostCopyStep)
+  .then(collectNewsStep)
+  .then(enrichParallelStep)
+  .then(selectTemplateStep)
   .then(renderPostStep)
+  .then(packagePostStep)
   .commit();

@@ -1,0 +1,24 @@
+{
+  "house_colors": {
+    "#087FEA": "electric blue (dominant bg)",
+    "#0B0C0C": "deep ink (hero anchor)",
+    "#F3EFE5": "warm paper (ground/highlight)",
+    "#F4E900": "acid yellow (accent)",
+    "#18A8C7": "cyan (support)",
+    "#FF8A00": "orange (optional accent)",
+    "#6A39D7": "ultraviolet (optional)",
+    "#C4CF36": "acid lime (optional)",
+    "#D96532": "terracotta (optional)",
+    "#253F25": "dark botanical green (optional)"
+  },
+  "medium_terms": ["antique engraving", "copperplate etching", "woodcut", "scientific illustration", "stippled illustration", "cross-hatched ink drawing", "vintage print", "halftone", "screen print", "risograph", "paper collage", "mixed-media editorial collage"],
+  "texture_terms": ["dense cross-hatching", "fine engraving lines", "stipple dots", "halftone", "paper grain", "paper tooth", "ink breakup", "screen-print misregistration", "risograph texture", "xerox texture", "distressed print edges", "uneven ink density", "paper fiber", "ink absorption"],
+  "material_terms": ["marble", "aged paper", "engraved metal", "carved stone", "oxidized bronze", "parchment", "wood", "canvas", "ink", "printed paper", "brushed metal", "glass"],
+  "historical_terms": ["Greco-Roman sculpture", "marble statue", "classical architecture", "antique engraving", "botanical illustration", "Victorian scientific illustration", "Renaissance reference", "classical landscape", "historical portraiture", "old diagram", "antique object", "copperplate etching"],
+  "contemporary_terms": ["laptop", "smartphone", "AI", "software", "data", "robot", "cloud computing", "modern office", "social media", "satellite", "network", "modern transportation", "contemporary product", "abstract technology"],
+  "composition_patterns": ["A hero-plus-symbolic-object", "B classical-figure-plus-modern-tech", "C object-collision", "D central-subject-plus-small-symbols", "E classical-landscape-plus-modern-intrusion", "F diagrammatic-editorial-collage", "G surreal-scale-shift"],
+  "mood_terms": ["intellectually curious", "surreal", "playful", "sophisticated", "provocative", "strange", "delightful", "slightly absurd", "editorial", "culturally literate"],
+  "avoid_terms": ["generic digital illustration", "generic vector art", "glossy CGI", "stock photography", "generic cinematic concept art", "generic corporate", "generic inspirational", "generic futuristic", "generic epic", "generic sci-fi", "bokeh", "shallow depth of field"],
+  "lighting_terms": ["directional graphic light", "dramatic illustrated shadows", "black ink shadow masses", "paper-white highlights", "warm-cool contrast", "saturated environmental light", "symbolic glow"],
+  "finish_terms": ["warm ivory paper", "deep black ink", "halftone", "stippling", "slight misregistration", "distressed edges", "ink absorption", "paper fiber", "antique print reproduced through modern editorial screen printing"]
+}

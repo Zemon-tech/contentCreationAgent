@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CommercialStoryboardSchema",
+  "description": "Production-grade schema for commercial video scripts and scene-by-scene storyboards ready for LTX-2.3",
+  "type": "object",
+  "required": [
+    "campaign_metadata",
+    "product_and_audience",
+    "creative_concept",
+    "scenes",
+    "brand_end_card"
+  ],
+  "properties": {
+    "campaign_metadata": {
+      "type": "object",
+      "required": ["campaign_title", "target_runtime_seconds", "aspect_ratio", "creative_archetype"],
+      "properties": {
+        "campaign_title": { "type": "string" },
+        "target_runtime_seconds": { "type": "number" },
+        "aspect_ratio": { "type": "string", "enum": ["16:9", "9:16", "2.39:1"] },
+        "creative_archetype": { "type": "string" },
+        "visual_style": { "type": "string" },
+        "film_stock_profile": { "type": "string" }
+      }
+    },
+    "product_and_audience": {
+      "type": "object",
+      "required": ["product_name", "target_audience", "core_villain", "magic_moment", "emotional_destination"],
+      "properties": {
+        "product_name": { "type": "string" },
+        "target_audience": { "type": "string" },
+        "core_villain": { "type": "string" },
+        "magic_moment": { "type": "string" },
+        "emotional_destination": { "type": "string" }
+      }
+    },
+    "creative_concept": {
+      "type": "object",
+      "required": ["logline", "core_tagline", "music_direction"],
+      "properties": {
+        "logline": { "type": "string" },
+        "core_tagline": { "type": "string" },
+        "music_direction": { "type": "string" }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "scene_number",
+          "title",
+          "timecode",
+          "duration_seconds",
+          "dramatic_beat",
+          "spatial_blocking",
+          "action_timeline",
+          "performance",
+          "camera",
+          "lighting",
+          "audio",
+          "ltx_prompt_preview"
+        ],
+        "properties": {
+          "scene_number": { "type": "integer" },
+          "title": { "type": "string" },
+          "timecode": { "type": "string" },
+          "duration_seconds": { "type": "number" },
+          "dramatic_beat": { "type": "string", "enum": ["Hook", "Friction", "Pivot", "Flow", "Resolution", "CTA"] },
+          "spatial_blocking": {
+            "type": "object",
+            "properties": {
+              "foreground": { "type": "string" },
+              "midground": { "type": "string" },
+              "background": { "type": "string" }
+            }
+          },
+          "action_timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": { "type": "string" },
+                "action": { "type": "string" }
+              }
+            }
+          },
+          "performance": {
+            "type": "object",
+            "properties": {
+              "micro_actions": { "type": "string" },
+              "emotional_tone": { "type": "string" },
+              "forbidden": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "camera": {
+            "type": "object",
+            "properties": {
+              "lens": { "type": "string" },
+              "starting_height": { "type": "string" },
+              "movement": { "type": "string" },
+              "constraints": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "lighting": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "temperature": { "type": "string" },
+              "mood": { "type": "string" }
+            }
+          },
+          "audio": {
+            "type": "object",
+            "properties": {
+              "acoustics": { "type": "string" },
+              "foley": { "type": "array", "items": { "type": "string" } },
+              "voiceover_or_dialogue": { "type": "string" },
+              "music_cue": { "type": "string" }
+            }
+          },
+          "post_compositing": { "type": "string" },
+          "ltx_prompt_preview": { "type": "string" }
+        }
+      }
+    },
+    "brand_end_card": {
+      "type": "object",
+      "required": ["brand_name", "tagline", "call_to_action", "composition_notes"],
+      "properties": {
+        "brand_name": { "type": "string" },
+        "tagline": { "type": "string" },
+        "call_to_action": { "type": "string" },
+        "composition_notes": { "type": "string" }
+      }
+    }
+  }
+}

@@ -29,7 +29,10 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Anchored to the design-agent project dir so the server picks up
+        # the right .env no matter which working directory it is launched
+        # from (uvicorn CWD bugs used to silently fall back to defaults).
+        env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

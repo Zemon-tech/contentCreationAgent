@@ -1,0 +1,66 @@
+{
+  "camera_movement_presets": {
+    "subtle_character_push_in": {
+      "name": "Subtle Character Push-In (Dolly In)",
+      "camera_type": "Full-frame cinema camera on precision geared dolly tracks",
+      "lens": "50mm T1.5 prime lens",
+      "starting_position": "Medium shot framing character from chest up at 2.2m distance",
+      "starting_height": "1.4m eye level",
+      "ending_height": "1.4m level hold",
+      "depth_of_field": "Shallow depth of field (T2.0) isolating subject from soft background",
+      "focus_priority": "Leading eye of primary character",
+      "movement_timeline": {
+        "start_hold": "Static observational hold for first 1.5 seconds",
+        "dolly_phase": "Smooth forward push-in traveling 0.6m at gentle 0.15 m/s velocity",
+        "settle_phase": "Gradual deceleration over final 1.5 seconds settling into tight medium close-up"
+      },
+      "constraints": ["no zoom lens distortion", "no camera shake", "no whip pan", "no sudden stop"]
+    },
+    "parallel_tracking_walk": {
+      "name": "Lateral Parallel Tracking Shot",
+      "camera_type": "Steadicam / stabilized gimbal tracking alongside subjects",
+      "lens": "35mm prime lens",
+      "starting_position": "Two-person profile two-shot at 3.0m distance",
+      "starting_height": "1.2m matching seated-to-standing eye line",
+      "ending_height": "1.5m matching walking eye line",
+      "depth_of_field": "Moderate depth of field keeping both subjects sharp",
+      "focus_priority": "Subjects' interaction plane",
+      "movement_timeline": {
+        "lead_in": "Subtle organic drift as characters begin moving",
+        "tracking_phase": "Smooth parallel lateral truck moving at synchronized walking pace (1.1 m/s)",
+        "end_phase": "Camera gently pans 15 degrees inward to reveal destination environment ahead"
+      },
+      "constraints": ["no erratic gimbal bumps", "no floating drone feeling", "no rolling shutter tilt"]
+    },
+    "static_observational_zen": {
+      "name": "Locked-Off Observational Master Hold",
+      "camera_type": "Heavy studio tripod with locked fluid head",
+      "lens": "35mm or 40mm cinematic prime",
+      "starting_position": "Wide environmental framing capturing room architecture and characters",
+      "starting_height": "1.3m chest level",
+      "ending_height": "1.3m unchanged",
+      "depth_of_field": "Deep focus (f/5.6 - f/8) rendering foreground props and background architecture sharp",
+      "focus_priority": "Entire spatial interaction field",
+      "movement_timeline": {
+        "duration": "100% locked-off stillness; camera is entirely stationary",
+        "internal_motion": "All motion comes strictly from characters, breathing, light changes, and environmental physics"
+      },
+      "constraints": ["zero camera movement", "zero zoom", "no artificial handheld breathing"]
+    },
+    "organic_documentary_handheld": {
+      "name": "Organic Human Handheld Breathing",
+      "camera_type": "Shoulder-mounted cinema rig (Arri Alexa Mini LF style)",
+      "lens": "35mm prime lens",
+      "starting_position": "Over-the-shoulder framing looking toward secondary subject",
+      "starting_height": "1.5m natural shoulder height",
+      "ending_height": "1.5m with natural human sway (+/- 2cm)",
+      "depth_of_field": "Medium-shallow depth of field",
+      "focus_priority": "Foreground shoulder soft, target subject sharp",
+      "movement_timeline": {
+        "organic_sway": "Subtle breathing rhythm, natural human inertia and micro-adjustments",
+        "focus_pull": "Organic micro-focus tracking matching subject's head turn"
+      },
+      "constraints": ["no chaotic action-cam shake", "no Dutch tilts", "no digital post-shake blur"]
+    }
+  }
+}

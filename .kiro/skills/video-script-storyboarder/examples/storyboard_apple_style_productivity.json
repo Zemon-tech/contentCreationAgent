@@ -1,0 +1,230 @@
+{
+  "campaign_metadata": {
+    "campaign_title": "THE 9:00 AM DEADLINE",
+    "target_runtime_seconds": 30,
+    "aspect_ratio": "16:9",
+    "creative_archetype": "apple_underdogs_kinetic",
+    "visual_style": "Candid kinetic commercial realism, natural daylight, crisp tactile foley",
+    "film_stock_profile": "Arri Alexa Rec.709 with Kodak Portra 400 warm grade"
+  },
+  "product_and_audience": {
+    "product_name": "Loomis Collaborative AI",
+    "target_audience": "Fast-moving product design teams, startup founders, agency creatives",
+    "core_villain": "Disjointed team syncs, version-control chaos, frantic morning panic before client presentations",
+    "magic_moment": "One team member makes a live edit and all presentation assets instantly recompile seamlessly across everyone's laptops",
+    "emotional_destination": "Humorous relief, shared team camaraderie, effortless victory"
+  },
+  "creative_concept": {
+    "logline": "A design team discovers a critical client slide is broken 8 minutes before the pitch, turning panic into effortless flow.",
+    "core_tagline": "Work together. Like magic.",
+    "music_direction": "Snappy, percussive acoustic drum taps building into a rhythmic, joyful indie-funk groove"
+  },
+  "scenes": [
+    {
+      "scene_number": 1,
+      "title": "THE MORNING CRISIS",
+      "timecode": "00:00-00:05",
+      "duration_seconds": 5,
+      "dramatic_beat": "Hook",
+      "spatial_blocking": {
+        "foreground": "Tilted paper coffee cup with plastic lid on conference desk",
+        "midground": "Maya (team lead, 29) holding her phone to her ear while staring wide-eyed at her laptop",
+        "background": "Teammates rushing past glass partition in background"
+      },
+      "action_timeline": [
+        { "time": "00:00.0-00:02.5", "action": "Maya looks at the clock on the wall (8:52 AM), then looks at her screen with an expression of comedic shock." },
+        { "time": "00:02.5-00:05.0", "action": "She taps the desk with both palms and shouts across the room: 'Guys, the prototype dimensions are completely wrong!'" }
+      ],
+      "performance": {
+        "micro_actions": "Darting eyes, rapid head swivel toward wall clock, authentic stressed expression without melodrama",
+        "emotional_tone": "High-urgency, relatable workplace panic, humorous energy",
+        "forbidden": ["no cartoon faint", "no crying", "no breaking 4th wall"]
+      },
+      "camera": {
+        "lens": "35mm prime lens",
+        "starting_height": "1.3m chest level",
+        "movement": "Dynamic shoulder-mount handheld push-in with organic human inertia",
+        "constraints": ["natural human motion", "no wild action-cam shake"]
+      },
+      "lighting": {
+        "source": "Morning sunlight streaming through large open loft windows",
+        "temperature": "5200K natural window light",
+        "mood": "Bright, energetic, realistic modern workspace"
+      },
+      "audio": {
+        "acoustics": "Modern loft office acoustics with glass and brick reflections",
+        "foley": ["coffee cup sliding on laminate", "rapid palms slapping desk", "distant phone ringing"],
+        "voiceover_or_dialogue": "Maya: 'Guys, the prototype dimensions are completely wrong!'",
+        "music_cue": "Fast, rhythmic acoustic percussion starts tapping at 00:01.0"
+      },
+      "post_compositing": "Clock graphic composited on wall in post.",
+      "ltx_prompt_preview": "In a bright modern design studio with exposed brick and large loft windows, a 29-year-old female team lead in a striped cotton shirt and dark trousers sits at a blonde oak desk, looking in comedic panic between the wall clock and her open laptop. She gasps, slaps both open palms firmly on the desk, and turns urgently toward her colleagues shouting, \\\"Guys, the prototype dimensions are completely wrong!\\\" The camera frames her on a 35mm cinema lens with natural, organic shoulder-mount handheld breathing, dynamically pushing in 0.4 meters toward her expressive face with authentic kinetic energy and zero artificial digital shake. Bright 5200K morning daylight floods the room, creating crisp natural skin highlights and soft ambient bounce in Arri Rec.709 realism with fine 35mm grain, accompanied by the sharp slap of hands on wood, bustling background office footsteps, and a snappy rhythmic percussion beat."
+    },
+    {
+      "scene_number": 2,
+      "title": "THE TEAM SCRAMBLE",
+      "timecode": "00:05-00:11",
+      "duration_seconds": 6,
+      "dramatic_beat": "Friction",
+      "spatial_blocking": {
+        "foreground": "Liam (designer, 26) spinning around on his wheeled office chair",
+        "midground": "Maya and Liam leaning over the central table together",
+        "background": "Whiteboard covered in colorful sticky notes and rough sketches"
+      },
+      "action_timeline": [
+        { "time": "00:05.0-00:08.0", "action": "Liam kicks off his desk, rolling his chair over to Maya's desk with comical velocity." },
+        { "time": "00:08.0-00:11.0", "action": "He opens his laptop, frantically scrolling with two fingers: 'I have the 3D renders, but they're in three different files!'" }
+      ],
+      "performance": {
+        "micro_actions": "Rolling momentum, quick pointing gesture, rapid multi-finger trackpad scrolling",
+        "emotional_tone": "Frantic teamwork, kinetic excitement",
+        "forbidden": ["no cheesy high-fives", "no artificial laughing"]
+      },
+      "camera": {
+        "lens": "28mm wide cinema prime",
+        "starting_height": "1.2m matching seated height",
+        "movement": "Rapid lateral tracking shot following the wheeled chair, settling into a two-person mid-shot",
+        "constraints": ["smooth stabilized track", "no motion blur smear"]
+      },
+      "lighting": {
+        "source": "Overhead diffused studio softbox mixed with warm morning sun",
+        "temperature": "4800K balanced daylight",
+        "mood": "High-energy collaborative buzz"
+      },
+      "audio": {
+        "acoustics": "Open-plan office room tone",
+        "foley": ["office chair wheels rolling on smooth concrete", "trackpad double-clicks", "paper rustle"],
+        "voiceover_or_dialogue": "Liam: 'I have the 3D renders, but they're in three different files!'",
+        "music_cue": "Acoustic percussion groove intensifies with syncopated bass guitar"
+      },
+      "post_compositing": "None. Live-action physical staging.",
+      "ltx_prompt_preview": "In the bustling modern loft studio, a 26-year-old male designer wearing an olive chore jacket pushes off from his desk and rolls his office chair across the polished concrete floor over to his colleague's table with rapid athletic momentum. He opens his laptop screen, furiously swiping his fingers across the trackpad as he leans close to her, exclaiming urgently, \\\"I have the 3D renders, but they're in three different files!\\\" The camera is locked onto a 28mm wide prime lens, executing a rapid, stabilized lateral tracking shot that follows his rolling chair before smoothly settling into a dynamic two-person composition with level horizon and zero lens jitter. Soft daylight mixes with warm overhead bounce, rendering vivid textile textures, natural skin tones, and subtle 35mm grain, accompanied by the whirring of polyurethane chair wheels on concrete, rapid trackpad clicks, and a driving syncopated bass groove."
+    },
+    {
+      "scene_number": 3,
+      "title": "THE ONE-CLICK MAGIC",
+      "timecode": "00:11-00:18",
+      "duration_seconds": 7,
+      "dramatic_beat": "Pivot",
+      "spatial_blocking": {
+        "foreground": "Extreme close-up of Maya's hand tapping the trackpad with single decisive finger press",
+        "midground": "Both laptops side by side, simultaneously refreshing with a synchronized chime",
+        "background": "Both characters holding their breath, looking from screen to screen"
+      },
+      "action_timeline": [
+        { "time": "00:11.0-00:13.5", "action": "Maya types three words into the command bar and taps return with deliberate calm." },
+        { "time": "00:13.5-00:18.0", "action": "Both laptops instantly sync; all slides update in real time. Liam's mouth drops open; Maya blinks in quiet awe." }
+      ],
+      "performance": {
+        "micro_actions": "Single finger tap, frozen collective anticipation, synchronized double-take between screens",
+        "emotional_tone": "Astonished relief, modern magic",
+        "forbidden": ["no overacted screaming", "no cartoon bug-eyes"]
+      },
+      "camera": {
+        "lens": "50mm macro cinema lens racking focus to 35mm two-shot",
+        "starting_height": "1.1m desk level",
+        "movement": "Starts tight on hands, pulls back smoothly 0.5m to reveal both stunned faces",
+        "constraints": ["buttery smooth pull-back", "no focus hunting"]
+      },
+      "lighting": {
+        "source": "Luminous glow from both laptop screens reflecting in their eyes",
+        "temperature": "5000K clean white daylight",
+        "mood": "Clean, crisp, magical"
+      },
+      "audio": {
+        "acoustics": "Dry, focused desk acoustics",
+        "foley": ["crisp tactile return key press", "satisfying crystalline UI sync chime", "synchronized collective exhale"],
+        "voiceover_or_dialogue": "Liam (whispering): 'Wait... did that just...?' / Maya (smiling): 'Yep.'",
+        "music_cue": "The chaotic drums suddenly drop away, leaving a joyful, bright acoustic guitar strum"
+      },
+      "post_compositing": "UI sync animation composited on laptop screens in post.",
+      "ltx_prompt_preview": "In the design studio, an extreme close-up captures a woman's hand calmly typing a single command and pressing the return key on a laptop keyboard. The camera glides backward on a 50mm cinema lens from the tactile aluminum keys, revealing Maya and Liam seated side by side as their faces illuminate with mutual disbelief; Liam's mouth falls open as he checks both laptop displays, and Maya lets out a joyful, relieved breath, nodding with a confident half-smile. The camera move is a buttery smooth 0.5-meter dolly pull-back with crisp focus transitioning effortlessly from fingertips to facial expressions, without shake or digital artifacts. Clean 5000K display light reflects clearly in their eyes, balanced by warm natural morning daylight in Kodak Portra 400 warmth, accompanied by a clean mechanical key click, a pristine crystalline sync chime, and an intimate whisper, \\\"Wait... did that just...?\\\" \\\"Yep.\\\""
+    },
+    {
+      "scene_number": 4,
+      "title": "THE EFFORTLESS PITCH",
+      "timecode": "00:18-00:25",
+      "duration_seconds": 7,
+      "dramatic_beat": "Flow",
+      "spatial_blocking": {
+        "foreground": "Client conference room table with glasses of water",
+        "midground": "Maya standing confidently at the head of the conference table, presenting with natural charisma",
+        "background": "Clients nodding appreciatively, Liam smiling from the side of the room"
+      },
+      "action_timeline": [
+        { "time": "00:18.0-00:21.5", "action": "Maya gestures naturally with her hands, speaking with effortless authority and relaxed humor." },
+        { "time": "00:21.5-00:25.0", "action": "The senior client across the table smiles warmly and nods in approval; Liam catches Maya's eye and gives a subtle thumbs-up." }
+      ],
+      "performance": {
+        "micro_actions": "Open-hand gestures, relaxed shoulders, confident eye contact, warm natural smile",
+        "emotional_tone": "Effortless confidence, shared triumph",
+        "forbidden": ["no stiff corporate posture", "no robotic presenting"]
+      },
+      "camera": {
+        "lens": "50mm prime lens",
+        "starting_height": "1.4m seated client perspective",
+        "movement": "Slow, elegant tracking glide from client's shoulder to Maya's radiant presentation posture",
+        "constraints": ["smooth cinematic tracking", "no handheld shake"]
+      },
+      "lighting": {
+        "source": "Floor-to-ceiling glass boardroom windows overlooking city skyline",
+        "temperature": "5400K natural high-key daylight",
+        "mood": "Triumphant, professional, luminous"
+      },
+      "audio": {
+        "acoustics": "Spacious corporate conference room acoustics",
+        "foley": ["gentle paper turning", "soft leather chair swivel", "warm client chuckle"],
+        "voiceover_or_dialogue": "Maya: '...and that's how we ship before nine.'",
+        "music_cue": "Upbeat, warm indie-funk groove kicks in with full joyful bassline"
+      },
+      "post_compositing": "Client presentation slides on projection screen composited in post.",
+      "ltx_prompt_preview": "In a sunlit high-floor corporate boardroom with floor-to-ceiling skyline windows, Maya stands confidently at the head of the conference table in her striped shirt and rolled sleeves, gesturing gracefully with open hands as she concludes her pitch with a warm, magnetic smile. Across the polished oak table, two clients in smart-casual jackets nod appreciatively with relaxed smiles, while in the background Liam sits back in his chair giving a discreet, joyful wink of triumph. The camera moves in a smooth 50mm tracking glide at 1.4m height, capturing Maya's poised profile with flawless cinematic framing and zero camera wobble. Pristine 5400K natural skyline daylight bathes the scene in luminous clarity, Kodak Portra 400 skin rendition, subtle 35mm grain, and clean highlight roll-off, accompanied by gentle conference room ambience, a soft chuckle, and an upbeat indie-funk musical groove under her closing line, \\\"...and that's how we ship before nine.\\\""
+    },
+    {
+      "scene_number": 5,
+      "title": "THE BRAND LANDING",
+      "timecode": "00:25-00:30",
+      "duration_seconds": 5,
+      "dramatic_beat": "Resolution",
+      "spatial_blocking": {
+        "foreground": "Clean off-white minimal space",
+        "midground": "Loomis logo and tagline",
+        "background": "Soft natural paper texture"
+      },
+      "action_timeline": [
+        { "time": "00:25.0-00:27.5", "action": "Minimalist brand typography fades in smoothly." },
+        { "time": "00:27.5-00:30.0", "action": "CTA appears: 'Try Loomis free at loomis.ai'." }
+      ],
+      "performance": {
+        "micro_actions": "Pure typographic elegance",
+        "emotional_tone": "Warm, confident, delightfully human",
+        "forbidden": ["no 3D logo spins", "no cheesy corporate voiceover"]
+      },
+      "camera": {
+        "lens": "Post-production graphic end frame",
+        "starting_height": "Static",
+        "movement": "Static hold",
+        "constraints": ["vector graphics in post"]
+      },
+      "lighting": {
+        "source": "Neutral graphic studio balance",
+        "temperature": "Neutral",
+        "mood": "Crisp modern minimalism"
+      },
+      "audio": {
+        "acoustics": "Pristine studio audio",
+        "foley": [],
+        "voiceover_or_dialogue": "VO (Warm, conversational): 'Work together. Like magic. Loomis.'",
+        "music_cue": "Final cheerful acoustic bassline resolve with signature gentle chime"
+      },
+      "post_compositing": "High-resolution vector logo, typography, and CTA composited in post-production.",
+      "ltx_prompt_preview": "Clean minimalist brand end card: off-white natural cotton background, centered modern sans-serif typography displaying 'Loomis: Work together. Like magic.' and 'Try Loomis free at loomis.ai', crisp and elegant, accompanied by a warm conversational voiceover and a cheerful musical acoustic resolve."
+    }
+  ],
+  "brand_end_card": {
+    "brand_name": "Loomis",
+    "tagline": "Work together. Like magic.",
+    "call_to_action": "Try Loomis free at loomis.ai",
+    "composition_notes": "Clean static graphic end card created in post. Do not generate text in diffusion."
+  }
+}

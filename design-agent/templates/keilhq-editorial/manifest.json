@@ -50,7 +50,7 @@
       "id": "background",
       "fit": "cover",
       "per_slide": true,
-      "comfy_workflow": "keilhq-bg.json",
+      "comfy_workflow": "flux2-dev.json",
       "prompt_slot": true
     }
   ]

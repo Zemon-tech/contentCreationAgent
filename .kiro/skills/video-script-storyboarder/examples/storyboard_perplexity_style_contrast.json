@@ -1,0 +1,230 @@
+{
+  "campaign_metadata": {
+    "campaign_title": "THE NOISE OF SEARCH",
+    "target_runtime_seconds": 30,
+    "aspect_ratio": "16:9",
+    "creative_archetype": "perplexity_friction_contrast",
+    "visual_style": "High-contrast editorial realism transitioning to clean natural daylight",
+    "film_stock_profile": "Kodak Vision3 500T (Scene 1-2) shifting to Kodak Portra 400 (Scene 3-5)"
+  },
+  "product_and_audience": {
+    "product_name": "NexusAI Search Engine",
+    "target_audience": "Founders, researchers, analysts, knowledge workers experiencing chronic cognitive overload",
+    "core_villain": "The exhausting modern web: 20 open browser tabs, popup cookie banners, clickbait ads, SEO fluff",
+    "magic_moment": "Asking a complex, nuanced question and seeing a single, rigorous synthesized answer with citations appear instantly",
+    "emotional_destination": "Immediate mental calm, sharp cognitive clarity, empowering control"
+  },
+  "creative_concept": {
+    "logline": "A researcher drowning in digital clutter closes their eyes, asks one real question, and finds instantaneous truth.",
+    "core_tagline": "Why search when you can know?",
+    "music_direction": "Chaotic industrial digital noise abruptly cutting to a deep sub-bass drop, followed by an elegant, crystalline piano motif"
+  },
+  "scenes": [
+    {
+      "scene_number": 1,
+      "title": "THE CACISTOPHONY OF TABS",
+      "timecode": "00:00-00:05",
+      "duration_seconds": 5,
+      "dramatic_beat": "Hook",
+      "spatial_blocking": {
+        "foreground": "Extreme close-up of a glowing mechanical keyboard with fingers drumming impatiently",
+        "midground": "A 32-year-old female researcher's face illuminated by the harsh blue glow of a monitor",
+        "background": "Dark office room, out-of-focus window reflecting rain streaks"
+      },
+      "action_timeline": [
+        { "time": "00:00.0-00:02.5", "action": "Fingers click rapidly across browser tabs; the monitor glow flickers violently as pop-up ads appear on her face." },
+        { "time": "00:02.5-00:05.0", "action": "She furrows her brow, leans back in her ergonomic chair, and pinches the bridge of her nose in frustration." }
+      ],
+      "performance": {
+        "micro_actions": "Tense jaw muscle, rapid eye scanning, heavy breath of cognitive fatigue",
+        "emotional_tone": "Overwhelmed, impatient, drained",
+        "forbidden": ["no cartoon head banging", "no theatrical keyboard smashing", "no looking at camera"]
+      },
+      "camera": {
+        "lens": "50mm T1.4 prime lens",
+        "starting_height": "1.2m desk height",
+        "movement": "Tight slow push-in toward her eyes over 5 seconds",
+        "constraints": ["no digital zoom", "no handheld shake"]
+      },
+      "lighting": {
+        "source": "Harsh 6500K blue computer monitor spill",
+        "temperature": "6500K cold digital blue",
+        "mood": "Stark, clinical, chaotic"
+      },
+      "audio": {
+        "acoustics": "Suffocating close-mic interior office tone",
+        "foley": ["rapid frantic mouse clicks", "rattling keyboard strokes", "distorted digital notification ping"],
+        "voiceover_or_dialogue": "",
+        "music_cue": "Dissonant electronic distortion drone building in volume"
+      },
+      "post_compositing": "Composite browser UI reflections on monitor screen in post. Do not render exact web pages in generative diffusion.",
+      "ltx_prompt_preview": "In a dark modern office, a 32-year-old female researcher with dark hair pulled back sits bathed in the harsh 6500K blue glow of a computer screen, her face reflecting rapid flickering light as her brow furrows in exhaustion. She leans back heavily in her charcoal mesh chair, closing her eyes and pinching the bridge of her nose with thumb and forefinger as she exhales in deep frustration. The camera is framed on a 50mm cinema prime in an intimate medium close-up, slowly pushing forward 0.3 meters toward her face with buttery stability and zero handheld shake. Stark cold monitor lighting casts sharp contrast across her cheekbones, with deep Kodak Vision3 500T film shadows and fine 35mm grain, accompanied by frantic mouse clicks, rapid keyboard tapping, and a dissonant building electronic distortion drone."
+    },
+    {
+      "scene_number": 2,
+      "title": "THE RESET",
+      "timecode": "00:05-00:11",
+      "duration_seconds": 6,
+      "dramatic_beat": "Friction",
+      "spatial_blocking": {
+        "foreground": "Edge of clean matte-black desk pad and a single ceramic mug",
+        "midground": "Researcher sitting upright, taking a deep centering breath, looking at a blank search prompt",
+        "background": "Warm domestic table lamp clicking on in the background, softening the dark room"
+      },
+      "action_timeline": [
+        { "time": "00:05.0-00:07.5", "action": "Complete silence hits. She opens her eyes with renewed focus, sits upright, and hovers her fingers over the keyboard." },
+        { "time": "00:07.5-00:11.0", "action": "She types a single, complex research question; her expression transitions from dread to quiet anticipation." }
+      ],
+      "performance": {
+        "micro_actions": "Deep chest rise on inhalation, shoulders dropping into relaxation, deliberate steady keystrokes",
+        "emotional_tone": "Centered, determined, hopeful",
+        "forbidden": ["no robotic posture", "no smiling yet"]
+      },
+      "camera": {
+        "lens": "35mm Cooke S4 prime",
+        "starting_height": "1.3m chest level",
+        "movement": "Observational static hold with subtle organic breathing",
+        "constraints": ["zero camera drift", "zero lens zoom"]
+      },
+      "lighting": {
+        "source": "Warm 2800K desk lamp practical mixed with soft warm ambient fill",
+        "temperature": "3200K warm interior",
+        "mood": "Intimate, warm, focused"
+      },
+      "audio": {
+        "acoustics": "Dry, warm, quiet room acoustics",
+        "foley": ["deep human inhalation", "clean tactile mechanical keyboard clacks", "soft fabric rustle"],
+        "voiceover_or_dialogue": "VO (Soft, intimate, contemplative): 'You don't need ten thousand links...'",
+        "music_cue": "Complete silence followed by a single resonant sub-bass drop at 00:05.0"
+      },
+      "post_compositing": "Clean minimalistic prompt bar animation composited in post.",
+      "ltx_prompt_preview": "In the same modern office, the 32-year-old female researcher sits upright as a warm 2800K brass desk lamp illuminates the scene, casting a comforting amber glow across her face and dark charcoal sweater. She takes a slow, deep breath, her shoulders naturally dropping into relaxed posture, and begins typing deliberate, rhythmic keystrokes on her keyboard, her eyes calm and focused on the screen ahead. The camera remains locked in a steady 35mm observational hold at 1.3m height, maintaining crisp level framing without shake or drift. Warm tungsten key light softens the shadows across her face, with organic 35mm grain, gentle highlight roll-off, accompanied by tactile mechanical keyboard clacks, a deep human breath, and an intimate soft voiceover stating, \\\"You don't need ten thousand links...\\\""
+    },
+    {
+      "scene_number": 3,
+      "title": "THE SYNTHESIS BREAKTHROUGH",
+      "timecode": "00:11-00:18",
+      "duration_seconds": 7,
+      "dramatic_beat": "Pivot",
+      "spatial_blocking": {
+        "foreground": "Soft out-of-focus coffee steam curling into the light",
+        "midground": "Researcher watching the screen with eyes widening in subtle delight",
+        "background": "Floor-to-ceiling studio window revealing sunrise light slicing across the wooden floor"
+      },
+      "action_timeline": [
+        { "time": "00:11.0-00:14.0", "action": "A pristine warm glow emanates from the display; she reads the synthesized answer, her head tilting slightly in genuine realization." },
+        { "time": "00:14.0-00:18.0", "action": "A faint, authentic smile crinkles the corners of her eyes; she picks up her ceramic mug with one hand and takes a calm sip." }
+      ],
+      "performance": {
+        "micro_actions": "Eyes tracking lines effortlessly, subtle crinkling around eyes, gentle nod of satisfaction",
+        "emotional_tone": "Enlightenment, effortless mastery, serene relief",
+        "forbidden": ["no over-the-top gasping", "no celebrating with fist pumps"]
+      },
+      "camera": {
+        "lens": "50mm prime lens",
+        "starting_height": "1.3m eye level",
+        "movement": "Gentle lateral track of 0.4m from right to left, revealing the morning sunbeam behind her",
+        "constraints": ["smooth motion", "no jerkiness"]
+      },
+      "lighting": {
+        "source": "Natural morning dawn sun breaking through east window",
+        "temperature": "5000K pure natural daylight with 3000K wood bounce",
+        "mood": "Luminous, optimistic, pristine"
+      },
+      "audio": {
+        "acoustics": "Vast, open, peaceful morning room tone",
+        "foley": ["gentle ceramic mug lift", "delicate liquid sip", "morning breeze outside"],
+        "voiceover_or_dialogue": "VO: '...you just need the answer.'",
+        "music_cue": "Luminous acoustic felt piano chord enters at 00:12.0, joined by a warm cello harmony"
+      },
+      "post_compositing": "Synthesized summary card and footnote citations composited on screen in post.",
+      "ltx_prompt_preview": "In the sunlit modern office, the 32-year-old female researcher watches her screen with eyes widening in quiet discovery as early dawn sunlight streams through the large window, illuminating rising steam from her ceramic mug. A genuine, relaxed smile touches her face as she tilts her head thoughtfully, effortlessly absorbing the information before lifting her warm ceramic cup for an unhurried sip. The camera glides on a smooth 50mm lateral slider moving 0.4 meters from right to left, framing her profile against the glowing morning sunbeam with cinematic elegance and no camera jitter. Golden 5000K morning daylight wraps softly around her face and wool sweater, rendered in Kodak Portra 400 warmth with subtle 35mm grain and delicate halation, accompanied by a quiet ceramic clink, gentle room ambience, and a pristine felt piano melody under the voiceover, \\\"...you just need the answer.\\\""
+    },
+    {
+      "scene_number": 4,
+      "title": "THE WORK IS DONE",
+      "timecode": "00:18-00:25",
+      "duration_seconds": 7,
+      "dramatic_beat": "Flow",
+      "spatial_blocking": {
+        "foreground": "Laptop on the desk as the lid is smoothly closed",
+        "midground": "The researcher standing up, grabbing her coat from the chair back",
+        "background": "Bright, sun-drenched hallway opening into the outdoors"
+      },
+      "action_timeline": [
+        { "time": "00:18.0-00:21.0", "action": "Her hand reaches out and firmly, smoothly closes the laptop lid with a clean acoustic snap." },
+        { "time": "00:21.0-00:25.0", "action": "She stands up with natural agility, drapes her beige trench coat over one arm, and walks away from the desk into the morning light." }
+      ],
+      "performance": {
+        "micro_actions": "Confident closure of laptop, unhurried posture, physical departure from work",
+        "emotional_tone": "Free, accomplished, lighthearted",
+        "forbidden": ["no hesitation", "no checking phone", "no looking back"]
+      },
+      "camera": {
+        "lens": "35mm prime lens",
+        "starting_height": "1.2m rising smoothly to 1.6m as she stands",
+        "movement": "Smooth pedestal rise and gentle track following her as she walks into the hallway",
+        "constraints": ["keep closed laptop readable in frame before tracking", "no rapid whip pan"]
+      },
+      "lighting": {
+        "source": "Full morning daylight filling the entire architectural space",
+        "temperature": "5400K natural daylight",
+        "mood": "Open, radiant, expansive"
+      },
+      "audio": {
+        "acoustics": "Expansive architectural hallway acoustics",
+        "foley": ["satisfying solid magnetic laptop lid closure snap", "confident shoe steps on hardwood floor", "coat rustle"],
+        "voiceover_or_dialogue": "VO: 'Search is over. Knowledge begins.'",
+        "music_cue": "Warm orchestral swell building gracefully into the finale"
+      },
+      "post_compositing": "None. Pure cinematic live-action resolution.",
+      "ltx_prompt_preview": "In the sun-drenched office, the researcher smoothly closes the laptop with a decisive, satisfying magnetic snap, leaving the closed computer quiet on the wooden desk. She rises gracefully to her feet, slinging a beige cotton trench coat over her forearm, and walks purposefully into the bright hallway bathed in radiant morning daylight, leaving the workspace behind. The camera smoothly rises on a pedestal jib from 1.2m to 1.6m on a 35mm lens, gently tracking alongside her confident walking stride with buttery fluid motion and zero handheld shake. Pristine 5400K natural daylight illuminates the clean oak floors and cotton textures in rich Kodak Portra 400 tones with subtle grain and glowing optical halation, accompanied by the crisp acoustic snap of the laptop, resonant footsteps on wood, and a warm rising musical swell under the voiceover, \\\"Search is over. Knowledge begins.\\\""
+    },
+    {
+      "scene_number": 5,
+      "title": "THE MINIMALIST BRAND LANDING",
+      "timecode": "00:25-00:30",
+      "duration_seconds": 5,
+      "dramatic_beat": "Resolution",
+      "spatial_blocking": {
+        "foreground": "Clean, uncluttered architectural composition",
+        "midground": "Centered typographic mark and CTA",
+        "background": "Soft, out-of-focus morning sky through modern glass window"
+      },
+      "action_timeline": [
+        { "time": "00:25.0-00:28.0", "action": "Clean, elegant brand logo and tagline fade in with subtle optical glow." },
+        { "time": "00:28.0-00:30.0", "action": "Clear call to action button appears: 'Experience NexusAI at nexus.ai'." }
+      ],
+      "performance": {
+        "micro_actions": "Pure graphic clarity",
+        "emotional_tone": "Authoritative, calm, inevitable",
+        "forbidden": ["no spinning 3D logos", "no neon particles", "no commercial shouting"]
+      },
+      "camera": {
+        "lens": "Post-production graphic layout",
+        "starting_height": "Static",
+        "movement": "Static hold with ultra-subtle 1% optical scale",
+        "constraints": ["crisp vector typography in post"]
+      },
+      "lighting": {
+        "source": "Warm neutral studio finish",
+        "temperature": "Neutral balanced",
+        "mood": "Refined luxury"
+      },
+      "audio": {
+        "acoustics": "Pristine digital audio master",
+        "foley": [],
+        "voiceover_or_dialogue": "VO (Quiet confidence): 'Why search when you can know? NexusAI.'",
+        "music_cue": "Final resonant acoustic piano chord sustaining gracefully into silence"
+      },
+      "post_compositing": "Vector typography, official brand mark, and URL CTA composited cleanly in post-production.",
+      "ltx_prompt_preview": "Static minimal brand end card: warm off-white linen texture background, clean centered modern typography displaying the brand name and tagline, ultra-subtle optical glow, no 3D spins or cheesy motion graphics, accompanied by a single sustaining acoustic piano chord and quiet, confident voiceover."
+    }
+  ],
+  "brand_end_card": {
+    "brand_name": "NexusAI",
+    "tagline": "Why search when you can know?",
+    "call_to_action": "Experience clarity at nexus.ai",
+    "composition_notes": "Render as a separate post-production graphic card. Do not generate typography inside LTX-2.3."
+  }
+}

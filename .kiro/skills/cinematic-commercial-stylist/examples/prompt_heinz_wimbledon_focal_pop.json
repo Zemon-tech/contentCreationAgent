@@ -1,0 +1,152 @@
+{
+  "scene": {
+    "scene_number": 1,
+    "title": "IT HAS TO BE HEINZ - WIMBLEDON",
+    "timecode": "00:00-00:06",
+    "duration_seconds": 6,
+    "generation_target": "LTX-2.3 via ComfyUI",
+    "generation_mode": "T2V",
+    "aspect_ratio": "16:9",
+    "purpose": "Emulate the exact 'Subdued English Crowd & Focal Pop' aesthetic from the Heinz Wimbledon campaign: medium telephoto background compression, muted neutral spectators, and a razor-sharp saturated red condiment squeeze.",
+    "emotional_destination": "Playful human obsession, comedic focus amidst British decorum.",
+    "dominant_visual_idea": "Young man in teal jacket dead-center intensely squeezing an upside-down red Heinz ketchup bottle onto a hot dog while crowd watches tennis.",
+    "brand_landing": "Uncompromising condiment devotion"
+  },
+  "important_generation_architecture": {
+    "reason": "Maintain spatial stability of the dense tiered crowd while isolating the subject's intense singular action. Separate white brand typography into post-compositing.",
+    "generative_boundaries": "Generate live-action crowd, hot dog squeeze, and authentic summer sports lighting via LTX-2.3. Add 'IT HAS TO BE HEINZ' typography in post.",
+    "recommended_method": "Native LTX-2.3 T2V Two-Stage Workflow."
+  },
+  "continuity": {
+    "character": {
+      "identity": "Curly-haired young Caucasian man (20s) with mustache in a teal and white athletic zip jacket over a beige polo",
+      "performance": "Single-minded, hyper-focused gaze locked onto the hot dog, tongue slightly pressed against upper lip in concentration"
+    },
+    "environment": {
+      "location": "Outdoor tiered stadium bleachers under high summer overcast sky",
+      "crowd": "Multi-generational spectators in cotton bucket hats, sun visors, sunglasses, cable-knit sweaters, and pastel linen shirts looking off-screen",
+      "props": "Upside-down red Heinz ketchup squeeze bottle with white cap, steaming grilled hot dog in a crusty white bakery roll held horizontally"
+    }
+  },
+  "spatial_blocking": {
+    "foreground": "Tops of seated spectator heads and white tennis visors softly framing the bottom of the composition",
+    "midground": "The central subject seated dead-center, hands elevated holding the hot dog and squeezing the ketchup bottle",
+    "background": "Ascending rows of seated spectators in muted cream, beige, and slate clothing under a soft overcast horizon",
+    "camera_relation": "Eye-level medium shot at subject's tier level, 3.8m camera distance with telephoto compression"
+  },
+  "action_timeline": [
+    {
+      "time": "00:00.0-00:03.0",
+      "action": "The central man carefully tilts the red Heinz bottle upside down, applying steady pressure with both thumbs as a rich ribbon of red ketchup extrudes onto the sausage."
+    },
+    {
+      "time": "00:03.0-00:06.0",
+      "action": "Around him, adjacent spectators clap politely while looking off-screen toward the tennis court; the man remains completely oblivious, admiring his perfectly dressed hot dog."
+    }
+  ],
+  "performance": {
+    "primary_subject": "Meticulous, comic obsession with food dressing",
+    "micro_actions": "Thumb pressure on plastic bottle, slight nostril flare, eyes tracking the red sauce, total disregard for tennis match",
+    "emotional_tone": "Humorous dedication, unhurried delight",
+    "forbidden": ["no cartoon squirting", "no looking at camera lens", "no messy sauce splatters", "no robotic posture"]
+  },
+  "camera": {
+    "camera_type": "Full-frame cinema camera with telephoto prime lens",
+    "lens": "85mm T1.5 Zeiss Supreme Prime lens",
+    "starting_position": "Dead-center medium crowd composition at subject's tier level",
+    "starting_height": "1.5m level tier height",
+    "ending_height": "1.5m locked",
+    "depth_of_field": "Moderate depth of field (f/4.0), subject, hot dog, and bottle tack-sharp with tiered crowd softly compressing behind",
+    "focus_priority": "The red Heinz bottle label and the man's concentrated eyes",
+    "movement": {
+      "00:00-00:06": "Rock-steady locked-off tripod observational hold with zero camera drift"
+    },
+    "camera_path": {
+      "travel": "0.0m locked-off",
+      "speed": "0.0 m/s",
+      "acceleration": "none"
+    },
+    "constraints": ["zero camera movement", "no digital zoom", "no handheld shake"]
+  },
+  "visual_callback": {
+    "thematic_contrast": "The polite restraint of Wimbledon spectators contrasting with the visceral human appetite for Heinz ketchup.",
+    "color_isolation": "Muted British pastels creating a neutral canvas that makes the bright red Heinz bottle and teal jacket electrify the frame."
+  },
+  "lighting": {
+    "source": "High-altitude diffuse overcast summer daylight",
+    "quality": "Soft, shadowless open-sky wrap-around light with 1.8:1 gentle contrast ratio",
+    "temperature": "5400K natural overcast daylight balanced",
+    "direction": "Overhead top-light at 65 degrees, filling eye sockets naturally without harsh black shadows",
+    "subject_lighting": "Clean, natural daylight across face and hands; subtle lifted shadow beneath cap visors",
+    "background_lighting": "Even, uniform soft ambient illumination across tiered spectators",
+    "important_rule": "Maintain open, lifted shadows; do not introduce harsh direct sun or dark crushed cinema contrast.",
+    "forbidden": ["no hard direct sunlight", "no heavy black shadows", "no studio ring lights", "no artificial lens flare"]
+  },
+  "color_and_finish": {
+    "style": "Candid British commercial editorial realism (Heinz Wimbledon aesthetic)",
+    "film_character": "Kodak Vision3 250D 35mm motion picture film stock",
+    "grade": "Kodak 2383 Print LUT with muted summer neutrals (ecru, sand beige, washed denim) and isolated hyper-saturated primary red",
+    "palette": ["#D91414", "#00A4D3", "#D8C7B5", "#F2EDE4", "#48535A"],
+    "contrast": "Gentle filmic S-curve with lifted, breathable shadow toe and smooth highlight roll-off",
+    "saturation": "Selectively desaturated crowd neutrals with vivid red Heinz bottle and teal nylon pop",
+    "grain": "Fine 35mm motion picture grain with authentic organic gate weave",
+    "halation": "Subtle golden rim halation around white sun visors and spectator shirt collars",
+    "texture": "Ribbed knit cable wool, cotton polo fabric weave, crinkled nylon windbreaker, smooth plastic squeeze bottle, crusty bread crust",
+    "avoid": ["video game aesthetic", "plastic waxy skin", "harsh digital contrast", "muddy shadows"]
+  },
+  "audio": {
+    "acoustics_and_ambience": "Spacious outdoor stadium acoustics with muffled crowd murmur and distant tennis ball impacts.",
+    "timeline_foley": {
+      "00:00.0-00:03.0": ["gentle plastic squeeze bottle compression", "thick viscous ketchup release onto warm sausage", "soft nylon sleeve rustle"],
+      "00:03.0-00:06.0": ["polite distant stadium tennis clapping", "distant tennis racket ball 'pock' sound", "subtle breeze in spectator hats"]
+    },
+    "dialogue": [],
+    "voiceover": [],
+    "music": {
+      "entry": "None. Pure, dry, naturalistic British summer stadium sound design.",
+      "character": "Authentic sports ambiance",
+      "intensity": "Natural environmental level",
+      "progression": "Atmospheric hold"
+    }
+  },
+  "negative_prompt": {
+    "anti_cgi": ["video game", "CGI", "3D render", "Unreal Engine", "cartoon", "anime", "plastic skin", "oversaturated"],
+    "anatomy_and_physics": ["deformed hands", "mutated fingers", "distorted ketchup bottle", "melting hot dog", "warped crowd faces", "floating props"],
+    "camera_and_artifacts": ["erratic camera shake", "whip pan", "rapid zoom", "jitter", "sensor noise", "digital glitch"],
+    "lighting": ["harsh direct midday sun", "deep black shadows", "neon lighting", "blown-out sky blowout"],
+    "prohibited_elements": ["no on-screen logo text in video", "no floating graphics", "no watermarks", "no subtitles generated in diffusion"]
+  },
+  "ltx_2_3_prompt": "In the crowded tiered outdoor bleachers of a British summer tennis tournament under soft overcast skies, a 20-something curly-haired man in a teal and white athletic windbreaker sits dead-center, meticulously squeezing an upside-down red Heinz ketchup bottle onto a hot dog in a crusty roll with intense, deadpan concentration as surrounding spectators in sun visors and cable-knit sweaters applaud off-screen. The camera is locked off on an 85mm cinema telephoto prime lens in an eye-level medium shot at 1.5m height, compressing the background tiers with authentic optical flatness and zero camera wobble. Diffuse 5400K overcast daylight softly wraps around the crowd with gentle 1.8:1 contrast, lifted breathable shadows under cap visors, and vivid Kodak Vision3 250D 35mm film grain, isolating the hyper-saturated red Heinz bottle and teal jacket against muted sand, ecru, and slate crowd neutrals, accompanied by the thick squeeze of ketchup, polite stadium tennis applause, and the distant acoustic 'pock' of a tennis racket impact.",
+  "comfyui_direction": {
+    "workflow": "Native LTX-2.3 T2V Two-Stage Workflow.",
+    "why_mode": "Text-to-video implementation of the Heinz 'Subdued Crowd with Focal Pop' aesthetic.",
+    "camera_strategy": "Locked-off 85mm telephoto tripod hold with zero drift.",
+    "audio": "Joint audio-visual latent pass with polite stadium applause, tennis ball impacts, and thick sauce foley.",
+    "prompting": "Emphasize telephoto background compression, muted neutral crowd palette, and isolated red bottle pop.",
+    "render_strategy": {
+      "pass_1_base": "640x360 @ 30 FPS, 181 frames (6s * 30 + 1), Euler sampler with 8-step ManualSigmas.",
+      "latent_upscale": "2x spatial latent upscaling via ltx-2.3-spatial-upscaler-x2-1.1.safetensors.",
+      "pass_2_refine": "1280x720 @ 30 FPS, Euler sampler with 3-step ManualSigmas."
+    }
+  },
+  "generation_priority": [
+    "1. Perfect telephoto 85mm spatial compression with flat, authentic crowd layering.",
+    "2. High-precision color isolation: saturated Heinz red bottle against muted sand/ecru crowd pastels.",
+    "3. Grounded, unhurried hand physics squeezing the bottle onto the hot dog.",
+    "4. Organic 35mm Kodak Vision3 250D film grain and lifted, breathable shadows.",
+    "5. Precise acoustic timing of polite tennis clapping and distant ball impacts."
+  ],
+  "quality_control": {
+    "critical_story_test": "Audience must instantly register the humorous obsession with ketchup over the tennis match.",
+    "critical_continuity_test": "Bottle shape, hot dog, and crowd faces must remain physically consistent without morphing.",
+    "critical_performance_test": "Subject's expression must be deadpan and focused, not clownish or exaggerated.",
+    "critical_camera_test": "Camera must remain 100% stationary on its tripod mount without digital drift.",
+    "failure_conditions": [
+      "ketchup bottle deforms or melts",
+      "crowd faces blur into mutant shapes",
+      "red color bleeds into surrounding clothing",
+      "camera zooms or moves",
+      "harsh black shadows appear on faces"
+    ]
+  }
+}
