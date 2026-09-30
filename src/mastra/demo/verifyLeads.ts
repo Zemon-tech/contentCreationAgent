@@ -234,6 +234,10 @@ setIcpJudgeForTesting(async (prompt) => {
   return { object: structuredClone(goodJudgement), usage: { totalTokens: 1 } };
 });
 
+// Exercise the real text -> JSON parse + partial-output tolerance seen in production.
+const { extractJson, normalizeJudgement } = await import("../lib/leads/judge");
+const { IcpJudgementSchema } = await import("../schemas/lead");
+
 // ---------------- helpers ----------------
 
 const HEADER = "Company Name,Sector,Profile,Contact Person,Designation,Mobile,Email,Website,Address,Source File,Source Line";
@@ -461,7 +465,17 @@ async function main(): Promise<void> {
   check("resume completes the batch", out3?.status === "completed" && rows3.every((r) => r.status === "complete"), rows3.map((r) => r.status).join(","));
   check("already-paid research was NOT re-run", completedKeys.size > 0 && fake4.creates.every((c) => !completedKeys.has(c.cacheKey)), `${completedKeys.size} reused, ${fake4.creates.length} new`);
 
-  console.log("[9] malformed input fails before any spend");
+  console.log("[9] Sarvam output parsing + partial-output tolerance");
+  check("extractJson strips code fences and prose", JSON.stringify(extractJson('Here you go:\n```json\n{"a":1,"b":{"c":2}}\n```')) === '{"a":1,"b":{"c":2}}');
+  check("extractJson handles braces inside strings", JSON.stringify(extractJson('{"text":"a } b","n":1}')) === '{"text":"a } b","n":1}');
+  check("truncated JSON -> undefined (triggers a retry, not a crash)", extractJson('{"criteria":{"x":') === undefined);
+  // Real production shape: criteria present, optional fields omitted entirely.
+  const partial = { criteria: { startup_tech_enabled: { result: "met", reason: "sw", evidence_refs: ["M0.description"] } }, triggers: [] };
+  check("partial judgement (missing pain_track/claims/...) normalizes + validates", IcpJudgementSchema.safeParse(normalizeJudgement(partial)).success);
+  const norm = normalizeJudgement(partial) as any;
+  check("normalizer fills all 5 criteria + null optionals, invents nothing", Object.keys(norm.criteria).length === 5 && norm.criteria.early_stage.result === "unknown" && norm.pain_hypothesis === null && Array.isArray(norm.claims));
+
+  console.log("[10] malformed input fails before any spend");
   const fake5 = new FakeExa();
   setExaAgentApiForTesting(fake5);
   const bad = await runBatch({ csvText: "name,website\nA,a.com\n" });

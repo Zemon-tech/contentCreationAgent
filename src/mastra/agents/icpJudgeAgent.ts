@@ -30,7 +30,26 @@ Rules:
 5. pain_track: "A_tool_sprawl" (too many disconnected tools, scattered docs), "B_operational_chaos" (coordination, handoffs, onboarding, founder bottleneck), "none" (evidence suggests neither), "unknown" (not enough evidence).
 6. ops_summary: who does what, based on M1 only (roles and functions; no contact details). null if M1 has nothing.
 7. pain_hypothesis: one or two sentences, clearly a hypothesis. null if there is no basis.
-8. Keep reasons short and factual. Output must match the JSON schema exactly.`;
+8. Keep reasons short and factual (one sentence each) so the whole answer fits in the token budget.
+
+Output: return ONE raw JSON object and nothing else — no markdown, no code fences, no commentary before or after. It MUST contain every one of these keys, even when values are unknown or empty:
+
+{
+  "criteria": {
+    "startup_tech_enabled":        { "result": "met|not_met|unknown", "reason": "...", "evidence_refs": ["M0.description"] },
+    "multiple_functional_teams":   { "result": "met|not_met|unknown", "reason": "...", "evidence_refs": [] },
+    "early_stage":                 { "result": "met|not_met|unknown", "reason": "...", "evidence_refs": [] },
+    "problem_fit_signals":         { "result": "met|not_met|unknown", "reason": "...", "evidence_refs": [] },
+    "current_trigger":             { "result": "met|not_met|unknown", "reason": "...", "evidence_refs": [] }
+  },
+  "triggers": [ { "type": "hiring_surge|new_leader|funding|launch|tool_complaint|expansion|other", "text": "...", "date": null, "evidence_refs": [] } ],
+  "pain_track": "A_tool_sprawl|B_operational_chaos|none|unknown",
+  "pain_hypothesis": "one sentence, or null",
+  "ops_summary": "who does what from M1, or null",
+  "claims": [ { "text": "...", "epistemic": "observed|hypothesis|unknown", "evidence_refs": [] } ]
+}
+
+Every property is required. Use null for pain_hypothesis/ops_summary when there is no basis, [] for empty arrays. Do not omit any key.`;
 
 export const icpJudgeAgent = new Agent({
   id: "icpJudgeAgent",

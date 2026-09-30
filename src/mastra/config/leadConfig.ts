@@ -42,8 +42,9 @@ const LeadEnvSchema = z.object({
 
   // --- tuning (optional; defaults documented in .env.example) ---
   LEAD_SARVAM_MODEL: z.string().default("sarvam/sarvam-105b"),
-  LEAD_SARVAM_MAX_TOKENS: num("LEAD_SARVAM_MAX_TOKENS", { int: true, min: 1024 }).default(8192),
-  LEAD_SARVAM_REASONING_EFFORT: z.enum(["low", "medium", "high"]).default("low"),
+  LEAD_SARVAM_MAX_TOKENS: num("LEAD_SARVAM_MAX_TOKENS", { int: true, min: 1024 }).default(16384),
+  // "none" disables reasoning so the whole token budget goes to the JSON answer.
+  LEAD_SARVAM_REASONING_EFFORT: z.enum(["none", "low", "medium", "high"]).default("none"),
   LEAD_EXA_POLL_INTERVAL_MS: num("LEAD_EXA_POLL_INTERVAL_MS", { int: true, min: 1 }).default(4000),
   LEAD_MODULE_TIMEOUT_MS: num("LEAD_MODULE_TIMEOUT_MS", { int: true, min: 1000 }).default(600_000),
   LEAD_EXA_MAX_CREATE_ATTEMPTS: num("LEAD_EXA_MAX_CREATE_ATTEMPTS", { int: true, min: 1, max: 10 }).default(5),
@@ -71,7 +72,7 @@ export interface LeadConfig {
   m5BudgetUsd: number;
   sarvamModel: string;
   sarvamMaxTokens: number;
-  sarvamReasoningEffort: "low" | "medium" | "high";
+  sarvamReasoningEffort: "none" | "low" | "medium" | "high";
   pollIntervalMs: number;
   moduleTimeoutMs: number;
   maxCreateAttempts: number;
