@@ -123,15 +123,23 @@ async def auto_fit_text_slots(page: Page) -> list[str]:
             const style = window.getComputedStyle(el);
             let fontSize = parseFloat(style.fontSize);
             const minVar = style.getPropertyValue('--min-font-size').trim();
-            const minFontSize = minVar ? parseFloat(minVar) : 14;
+            const minFontSize = minVar ? parseFloat(minVar) : 18;
 
-            // Check if element overflows vertically or horizontally
-            let isOverflowing = (el.scrollHeight > el.clientHeight + 1) || (el.scrollWidth > el.clientWidth + 1);
+            const hasVerticalConstraint = (style.maxHeight && style.maxHeight !== 'none') || 
+                                          (style.overflowY === 'hidden' || style.overflow === 'hidden');
+
+            const checkOverflow = () => {
+                const horiz = el.scrollWidth > el.clientWidth + 2;
+                const vert = hasVerticalConstraint && (el.scrollHeight > el.clientHeight + 4);
+                return horiz || vert;
+            };
+
+            let isOverflowing = checkOverflow();
 
             while (isOverflowing && fontSize > minFontSize) {
                 fontSize = Math.max(minFontSize, fontSize * 0.94);
                 el.style.fontSize = fontSize + 'px';
-                isOverflowing = (el.scrollHeight > el.clientHeight + 1) || (el.scrollWidth > el.clientWidth + 1);
+                isOverflowing = checkOverflow();
             }
 
             if (isOverflowing) {
@@ -142,14 +150,14 @@ async def auto_fit_text_slots(page: Page) -> list[str]:
         }
 
         // Also check main editorial content container
-        const contentContainer = document.querySelector('.editorial-content');
-        if (contentContainer && (contentContainer.scrollHeight > contentContainer.clientHeight + 2)) {
+        const contentContainer = document.querySelector('.editorial-content, .news-main');
+        if (contentContainer && (contentContainer.scrollHeight > contentContainer.clientHeight + 4)) {
             // Shrink headline and body cooperatively
             const headline = contentContainer.querySelector('[data-slot="headline"]');
             const body = contentContainer.querySelector('[data-slot="body"]');
 
             for (let step = 0; step < 10; step++) {
-                if (contentContainer.scrollHeight <= contentContainer.clientHeight + 2) break;
+                if (contentContainer.scrollHeight <= contentContainer.clientHeight + 4) break;
 
                 if (headline) {
                     const hStyle = window.getComputedStyle(headline);
@@ -162,7 +170,7 @@ async def auto_fit_text_slots(page: Page) -> list[str]:
 
                 if (body) {
                     const bStyle = window.getComputedStyle(body);
-                    const bMin = parseFloat(bStyle.getPropertyValue('--min-font-size')) || 16;
+                    const bMin = parseFloat(bStyle.getPropertyValue('--min-font-size')) || 18;
                     let bSize = parseFloat(bStyle.fontSize);
                     if (bSize > bMin) {
                         body.style.fontSize = Math.max(bMin, bSize * 0.94) + 'px';
@@ -246,6 +254,15 @@ async def composite_post(
     shared_jpg = (templates_dir or settings.templates_dir) / "shared.jpg"
     shared_image_uri = image_file_to_data_uri(shared_jpg) if shared_jpg.is_file() else None
 
+    # Template-local fallback image (e.g. back.jpg / back.png when ComfyUI is unavailable)
+    tmpl_back_candidates = [
+        tmpl_dir / "back.jpg",
+        tmpl_dir / "back.png",
+        tmpl_dir / "back.jpeg",
+    ]
+    tmpl_back_file = next((p for p in tmpl_back_candidates if p.is_file()), None)
+    tmpl_back_uri = image_file_to_data_uri(tmpl_back_file) if tmpl_back_file else None
+
     # Template-local brand logos (e.g. RAS by KeilHQ light/dark). Preferred
     # location is the template dir so templates stay self-contained; falls
     # back to the repo-level assets/ dir. Exposed as Jinja vars; None when
@@ -281,6 +298,8 @@ async def composite_post(
                 custom_img = images.get((idx, img_slot.id)) if images else None
                 if custom_img is not None:
                     slide_images[img_slot.id] = image_file_to_data_uri(custom_img)
+                elif tmpl_back_uri is not None:
+                    slide_images[img_slot.id] = tmpl_back_uri
                 else:
                     # Provide solid brand-color placeholder image (D10)
                     slide_images[img_slot.id] = create_placeholder_image(
@@ -294,6 +313,7 @@ async def composite_post(
                 "text": slide.text,
                 "images": slide_images,
                 "shared_image": shared_image_uri,
+                "back_image": tmpl_back_uri,
                 "logo_light": logo_light_uri,
                 "logo_dark": logo_dark_uri,
                 "brand_name": brand.name,

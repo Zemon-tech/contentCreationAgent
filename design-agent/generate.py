@@ -26,7 +26,7 @@ async def main() -> None:
         "--template",
         "-t",
         default="keilhq-text",
-        choices=["keilhq-text", "keilhq-editorial", "entrepreneur-post", "tech-announcement"],
+        choices=["keilhq-text", "keilhq-editorial", "entrepreneur-post", "tech-announcement", "360labs-news", "news-brief"],
         help="Template to use (default: keilhq-text).",
     )
     parser.add_argument(

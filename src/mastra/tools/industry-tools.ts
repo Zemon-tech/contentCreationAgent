@@ -6,12 +6,9 @@ import {
 } from "../config/industry";
 import { getSourceRegistry } from "../config/sources";
 import {
-  contentRepository,
   opportunityRepository,
-  sourceRepository,
   storyRepository,
 } from "../repositories/store";
-import { NormalizedContentSchema, RawContentSchema } from "../schemas/rawContent";
 import { SourceSchema } from "../schemas/source";
 import {
   ContentOpportunitySchema,
@@ -41,65 +38,14 @@ export const getSourceRegistryTool = createTool({
   },
 });
 
-export const saveRawContentTool = createTool({
-  id: "saveRawContent",
-  description: "Persist raw or normalized content items to storage.",
-  inputSchema: z.object({
-    items: z.array(RawContentSchema),
-  }),
-  outputSchema: z.object({ saved: z.number() }),
-  execute: async ({ items }) => {
-    for (const item of items) await contentRepository.save(item);
-    return { saved: items.length };
-  },
-});
-
-export const saveNormalizedContentTool = createTool({
-  id: "saveNormalizedContent",
-  description: "Persist normalized content items to storage.",
-  inputSchema: z.object({
-    items: z.array(NormalizedContentSchema),
-  }),
-  outputSchema: z.object({ saved: z.number() }),
-  execute: async ({ items }) => {
-    for (const item of items) await contentRepository.save(item);
-    return { saved: items.length };
-  },
-});
-
-export const saveSourcesTool = createTool({
-  id: "saveSources",
-  description: "Persist source registry entries to storage.",
-  inputSchema: z.object({
-    sources: z.array(SourceSchema),
-  }),
-  outputSchema: z.object({ saved: z.number() }),
-  execute: async ({ sources }) => {
-    for (const s of sources) await sourceRepository.save(s);
-    return { saved: sources.length };
-  },
-});
-
-export const saveStoryTool = createTool({
-  id: "saveStory",
-  description: "Persist a Story object to storage.",
-  inputSchema: StorySchema,
-  outputSchema: z.object({ id: z.string() }),
-  execute: async (story) => {
-    await storyRepository.save(story);
-    return { id: story.id };
-  },
-});
-
 /**
- * Batch variant: persist many stories in ONE tool call. Prefer this over
- * N sequential saveStory calls — each agent tool round-trip costs an LLM
- * turn, so batching turns 15 slow sequential saves into one fast call.
+ * Batch variant: persist many stories in ONE tool call.
+ * Batches stories to avoid slow sequential tool round-trips.
  */
 export const saveStoriesTool = createTool({
   id: "saveStories",
   description:
-    "Persist multiple Story objects in one call. Always prefer this over calling saveStory repeatedly. Keep each call to at most 5 stories so the arguments fit the model's output token budget — make multiple calls for larger sets.",
+    "Persist multiple Story objects in one call. Keep each call to at most 5 stories so the arguments fit the model's output token budget.",
   inputSchema: z.object({
     stories: z.array(StorySchema).min(1).max(5),
   }),

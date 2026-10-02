@@ -1,0 +1,29 @@
+{
+  "job_id": "151dfeb1-1d68-4d84-b957-1fe2528d1041",
+  "created_at": "2026-09-28T04:42:31.698513Z",
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "A minimalist editorial composition on a rich crimson canvas with seamless gradient feathering at top and bottom, featuring a subtle textured geometric form centered in clean negative space."
+    }
+  ],
+  "caption": "OpenAI, Google, Meta, and others have updated their LLM and AI agent infrastructure. This affects coding, research, and open source models. Developers should review the changes and adapt their workflows.",
+  "hashtags": [
+    "AI",
+    "LLM",
+    "OpenAI",
+    "Google",
+    "Meta",
+    "AIagents",
+    "AICoding",
+    "AInfrastructure",
+    "Research",
+    "OpenSourceAI"
+  ],
+  "source_content_sha256": "d1008fae66c6cbb70b137d31a00b2eb22dbbdaddcdd1d92f2ac2da5181056b89",
+  "warnings": []
+}

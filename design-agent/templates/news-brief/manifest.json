@@ -1,0 +1,49 @@
+{
+  "id": "news-brief",
+  "name": "News Brief",
+  "description": "High-impact breaking news and editorial flash layout with full-width centered hero imagery, seamless top/bottom gradient feathering against rich news crimson canvas, top-right brand lockup, high-visibility boxed headline under 15 words with solid highlight background, and clean DM Sans editorial body text.",
+  "supports": {
+    "formats": ["single"],
+    "aspect_ratios": ["3:4", "4:5"]
+  },
+  "slides": {
+    "min": 1,
+    "max": 1,
+    "fixed": 1
+  },
+  "text_slots": [
+    {
+      "id": "eyebrow",
+      "role": "eyebrow",
+      "max_chars": 40,
+      "min_chars": 0,
+      "multiline": false,
+      "per_slide": true
+    },
+    {
+      "id": "headline",
+      "role": "headline",
+      "max_chars": 110,
+      "min_chars": 10,
+      "multiline": true,
+      "per_slide": true
+    },
+    {
+      "id": "body",
+      "role": "body",
+      "max_chars": 480,
+      "min_chars": 10,
+      "multiline": true,
+      "per_slide": true
+    }
+  ],
+  "image_slots": [
+    {
+      "id": "hero",
+      "fit": "cover",
+      "per_slide": true,
+      "comfy_workflow": "keilhq-bg.json",
+      "prompt_slot": true
+    }
+  ]
+}

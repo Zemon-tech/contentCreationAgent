@@ -1,0 +1,284 @@
+/* News Brief Template Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+/* Local font fallbacks */
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Regular.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Medium.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Bold.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../_shared/fonts/DMSans-Bold.woff2") format("woff2"),
+       url("../_shared/fonts/DMSans-Bold.ttf") format("truetype");
+}
+
+:root {
+  --color-canvas: #0B132B;
+  --color-canvas-rgb: 11, 19, 43;
+  --color-white: #FFFFFF;
+  --color-ink-primary: #FFFFFF;
+  --color-accent: #38BDF8;
+  --color-news-highlight: #0B132B;
+  --font-primary: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-canvas);
+  color: var(--color-ink-primary);
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#canvas {
+  position: relative;
+  width: 1080px;
+  height: 1440px;
+  overflow: hidden;
+  background-color: var(--color-canvas);
+  display: flex;
+  flex-direction: column;
+}
+
+#canvas.aspect-3-4 {
+  height: 1440px;
+}
+
+#canvas.aspect-4-5 {
+  height: 1350px;
+}
+
+/* ============================================================================
+   Middle Hero Image Container (Maximized Visibility: 1020px height)
+   ============================================================================ */
+
+.hero-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1020px;
+  overflow: hidden;
+  z-index: 1;
+  background-color: var(--color-canvas);
+}
+
+#canvas.aspect-4-5 .hero-image-container {
+  height: 940px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  display: block;
+}
+
+.gradient-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Top gradient maintained at full height (260px) for smooth header integration */
+.gradient-top {
+  top: 0;
+  height: 260px;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--color-canvas-rgb), 1) 0%,
+    rgba(var(--color-canvas-rgb), 0.92) 28%,
+    rgba(var(--color-canvas-rgb), 0.5) 60%,
+    transparent 100%
+  );
+  z-index: 2;
+}
+
+/* Decreased bottom gradient (140px) keeping the subject and road fully visible */
+.gradient-bottom {
+  bottom: 0;
+  height: 140px;
+  background: linear-gradient(
+    to top,
+    rgba(var(--color-canvas-rgb), 1) 0%,
+    rgba(var(--color-canvas-rgb), 0.92) 30%,
+    rgba(var(--color-canvas-rgb), 0.5) 70%,
+    transparent 100%
+  );
+  z-index: 2;
+}
+
+/* ============================================================================
+   Safe Zone & Layout (UI overlay atop the canvas)
+   ============================================================================ */
+
+.safe-zone {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 52px 64px 50px 64px;
+}
+
+/* ============================================================================
+   Header: Eyebrow on Left, Logo at Top Right
+   ============================================================================ */
+
+.news-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 76px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.slot-eyebrow {
+  display: inline-flex;
+  align-items: center;
+}
+
+.eyebrow-badge {
+  font-family: var(--font-primary);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: -0.01em;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.eyebrow-badge::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 24px;
+  background-color: var(--color-accent);
+  border-radius: 3px;
+  opacity: 0.95;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.brand-logo {
+  height: 76px;
+  width: auto;
+  max-width: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-badge {
+  font-family: var(--font-primary);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-white);
+  padding: 6px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   Main News Content (Headline + Body Layout at Top)
+   ============================================================================ */
+
+.news-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 16px;
+}
+
+/* Boxed headline under 15 words with clean white highlight background */
+.slot-headline {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 52px;
+  --min-font-size: 34px;
+  font-weight: 800;
+  line-height: 1.28;
+  letter-spacing: -0.025em;
+}
+
+.headline-box {
+  background-color: var(--color-white);
+  color: var(--color-news-highlight);
+  padding: 6px 18px;
+  border-radius: 6px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  display: inline;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Clean editorial body text in DM Sans */
+.slot-body {
+  width: 100%;
+}
+
+.slot-body p {
+  font-family: var(--font-primary);
+  font-size: 30px;
+  --min-font-size: 22px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-white);
+  letter-spacing: -0.012em;
+  opacity: 0.96;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+

@@ -29,6 +29,7 @@ const TemplateIdSchema = z.enum([
   'keilhq-text',
   'entrepreneur-post',
   '360labs-news',
+  'news-brief',
 ]);
 
 // ---------- Schemas ----------

@@ -1,11 +1,26 @@
-import { createPostFromContentTool, searchNewsAndCreatePostTool } from "../tools/design-tools";
+import {
+  createPostFromContentTool,
+  searchNewsAndCreatePostTool,
+  renderPostFromApprovedStoryTool,
+} from "../tools/design-tools";
 import { generateCoverPromptTool } from "../tools/cover-tools";
 import { generateAnglePackTool } from "../tools/angle-tools";
+import {
+  listPendingNewsTool,
+  approveNewsStoryTool,
+  rejectNewsStoryTool,
+} from "../tools/editorial-tools";
+import {
+  checkInstagramConnectionTool,
+  publishToInstagramTool,
+  publishDesignJobToInstagramTool,
+  publishStoryToInstagramTool,
+} from "../tools/instagram-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { resolveChatModel } from "../config/model";
-import { findSimilarContentTool, generateEmbeddingTool } from "../tools/analysis-tools";
+
 import {
   extractArticleContentTool,
   fetchGitHubReleasesTool,
@@ -17,7 +32,7 @@ import {
   getSourceRegistryTool,
   saveContentOpportunityTool,
   saveStoriesTool,
-  saveStoryTool,
+
 } from "../tools/industry-tools";
 import { exaScrapeTool, exaSearchTool } from "../tools/exa-tools";
 import { getCurrentTimeTool } from "../tools/time-tools";
@@ -138,29 +153,48 @@ velocity) are computed by code, not by you — focus your judgment on
 relevance, novelty, impact, content potential and interpretation.
 
 
-VISUAL POST CREATION (DESIGN AGENT PIPELINE v2)
-When the user asks for an Instagram post/visual card/carousel — either by pasting
-news OR by asking you to search news on a topic — run this pipeline:
-1. COLLECT: user-pasted news is used as-is; otherwise exaSearch + exaScrape the
-   topic and merge ALL relevant results (never just the first snippet).
-2. PARALLEL FAN-OUT on the collected story (same block, independent calls):
-   - generateCoverPrompt with articleTitle + articleText → canonical
-     neoclassical-editorial-image JSON (Flux fluxPrompt drives the slide-1 hero).
-   - generateAnglePack with articleTitle + articleText → viral / controversy /
-     unique angles + recommendedAngle.
-3. TEMPLATE: honor an explicit user template suggestion; otherwise auto-select
-   (controversy/investigation → 360labs-news, tech launch → tech-announcement,
-   founder/startup → entrepreneur-post, general insight → keilhq-editorial) and
-   state the rationale. The newsToPostWorkflow does this automatically.
-4. EXECUTE: call searchNewsAndCreatePost (topic search) or createPostFromContent
-   (user news) with topic/content, format, and optional template_id/cover_prompt
-   overrides — the workflow handles collect → parallel enrich → template → render → package.
-5. DELIVER: headline, recommended angle, cover thesis + fluxPrompt, caption,
-   hashtags, and every generated slide IN THE CHAT. The design tool returns
-   view_url and download_url for every slide: render each as
-   ![descriptive alt text](view_url), followed by [Download slide N](download_url).
-   Also give workspace/output/<job_id>/preview.html and bundle.zip as local file
-   locations; never use a file:// URL for an image.
+VISUAL POST CREATION (DESIGN AGENT PIPELINE)
+When the user asks for an Instagram post, visual card, or carousel — either by pasting news OR by asking you to search news on a topic:
+1. COLLECT & CLARIFY:
+   - User-pasted news is used directly; for topic requests, exaSearch + exaScrape the topic and merge relevant results.
+   - Format: 'single' (1 high-impact slide) or 'carousel' (multi-slide story deck).
+   - Template: 'news-brief' (high-impact breaking news with middle image, feathered gradients, top-right logo, and boxed headline), 'tech-announcement' (bold modern layout, recommended for tech news), '360labs-news' (AI NEWS editorial carousel with hero image card, cover + content layouts), 'entrepreneur-post' (editorial magazine layout), 'keilhq-editorial' (quiet insights), or 'keilhq-text' (clean typography).
+   - Cover image: if the user shares a direct image URL, pass it as cover_image_url so slide 1 uses their image as-is instead of AI generation.
+2. PARALLEL ENRICHMENT:
+   - generateCoverPrompt with articleTitle + articleText → canonical neoclassical-editorial-image JSON (Flux fluxPrompt drives the slide-1 hero).
+   - generateAnglePack with articleTitle + articleText → viral / controversy / unique angles + recommendedAngle.
+3. TEMPLATE SELECTION:
+   - Honor explicit user template selection; otherwise auto-select (controversy/investigation → 360labs-news, tech launch → tech-announcement, founder/startup → entrepreneur-post, breaking news → news-brief, general insight → keilhq-editorial).
+4. EXECUTE:
+   - For a topic or breaking news search: call searchNewsAndCreatePost with topic, format, and optional template_id/cover_prompt.
+   - For user-provided text or existing summary: call createPostFromContent with content, format, and optional template_id/cover_prompt.
+   - For an approved story from the editorial review queue: call renderPostFromApprovedStory with story_id and optional template_id.
+5. DELIVER:
+   - Present the headline, recommended angle, cover thesis + fluxPrompt, caption, hashtags, and every generated slide IN THE CHAT.
+   - The design tool returns view_url and download_url for every slide: render each as ![descriptive alt text](view_url), followed by [Download slide N](download_url).
+   - Also give workspace/output/<job_id>/preview.html and bundle.zip as local file locations; never use a file:// URL for an image.
+
+PUBLISHING TO INSTAGRAM (LIVE POSTING)
+Rendering a post only produces image files — it does NOT post to Instagram.
+Publishing to Instagram is a separate, explicit step and must be treated as
+a high-impact action:
+1. NEVER auto-publish. Only publish when the user explicitly asks to post/
+   publish to Instagram, and after they have seen the rendered slides + caption.
+2. Before the first publish in a session, call checkInstagramConnection to
+   confirm the account is reachable and report the remaining daily quota. If
+   it is not connected, explain what config is missing (INSTAGRAM_ACCOUNT_ID,
+   INSTAGRAM_ACCESS_TOKEN, PUBLIC_BASE_URL) instead of attempting to post.
+3. Choose the right tool:
+   - publishStoryToInstagram: render an APPROVED story and post it in one step
+     (marks the story PUBLISHED). Preferred for the editorial approve→post flow.
+   - publishDesignJobToInstagram: post an already-rendered job by its job_id.
+   - publishToInstagram: post from explicit public HTTPS image URLs.
+4. Instagram fetches images from public HTTPS URLs — if PUBLIC_BASE_URL is not
+   set or points at localhost, publishing will fail with a clear message. Relay
+   that message; do not retry blindly.
+5. If INSTAGRAM_DRY_RUN is on, the tools return a dry_run result and nothing is
+   posted — tell the user it was a dry run and how to go live.
+6. On success, report the returned permalink (or media id) to the user.
 
 TOOLS
 - getIndustryConfig / getSourceRegistry: load configuration first.
@@ -177,6 +211,9 @@ TOOLS
   Always use saveStories (batch, max 5 stories per call, multiple calls for
   larger sets) over repeated saveStory calls — one batched call per group,
   not one per story. Never re-emit an already-saved story.
+- checkInstagramConnection / publishToInstagram / publishDesignJobToInstagram /
+  publishStoryToInstagram: verify and publish to Instagram (see PUBLISHING TO
+  INSTAGRAM). Only ever publish on explicit user request.
 
 SOURCES — USE THE CATALOG ONLY
 The source registry (getSourceRegistry) is the curated, complete source
@@ -236,16 +273,25 @@ SEARCH-THEN-READ LOOP (for live investigation)
     fetchWebPage: fetchWebPageTool,
     fetchGitHubReleases: fetchGitHubReleasesTool,
     extractArticleContent: extractArticleContentTool,
-    generateEmbedding: generateEmbeddingTool,
-    findSimilarContent: findSimilarContentTool,
-    saveStory: saveStoryTool,
+
+
+
     saveStories: saveStoriesTool,
     saveContentOpportunity: saveContentOpportunityTool,
-    searchNewsAndCreatePost: searchNewsAndCreatePostTool,
+
     createPostFromContent: createPostFromContentTool,
+    searchNewsAndCreatePost: searchNewsAndCreatePostTool,
     search_news_and_create_post: searchNewsAndCreatePostTool,
     create_post_from_content: createPostFromContentTool,
     generateCoverPrompt: generateCoverPromptTool,
     generateAnglePack: generateAnglePackTool,
+    listPendingNews: listPendingNewsTool,
+    approveNewsStory: approveNewsStoryTool,
+    rejectNewsStory: rejectNewsStoryTool,
+    renderPostFromApprovedStory: renderPostFromApprovedStoryTool,
+    checkInstagramConnection: checkInstagramConnectionTool,
+    publishToInstagram: publishToInstagramTool,
+    publishDesignJobToInstagram: publishDesignJobToInstagramTool,
+    publishStoryToInstagram: publishStoryToInstagramTool,
   },
 });

@@ -1,0 +1,36 @@
+{
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "text": {
+        "eyebrow": "BREAKING",
+        "headline": "Major tech firms advance AI agent capabilities",
+        "body": "OpenAI, Google, Meta, Microsoft, and Copilot have made an official move in AI agents, coding, and research. A primary signal worth covering quickly."
+      },
+      "images": {
+        "hero": {
+          "prompt": "Minimalist editorial composition on a rich crimson canvas. A subtle, textured gradient feathering at the top and bottom edges. A clean, high-visibility box with a solid highlight background holds the centered headline. A discreet brand lockup sits in the top-right corner. The overall mood is calm, restrained, and deliberate, emphasizing quiet confidence and substance over spectacle."
+        }
+      }
+    }
+  ],
+  "caption": "OpenAI, Google, Meta, Microsoft, and Copilot have made an official move in AI agents, coding, and research. A primary signal worth covering quickly.",
+  "hashtags": [
+    "AI",
+    "technology",
+    "OpenAI",
+    "Google",
+    "Meta",
+    "Microsoft",
+    "AIagents",
+    "research",
+    "coding",
+    "technews",
+    "editorial"
+  ],
+  "alt_texts": [
+    "A minimalist editorial layout on a deep crimson canvas. The top and bottom edges fade into a subtle textured gradient. A clean, high-visibility box with a solid highlight background holds the centered headline in a calm, restrained font. A small brand lockup is positioned in the top-right corner, emphasizing a quiet, deliberate aesthetic."
+  ]
+}

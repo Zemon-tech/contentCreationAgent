@@ -1,0 +1,32 @@
+{
+  "job_id": "ad69954f-4f2d-46d3-a268-ab5ca46204b0",
+  "created_at": "2026-09-28T04:43:22.240254Z",
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "index": 0,
+      "file": "slide_01.jpg",
+      "alt_text": "A minimalist editorial layout on a deep crimson canvas. The top and bottom edges fade into a subtle textured gradient. A clean, high-visibility box with a solid highlight background holds the centered headline in a calm, restrained font. A small brand lockup is positioned in the top-right corner, emphasizing a quiet, deliberate aesthetic."
+    }
+  ],
+  "caption": "OpenAI, Google, Meta, Microsoft, and Copilot have made an official move in AI agents, coding, and research. A primary signal worth covering quickly.",
+  "hashtags": [
+    "AI",
+    "technology",
+    "OpenAI",
+    "Google",
+    "Meta",
+    "Microsoft",
+    "AIagents",
+    "research",
+    "coding",
+    "technews",
+    "editorial"
+  ],
+  "source_content_sha256": "dd7c512066e5ce2bdc0a1d427fc0f6c0a0b3853cf31af2e44ef97fe873538c3e",
+  "warnings": [
+    "Slot 'headline' overflows container despite reducing font-size to floor (14px)."
+  ]
+}

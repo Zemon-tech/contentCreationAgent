@@ -1,0 +1,35 @@
+{
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "text": {
+        "eyebrow": "BREAKING",
+        "headline": "New AI capability from major labs changes how developers build",
+        "body": "OpenAI, Google, Meta, and others have updated their LLM and AI agent infrastructure. This affects coding, research, and open source models. Developers should review the changes and adapt their workflows."
+      },
+      "images": {
+        "hero": {
+          "prompt": "Minimalist editorial composition on a rich news crimson canvas, seamless gradient feathering at top and bottom. A subtle, textured geometric form sits centered, evoking quiet confidence. Clean negative space, restrained lighting, no text, no hype, no exclamation marks, no emoji."
+        }
+      }
+    }
+  ],
+  "caption": "OpenAI, Google, Meta, and others have updated their LLM and AI agent infrastructure. This affects coding, research, and open source models. Developers should review the changes and adapt their workflows.",
+  "hashtags": [
+    "AI",
+    "LLM",
+    "OpenAI",
+    "Google",
+    "Meta",
+    "AIagents",
+    "AICoding",
+    "AInfrastructure",
+    "Research",
+    "OpenSourceAI"
+  ],
+  "alt_texts": [
+    "A minimalist editorial composition on a rich crimson canvas with seamless gradient feathering at top and bottom, featuring a subtle textured geometric form centered in clean negative space."
+  ]
+}

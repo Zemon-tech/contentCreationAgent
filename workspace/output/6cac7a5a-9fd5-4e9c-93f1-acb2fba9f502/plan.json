@@ -1,0 +1,45 @@
+{
+  "template_id": "news-brief",
+  "format": "single",
+  "aspect_ratio": "4:5",
+  "slides": [
+    {
+      "text": {
+        "eyebrow": "BREAKING",
+        "headline": "Capital flows to AI startups",
+        "body": "Series A, B, and C rounds signal sustained momentum across the ecosystem. A16Z, Accel, and major model providers are leading investments."
+      },
+      "images": {
+        "hero": {
+          "prompt": "A vast, quiet landscape of capital flowing like a slow river through a modern tech ecosystem, rendered in deep crimson and charcoal tones. Minimalist, textured, editorial aesthetic with subtle gradients. No text, no logos, no people."
+        }
+      }
+    }
+  ],
+  "caption": "Capital continues to flow toward AI infrastructure. Series A, B, and C rounds from top-tier firms signal sustained momentum. The ecosystem is building.",
+  "hashtags": [
+    "a16z",
+    "accel",
+    "ai",
+    "startups",
+    "funding",
+    "seriesa",
+    "seriesb",
+    "seriesc",
+    "venturecapital",
+    "technology",
+    "ecosystem",
+    "aiinfrastructure",
+    "generativeai",
+    "claudemodel",
+    "llamodel",
+    "gpt",
+    "cursor",
+    "replicate",
+    "editorial",
+    "news"
+  ],
+  "alt_texts": [
+    "A minimalist editorial illustration of capital flowing through a tech ecosystem in deep crimson and charcoal tones."
+  ]
+}

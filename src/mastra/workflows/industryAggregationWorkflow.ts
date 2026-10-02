@@ -5,7 +5,7 @@ import { isLlmConfigured } from "../config/model";
 import { sweepSources } from "../collectors/index";
 import { getIndustryConfig, OPPORTUNITY_THRESHOLD_DEFAULT } from "../config/industry";
 import { FRESHNESS_HOURS_DEFAULT, FilterDiscardSchema, RELEVANCE_THRESHOLD_DEFAULT, hardFilter, semanticFilter } from "../lib/relevance";
-import { applyOverrides, detectSignalClass, verifyStory } from "../lib/verify";
+import { applyOverrides, detectSignalClass, verifyStory, enrichStoriesWithExa } from "../lib/verify";
 import { classifyFreshness } from "../lib/freshness";
 import { resolveEvidenceTier } from "../lib/evidence";
 import { applyScoreCaps, decideContent, toSignalScores } from "../lib/decision";
@@ -29,7 +29,7 @@ import {
 } from "../repositories/store";
 import { AnalysisSchema } from "../schemas/analysis";
 import { IndustryConfigSchema } from "../config/industry";
-import { NormalizedContentSchema, RawContentSchema } from "../schemas/rawContent";
+import { NormalizedContentSchema, RawContentSchema, type RawContent } from "../schemas/rawContent";
 import { SourceSchema } from "../schemas/source";
 import {
   ContentOpportunitySchema,
@@ -41,6 +41,14 @@ import {
   type ContentOpportunity,
   type Story,
 } from "../schemas/story";
+import { searchExa } from "../tools/exa-tools";
+import { formatStoryForTemplate } from "../lib/content-formatter";
+import { routeStoryToTemplate } from "../lib/template-router";
+import {
+  submitDesignJob,
+  waitForDesignJob,
+  copyDeliverablesToWorkspace,
+} from "../lib/design-agent-client";
 
 /**
  * industryAggregationWorkflow — the production pipeline:
@@ -80,6 +88,10 @@ const WorkflowInputSchema = z.object({
   windowHours: z.number().int().min(1).max(720).default(24).optional(),
   /** Max content opportunities in final output (3-5 per spec). */
   maxOpportunities: z.number().int().min(1).max(10).default(5).optional(),
+  /** Phase 1: Enrich candidate stories with live Exa verification. */
+  useExaEnrichment: z.boolean().default(true).optional(),
+  /** Phase 4: Automatically render post drafts for top verified stories using templates. */
+  autoRenderPosts: z.boolean().default(true).optional(),
 });
 
 const CollectionResultSchema = z.object({
@@ -109,6 +121,8 @@ const ContextFields = {
   runId: z.string(),
   industryName: z.string(),
   demoMode: z.boolean(),
+  useExaEnrichment: z.boolean(),
+  autoRenderPosts: z.boolean(),
   minScore: z.number(),
   similarityThreshold: z.number(),
   maxItemsPerSource: z.number(),
@@ -169,7 +183,33 @@ const VerifyFields = {
   verifiedAt: z.string(),
 };
 
-const WorkflowOutputSchema = z.object({
+export const PostDraftSchema = z.object({
+  storyId: z.string(),
+  templateId: z.string(),
+  headline: z.string(),
+  caption: z.string(),
+  hashtags: z.array(z.string()),
+  editorialStatus: z.string(),
+  renderStatus: z.enum(["RENDERED", "FORMATTED_PENDING_RENDER", "FAILED"]),
+  jobId: z.string().optional(),
+  slides: z
+    .array(
+      z.object({
+        index: z.number(),
+        file: z.string(),
+        alt_text: z.string().optional(),
+        view_url: z.string(),
+        download_url: z.string(),
+      }),
+    )
+    .optional(),
+  workspaceDir: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export type PostDraft = z.infer<typeof PostDraftSchema>;
+
+const OpportunityOutputSchema = z.object({
   runId: z.string(),
   industryName: z.string(),
   startedAt: z.string(),
@@ -204,6 +244,11 @@ const WorkflowOutputSchema = z.object({
   errors: z.array(
     z.object({ sourceId: z.string(), sourceName: z.string(), error: z.string() }),
   ),
+  autoRenderPosts: z.boolean().default(true),
+});
+
+const WorkflowOutputSchema = OpportunityOutputSchema.extend({
+  postDrafts: z.array(PostDraftSchema).default([]),
 });
 
 function log(runId: string, step: string, data: Record<string, unknown>): void {
@@ -242,6 +287,8 @@ const loadContextStep = createStep({
       runId,
       industryName: industry.name,
       demoMode: inputData.demoMode,
+      useExaEnrichment: inputData.useExaEnrichment ?? true,
+      autoRenderPosts: inputData.autoRenderPosts ?? true,
       minScore: inputData.minScore,
       similarityThreshold: inputData.similarityThreshold,
       maxItemsPerSource: inputData.maxItemsPerSource,
@@ -282,35 +329,117 @@ const collectStep = createStep({
         })),
       };
     }
-    // Live: bounded parallel sweep. Slow/failed sources never gate the run.
+    // Live: bounded parallel sweep of registered feeds AND parallel Exa web news search.
     const sweepStarted = Date.now();
-    const results = await sweepSources(inputData.sources, {
+
+    // 1. Parallel Exa web news search promise
+    const exaSearchPromise = (async () => {
+      if (!inputData.useExaEnrichment || !process.env.EXA_API_KEY) {
+        return [];
+      }
+      try {
+        const topics = inputData.industry.topics?.slice(0, 3).join(" ") || "AI technology";
+        const query = `${inputData.industry.name} ${topics} breaking news announcement release`;
+        const searchRes = await searchExa({
+          query,
+          category: "news",
+          numResults: 15,
+          startPublishedDate: inputData.collectionWindowStart,
+          includeText: true,
+        });
+
+        const exaRaw: RawContent[] = (searchRes.results || []).map((item) => ({
+          id: makeId("raw"),
+          sourceId: "exa-web-search",
+          sourceName: "Exa Web News Search",
+          sourceType: "web",
+          url: item.url,
+          title: item.title || "Untitled News",
+          content: item.text || item.title || "No snippet content",
+          publishedAt: item.publishedDate || nowIso(),
+          collectedAt: nowIso(),
+          author: item.author ? { name: item.author } : undefined,
+        }));
+
+        log(inputData.runId, "collect-exa-web-search", {
+          query,
+          found: exaRaw.length,
+        });
+
+        return exaRaw;
+      } catch (err) {
+        log(inputData.runId, "collect-exa-search-warn", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return [];
+      }
+    })();
+
+    // 2. Parallel sweep of primary sources (RSS, arXiv, GitHub, etc.)
+    const sweepPromise = sweepSources(inputData.sources, {
       maxItems: inputData.maxItemsPerSource,
       concurrency: inputData.concurrency,
       perSourceTimeoutMs: inputData.perSourceTimeoutMs,
     });
-    const rawItems = results.flatMap((r) => r.items);
+
+    const [results, exaRawItems] = await Promise.all([sweepPromise, exaSearchPromise]);
+
+    const allItems = [...results.flatMap((r) => r.items), ...exaRawItems];
+    const rawItems: RawContent[] = allItems
+      .filter((item) => item && typeof item.url === "string" && item.url.trim().length > 0)
+      .map((item) => {
+        let content = (item.content || "").trim();
+        if (!content && item.title) {
+          content = item.title.trim();
+        }
+        if (!content) {
+          content = `Coverage from ${item.sourceName || item.sourceId || "source"}`;
+        }
+        const title = (item.title || "").trim() || "Untitled News";
+        return {
+          ...item,
+          title,
+          content,
+        };
+      });
     const slowest = [...results]
       .sort((a, b) => b.durationMs - a.durationMs)
       .slice(0, 5)
       .map((r) => `${r.sourceId}:${r.durationMs}ms`);
+
     log(inputData.runId, "collect", {
-      mode: "live-sweep",
+      mode: "live-sweep-and-exa",
       sources: results.length,
+      feedItems: rawItems.length - exaRawItems.length,
+      exaWebItems: exaRawItems.length,
       collected: rawItems.length,
       elapsedMs: Date.now() - sweepStarted,
       slowest,
     });
-    return {
-      ...inputData,
-      rawItems,
-      collectionResults: results.map((r) => ({
+
+    const collectionResults = [
+      ...results.map((r) => ({
         sourceId: r.sourceId,
         sourceName: r.sourceName,
         count: r.items.length,
         error: r.error,
         skipped: r.skipped,
       })),
+      ...(exaRawItems.length > 0
+        ? [
+            {
+              sourceId: "exa-web-search",
+              sourceName: "Exa Web News Search",
+              count: exaRawItems.length,
+            },
+          ]
+        : []),
+    ];
+
+    return {
+      ...inputData,
+      rawItems,
+      collectionResults,
     };
   },
 });
@@ -455,7 +584,7 @@ const verifyStep = createStep({
     const analysesById = new Map(full.map((a) => [a.contentId, a]));
     const byId = new Map(inputData.normalizedItems.map((i) => [i.id, i]));
 
-    const stories = inputData.stories.map((story) => {
+    let stories = inputData.stories.map((story) => {
       const members = story.contentIds.flatMap((id) => {
         const m = byId.get(id);
         return m ? [m] : [];
@@ -470,6 +599,21 @@ const verifyStep = createStep({
       });
       return { ...story, evidence };
     });
+
+    if (!inputData.demoMode && inputData.useExaEnrichment && process.env.EXA_API_KEY) {
+      log(inputData.runId, "verify-exa-start", { candidateCount: stories.length });
+      stories = await enrichStoriesWithExa(stories);
+      log(inputData.runId, "verify-exa-done", {
+        enrichedCount: stories.length,
+        verifiedSummary: stories.map((s) => ({
+          id: s.id,
+          sources: s.sources.length,
+          verification: s.verification_status,
+          confidence: s.verification_confidence,
+        })),
+      });
+    }
+
     return { ...inputData, stories, verifiedAt: nowIso() };
   },
 });
@@ -477,7 +621,7 @@ const verifyStep = createStep({
 const opportunityStep = createStep({
   id: "score-filter-opportunities",
   inputSchema: z.object(VerifyFields),
-  outputSchema: WorkflowOutputSchema,
+  outputSchema: OpportunityOutputSchema,
   execute: async ({ inputData }) => {
     const { runId } = inputData;
     // Majority classification per story drives recommended formats.
@@ -584,8 +728,8 @@ const opportunityStep = createStep({
         verification_confidence: verificationConfidence,
         evidenceList: evidence.evidenceSources,
         source_count: new Set(members.map((m) => m.sourceId)).size,
-        independent_source_count: evidence.independentSources,
         decision,
+        editorial_status: (decision === "POST_NOW" || decision === "WORTH_COVERING") ? "PENDING_REVIEW" : "DISCOVERED",
         ...(rejection_reason ? { rejection_reason } : {}),
       };
       if (!withSignal.canonical_story_id) {
@@ -802,6 +946,119 @@ const opportunityStep = createStep({
         sourceName: f.sourceName,
         error: f.error!,
       })),
+      autoRenderPosts: inputData.autoRenderPosts,
+    };
+  },
+});
+
+const createPostDraftsStep = createStep({
+  id: "create-post-drafts",
+  inputSchema: OpportunityOutputSchema,
+  outputSchema: WorkflowOutputSchema,
+  execute: async ({ inputData }) => {
+    if (!inputData.autoRenderPosts) {
+      log(inputData.runId, "create-post-drafts", { skipped: "autoRenderPosts is false" });
+      return {
+        ...inputData,
+        postDrafts: [],
+      };
+    }
+
+    // Pick top opportunities with high signal
+    const candidateOpportunities = inputData.opportunities
+      .filter((o) => o.decision === "POST_NOW" || o.decision === "WORTH_COVERING")
+      .slice(0, 3); // Top 3 posts maximum per sweep
+
+    const postDrafts: z.infer<typeof PostDraftSchema>[] = [];
+
+    for (const opp of candidateOpportunities) {
+      const story = inputData.stories.find((s) => s.id === opp.storyId);
+      if (!story) continue;
+
+      // 1. Template Routing (defaults to news-brief test template or JEV router)
+      const routing = await routeStoryToTemplate(story, opp, {
+        forceTemplateId: "news-brief",
+      });
+
+      // 2. Content Formatting for news-brief slots
+      const formatted = formatStoryForTemplate(story, opp, {
+        template_id: routing.template_id,
+        aspect_ratio: routing.aspect_ratio,
+        cover_image_url: story.evidence?.primarySource || story.sources[0],
+      });
+
+      // 3. Attempt Visual Post Rendering with Design Agent
+      let renderStatus: "RENDERED" | "FORMATTED_PENDING_RENDER" | "FAILED" = "FORMATTED_PENDING_RENDER";
+      let jobId: string | undefined;
+      let slides: { index: number; file: string; alt_text?: string; view_url: string; download_url: string }[] | undefined;
+      let workspaceDir: string | undefined;
+      let error: string | undefined;
+
+      try {
+        const submitRes = await submitDesignJob({
+          content: formatted.content,
+          template_id: routing.template_id as any,
+          format: formatted.format,
+          aspect_ratio: formatted.aspect_ratio,
+          max_slides: 1,
+          ...(formatted.cover_image_url ? { cover_image_url: formatted.cover_image_url } : {}),
+        });
+        jobId = submitRes.job_id;
+        const job = await waitForDesignJob(jobId);
+        const deliverables = await copyDeliverablesToWorkspace(job);
+        workspaceDir = deliverables.destDir;
+        slides = deliverables.slides.map((s) => ({
+          ...s,
+          view_url: `/post-assets/${jobId}/${encodeURIComponent(s.file)}`,
+          download_url: `/post-assets/${jobId}/${encodeURIComponent(s.file)}?download=1`,
+        }));
+        renderStatus = "RENDERED";
+      } catch (err: unknown) {
+        renderStatus = "FORMATTED_PENDING_RENDER";
+        error = err instanceof Error ? err.message : String(err);
+        log(inputData.runId, "post-draft-render-notice", {
+          storyId: story.id,
+          notice: `Design Agent render skipped or offline: ${error}`,
+        });
+      }
+
+      // 4. Update story status to PENDING_REVIEW with draft metadata in SQLite
+      const updatedStory: Story = {
+        ...story,
+        editorial_status: "PENDING_REVIEW",
+        editorial_notes: JSON.stringify({
+          template_id: routing.template_id,
+          renderStatus,
+          jobId,
+          headline: formatted.structured_slots?.headline,
+          workspaceDir,
+        }),
+      };
+      await storyRepository.save(updatedStory).catch(() => undefined);
+
+      postDrafts.push({
+        storyId: story.id,
+        templateId: routing.template_id,
+        headline: formatted.structured_slots?.headline || story.title,
+        caption: formatted.caption,
+        hashtags: formatted.hashtags,
+        editorialStatus: "PENDING_REVIEW",
+        renderStatus,
+        jobId,
+        slides,
+        workspaceDir,
+        error,
+      });
+    }
+
+    log(inputData.runId, "create-post-drafts", {
+      candidateOpportunities: candidateOpportunities.length,
+      draftsGenerated: postDrafts.length,
+    });
+
+    return {
+      ...inputData,
+      postDrafts,
     };
   },
 });
@@ -977,4 +1234,5 @@ export const industryAggregationWorkflow = createWorkflow({
   .then(analyzeClusterStep)
   .then(verifyStep)
   .then(opportunityStep)
+  .then(createPostDraftsStep)
   .commit();

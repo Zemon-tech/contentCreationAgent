@@ -8,12 +8,14 @@ import {
   Observability,
   SensitiveDataFilter,
 } from '@mastra/observability';
-import { agent } from './agents/agent';
+
 import { aggregatorAgent } from './agents/aggregatorAgent';
 import { imageGenAgent } from './agents/imageGenAgent';
+import { icpJudgeAgent } from './agents/icpJudgeAgent';
+
 import { fluxOutputRoute } from './lib/flux-output-route';
-import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
-import { findSimilarContentTool, generateEmbeddingTool } from './tools/analysis-tools';
+import { postAssetRoute } from './routes/post-assets';
+
 import {
   extractArticleContentTool,
   fetchGitHubReleasesTool,
@@ -21,10 +23,24 @@ import {
   fetchWebPageTool,
 } from './tools/fetch-tools';
 import { exaScrapeTool, exaSearchTool } from './tools/exa-tools';
-import { searchNewsAndCreatePostTool,
-    createPostFromContentTool } from './tools/design-tools';
+import {
+  searchNewsAndCreatePostTool,
+  createPostFromContentTool,
+  renderPostFromApprovedStoryTool,
+} from './tools/design-tools';
 import { generateCoverPromptTool } from './tools/cover-tools';
 import { generateAnglePackTool } from './tools/angle-tools';
+import {
+  listPendingNewsTool,
+  approveNewsStoryTool,
+  rejectNewsStoryTool,
+} from './tools/editorial-tools';
+import {
+  checkInstagramConnectionTool,
+  publishToInstagramTool,
+  publishDesignJobToInstagramTool,
+  publishStoryToInstagramTool,
+} from './tools/instagram-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
 import {
@@ -37,15 +53,13 @@ import {
   getIndustryConfigTool,
   getSourceRegistryTool,
   saveContentOpportunityTool,
-  saveNormalizedContentTool,
-  saveRawContentTool,
-  saveSourcesTool,
   saveStoriesTool,
-  saveStoryTool,
 } from './tools/industry-tools';
+
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
-import { postAssetRoute } from './routes/post-assets';
+import { companyResearchWorkflow } from './workflows/companyResearchWorkflow';
+import { leadQualificationWorkflow } from './workflows/leadQualificationWorkflow';
 
 export const mastra = new Mastra({
   bundler: {
@@ -56,33 +70,38 @@ export const mastra = new Mastra({
     // Both let images display inline in Studio chat.
     apiRoutes: [postAssetRoute, fluxOutputRoute],
   },
-  agents: { agent, aggregatorAgent, imageGenAgent },
-  workflows: { industryAggregationWorkflow, newsToPostWorkflow },
+  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent },
+  workflows: {
+    industryAggregationWorkflow,
+    newsToPostWorkflow,
+    leadQualificationWorkflow,
+    companyResearchWorkflow,
+  },
   tools: {
-    startScheduleTool,
-    stopScheduleTool,
-    fetchRSSTool,
-    fetchWebPageTool,
-    fetchGitHubReleasesTool,
-    extractArticleContentTool,
+    sweepSourcesTool,
     exaSearchTool,
     exaScrapeTool,
+    getCurrentTimeTool,
+    getIndustryConfigTool,
+    getSourceRegistryTool,
+    saveStoriesTool,
+    saveContentOpportunityTool,
+    listPendingNewsTool,
+    approveNewsStoryTool,
+    rejectNewsStoryTool,
+    renderPostFromApprovedStoryTool,
     searchNewsAndCreatePostTool,
     createPostFromContentTool,
     generateCoverPromptTool,
     generateAnglePackTool,
-    getCurrentTimeTool,
-    sweepSourcesTool,
-    generateEmbeddingTool,
-    findSimilarContentTool,
-    getIndustryConfigTool,
-    getSourceRegistryTool,
-    saveRawContentTool,
-    saveNormalizedContentTool,
-    saveSourcesTool,
-    saveStoryTool,
-    saveStoriesTool,
-    saveContentOpportunityTool,
+    checkInstagramConnectionTool,
+    publishToInstagramTool,
+    publishDesignJobToInstagramTool,
+    publishStoryToInstagramTool,
+    fetchRSSTool,
+    fetchWebPageTool,
+    fetchGitHubReleasesTool,
+    extractArticleContentTool,
     savePastedImageTool,
     useInboxReferencesTool,
     fetchReferenceImageTool,

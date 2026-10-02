@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ text.headline | default("News Brief") }}</title>
+  {% if style_content %}
+  <style>
+    {{ style_content | safe }}
+  </style>
+  {% else %}
+  <link rel="stylesheet" href="style.css">
+  {% endif %}
+  {% if css_colors %}
+  <style>
+    :root {
+      {% for prop, val in css_colors.items() %}
+      {{ prop }}: {{ val }};
+      {% endfor %}
+    }
+  </style>
+  {% endif %}
+</head>
+<body>
+  <div id="canvas" class="aspect-{{ (aspect_ratio | default('3:4')).replace(':', '-') }}" style="width: {{ width | default(1080) }}px; height: {{ height | default(1440) }}px;">
+    
+    <!-- Middle Hero Image with Feathered Gradients Top and Bottom -->
+    <div class="hero-image-container">
+      {% if images and images.hero %}
+      <img class="hero-image" src="{{ images.hero }}" alt="News Hero" />
+      {% elif back_image %}
+      <img class="hero-image" src="{{ back_image }}" alt="News Hero" />
+      {% elif shared_image %}
+      <img class="hero-image" src="{{ shared_image }}" alt="News Hero" />
+      {% else %}
+      <img class="hero-image" src="back.jpg" alt="News Hero" />
+      {% endif %}
+      <!-- Top gradient blends image into red top header -->
+      <div class="gradient-overlay gradient-top" aria-hidden="true"></div>
+      <!-- Bottom gradient blends image into red bottom text zone -->
+      <div class="gradient-overlay gradient-bottom" aria-hidden="true"></div>
+    </div>
+
+    <!-- Safe Zone Overlay for UI, Brand Lockup, and Content -->
+    <div class="safe-zone">
+      <!-- Header: Category / Eyebrow on left, Brand Logo at Top Right -->
+      <header class="news-header">
+        <div class="header-left">
+          {% if text and text.eyebrow %}
+          <div class="slot-eyebrow" data-slot="eyebrow">
+            <span class="eyebrow-badge">{{ text.eyebrow }}</span>
+          </div>
+          {% else %}
+          <div class="slot-eyebrow" data-slot="eyebrow">
+            <span class="eyebrow-badge">News Brief</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="header-right">
+          {% if logo_dark %}
+          <img class="brand-logo" src="{{ logo_dark }}" alt="RAS by KeilHQ" />
+          {% elif logo_light %}
+          <img class="brand-logo" src="{{ logo_light }}" alt="RAS by KeilHQ" />
+          {% else %}
+          <div class="brand-badge">[<span>RAS</span>]</div>
+          {% endif %}
+        </div>
+      </header>
+
+      <!-- Main News Content: Highlighted Boxed Headline + Clean Body Text -->
+      <main class="news-main">
+        {% if text and text.headline %}
+        <h1 class="slot-headline" data-slot="headline">
+          <span class="headline-box">{{ text.headline | safe }}</span>
+        </h1>
+        {% endif %}
+
+        {% if text and text.body %}
+        <div class="slot-body" data-slot="body">
+          <p>{{ text.body | safe }}</p>
+        </div>
+        {% endif %}
+      </main>
+    </div>
+
+  </div>
+</body>
+</html>

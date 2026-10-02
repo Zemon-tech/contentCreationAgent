@@ -13,8 +13,12 @@
     "verify:registry": "npx -y tsx src/mastra/demo/verifyRegistry.ts",
     "verify:workflow": "npx -y tsx src/mastra/demo/runWorkflowDemo.ts",
     "verify:intelligence": "npx -y tsx src/mastra/demo/verifyIntelligence.ts",
-    "benchmark:sweep": "npx -y tsx src/mastra/demo/benchmarkSweep.ts",
-    "post": "npx -y tsx --env-file=.env src/mastra/demo/runNewsPostDemo.ts",
+    "verify:phase": "npx -y tsx src/mastra/demo/verifyPhase2and3.ts",
+    "radar:auto": "npx -y tsx src/mastra/cron/runScheduledRadar.ts",
+    "radar:once": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --once",
+    "radar:demo": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --demo --once",
+    "leads": "npx -y tsx --env-file=.env src/mastra/cli/leads.ts",
+    "verify:leads": "npx -y tsx src/mastra/demo/verifyLeads.ts",
     "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts"
   },
   "keywords": [],
@@ -30,6 +34,7 @@
     "@mastra/libsql": "1.23.0",
     "@mastra/memory": "1.30.0",
     "@mastra/observability": "1.17.8",
+    "exa-js": "2.23.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
