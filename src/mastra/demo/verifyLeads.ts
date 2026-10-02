@@ -23,7 +23,7 @@ const BASE_ENV: Record<string, string> = {
   LEAD_EXA_MAX_CONCURRENT_RUNS: "40",
   LEAD_COMPANY_CONCURRENCY: "2",
   LEAD_MAX_TEAM_CONTACTS_PER_COMPANY: "20",
-  LEAD_MAX_COST_PER_COMPANY_USD: "8",
+  LEAD_MAX_COST_PER_COMPANY_USD: "10",
   LEAD_MAX_COST_PER_BATCH_USD: "100",
   LEAD_M1_BUDGET_USD: "2",
   LEAD_M5_BUDGET_USD: "1",
@@ -128,6 +128,28 @@ function fixture(module: string, params: CreateAgentRunParams): { structured: un
         grounding: [g("tools"), g("tooling_signals[0].text")],
         cost: 0.1,
       };
+    case "M6": {
+      const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+      const people = data.filter((d) => d.entity === "person");
+      return {
+        structured: {
+          company: {
+            linkedin: { profile_url: `https://linkedin.com/company/${domain}`, followers: 1200, total_posts: null, posts_last_90_days: 9, last_post_date: daysAgo(5) },
+            x: { profile_url: `https://x.com/${domain}`, followers: 300, total_posts: 850, posts_last_90_days: 4, last_post_date: daysAgo(12) },
+            // Instagram value WITHOUT a citation below: must be ignored by the scorer.
+            instagram: { profile_url: null, followers: 99, total_posts: 40, posts_last_90_days: 1, last_post_date: daysAgo(1) },
+          },
+          people: people.map((p) => ({
+            input_name: p.name,
+            linkedin: { profile_url: null, followers: 500, total_posts: null, posts_last_90_days: 2, last_post_date: daysAgo(300) },
+            x: null,
+            instagram: null,
+          })),
+        },
+        grounding: [g("company.linkedin"), g("company.x.last_post_date"), ...people.map((_, i) => g(`people[${i}].linkedin.last_post_date`))],
+        cost: 0.4,
+      };
+    }
     default: {
       // M4 / M5 contacts
       const people = data.map((p) => ({
@@ -464,6 +486,33 @@ async function main(): Promise<void> {
   const rows3 = out3 ? await store.listRows(out3.batchId) : [];
   check("resume completes the batch", out3?.status === "completed" && rows3.every((r) => r.status === "complete"), rows3.map((r) => r.status).join(","));
   check("already-paid research was NOT re-run", completedKeys.size > 0 && fake4.creates.every((c) => !completedKeys.has(c.cacheKey)), `${completedKeys.size} reused, ${fake4.creates.length} new`);
+
+  console.log("[9b] M6 social activity");
+  const m6Creates = fake2.creates.filter((c) => c.module === "M6");
+  const m6Params = [...fake2.runs.values()].find((r) => (r.params.metadata as Record<string, string>)?.module === "M6")?.params;
+  check("M6 ran once per resolved company", m6Creates.length === 3, `${m6Creates.length} runs`);
+  check("Fiber attached via LEAD_M6_DATA_SOURCES (no extra key)", JSON.stringify(m6Params?.dataSources) === '[{"provider":"fiber"}]');
+  const act = acmeRec?.activity;
+  check("company active from cited LinkedIn/X post dates", act?.company_status === "active" && act.company.platforms.find((p) => p.platform === "linkedin")?.status === "active");
+  const ig = act?.company.platforms.find((p) => p.platform === "instagram");
+  check("uncited Instagram values ignored (not counted as activity)", ig?.grounded === false && ig.status === "unknown" && ig.last_post_date === null);
+  check("founders checked (founders first) and scored dormant at 300 days", (act?.founders.length ?? 0) >= 1 && act?.founders[0]?.name === "Asha Rao" && act?.founders_status === "dormant");
+  check("social_activity criterion met (company active)", acmeRec?.criteria.social_activity?.result === "met");
+  check("companies.csv has activity columns", companiesCsv.includes("company_social_activity") && companiesCsv.includes("linkedin: "));
+  const { activityCriterion, statusFromDays, summarizeActivity } = await import("../lib/leads/activity");
+  check("status thresholds 30 / 180 days", statusFromDays(10, null) === "active" && statusFromDays(90, null) === "low_activity" && statusFromDays(200, null) === "dormant" && statusFromDays(null, 3) === "low_activity" && statusFromDays(null, null) === "unknown");
+  const dormant = summarizeActivity({
+    structured: { company: { linkedin: { last_post_date: "2024-01-01" }, x: null, instagram: null }, people: [] },
+    grounding: [g("company.linkedin.last_post_date")],
+    companyName: "Old Co",
+    people: [],
+  });
+  check("dormant everywhere -> social_activity not_met", activityCriterion(dormant, "success").result === "not_met");
+  check(
+    "dormant blocks Qualified even with other criteria met",
+    computeIcpStatus({ team_size: met, decision_maker: met, multiple_functional_teams: met, current_trigger: met, social_activity: { ...met, result: "not_met" } }, "complete") === "Needs review" &&
+      computeIcpStatus({ team_size: met, decision_maker: met, multiple_functional_teams: met, social_activity: met }, "complete") === "Qualified",
+  );
 
   console.log("[9] Sarvam output parsing + partial-output tolerance");
   check("extractJson strips code fences and prose", JSON.stringify(extractJson('Here you go:\n```json\n{"a":1,"b":{"c":2}}\n```')) === '{"a":1,"b":{"c":2}}');

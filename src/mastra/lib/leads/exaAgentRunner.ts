@@ -91,13 +91,17 @@ export function buildModuleRequest(module: LeadModuleDef, ctx: ModuleContext, co
   if (module.effort === "auto" && module.budgetKey) {
     params.budget = { maxCostDollars: config[module.budgetKey] };
   }
+  const dataSources = module.dataSources?.(config) ?? [];
+  if (dataSources.length) params.dataSources = dataSources.map((provider) => ({ provider }));
   // Budget is excluded from the hash: changing a cap must not invalidate good results.
+  // Data sources ARE included: web-only and Fiber-backed answers are different results.
   const inputHash = hashOf({
     query: params.query,
     systemPrompt: params.systemPrompt,
     input: params.input,
     outputSchema: params.outputSchema,
     effort: params.effort,
+    ...(dataSources.length ? { dataSources } : {}),
   });
   return { params, inputHash };
 }

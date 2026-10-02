@@ -94,6 +94,7 @@ export function computeIcpStatus(criteria: Record<string, CriterionOutcome>, res
 
   const requiredOk = ICP_RULES.qualified.requireMet.every((id) => r(id) === "met");
   const anyOfMet = ICP_RULES.qualified.anyOf.filter((id) => r(id) === "met").length;
-  if (requiredOk && anyOfMet >= ICP_RULES.qualified.minMet) return "Qualified";
+  const blocked = ICP_RULES.blockQualifiedIfNotMet.some((id) => r(id) === "not_met");
+  if (requiredOk && anyOfMet >= ICP_RULES.qualified.minMet && !blocked) return "Qualified";
   return "Needs review"; // incl. unknown/borderline team size (OPEN-2)
 }

@@ -4,6 +4,8 @@ import type { LeadStore } from "../../repositories/leadStore";
 import { resolveFromProjectRoot } from "../../repositories/leadStore";
 import type { BatchRecord, CompanyPerson, CompanyRecord, ContactValue, SeedRow } from "../../schemas/lead";
 import { toCsv } from "./csv";
+import { formatEntityActivity } from "./activity";
+import { personKey } from "./contacts";
 
 /**
  * Batch exports (PRD §9): companies.csv, team.csv, evidence.jsonl,
@@ -40,6 +42,11 @@ const COMPANY_COLUMNS = [
   "identity_confidence",
   "pain_track",
   "criteria",
+  "activity_status",
+  "company_activity_status",
+  "founders_activity_status",
+  "company_social_activity",
+  "founders_social_activity",
   "funding_summary",
   "revenue_summary",
   "hiring_summary",
@@ -70,6 +77,8 @@ const TEAM_COLUMNS = [
   "phones",
   "source_type",
   "conflict",
+  "activity_status",
+  "social_activity",
   "source_urls",
 ];
 
@@ -154,6 +163,17 @@ function companyRow(c: CompanyRecord): Record<string, unknown> {
     criteria: Object.entries(c.criteria)
       .map(([k, v]) => `${k}=${v.result}`)
       .join(J),
+    activity_status: c.activity?.overall ?? "unknown",
+    company_activity_status: c.activity?.company_status ?? "unknown",
+    founders_activity_status: c.activity?.founders_status ?? "unknown",
+    company_social_activity: c.activity ? formatEntityActivity(c.activity.company) : "",
+    founders_social_activity: (c.activity?.founders ?? [])
+      .map((f) => {
+        const line = formatEntityActivity(f);
+        return line ? `${f.name}: ${line}` : "";
+      })
+      .filter(Boolean)
+      .join(" || "),
     funding_summary: fundingSummary(c.signals),
     revenue_summary: revenueSummary(c.signals),
     hiring_summary: hiringSummary(c.signals),
@@ -172,6 +192,7 @@ function companyRow(c: CompanyRecord): Record<string, unknown> {
 }
 
 function teamRow(c: CompanyRecord, p: CompanyPerson): Record<string, unknown> {
+  const act = p.source_type === "exa_agent" ? c.activity?.founders.find((f) => personKey(f.name) === p.key) : undefined;
   return {
     row_id: c.row_id,
     company: s(c.identity?.brand_name) || c.seed.company_name,
@@ -186,6 +207,8 @@ function teamRow(c: CompanyRecord, p: CompanyPerson): Record<string, unknown> {
     phones: fmtContacts(p.phones),
     source_type: p.source_type,
     conflict: p.conflict,
+    activity_status: act?.status ?? "",
+    social_activity: act ? formatEntityActivity(act) : "",
     source_urls: p.source_urls.join(J),
   };
 }
@@ -207,6 +230,7 @@ function placeholderCompany(batchId: string, row: SeedRow, status: string): Comp
     company_contacts: { emails: [], phones: [] },
     signals: null,
     tools: null,
+    activity: null,
     team_size: { low: null, high: null, basis: null, confidence: null },
     criteria: {},
     triggers: [],
@@ -306,6 +330,7 @@ export async function writeBatchExports(store: LeadStore, batchId: string, expor
     tools: has((c) => (((c.tools?.tools as unknown[]) ?? []).length > 0)),
     email: has((c) => exaPeople(c).some((p) => p.emails.length > 0) || c.company_contacts.emails.length > 0),
     phone: has((c) => exaPeople(c).some((p) => p.phones.length > 0) || c.company_contacts.phones.length > 0),
+    social_activity: has((c) => !!c.activity && c.activity.overall !== "unknown"),
   };
   const durations = companies.filter((c) => c.duration_ms > 0).map((c) => c.duration_ms);
   const totalCost = companies.reduce((s2, c) => s2 + c.cost_usd, 0);
@@ -334,6 +359,7 @@ export async function writeBatchExports(store: LeadStore, batchId: string, expor
       research_status: count(companies.map((c) => c.research_status)),
       icp_status: count(companies.map((c) => c.icp_status)),
       analysis_status: count(companies.map((c) => c.analysis_status)),
+      activity_status: count(companies.map((c) => c.activity?.overall ?? "unknown")),
       contacts_truncated: companies.filter((c) => c.contacts_truncated).length,
       contact_conflicts: companies.filter((c) => c.contact_conflict).length,
       observed_claims_without_ref: observedWithoutRef,
@@ -380,6 +406,7 @@ function renderSummary(r: Record<string, any>, batch: BatchRecord | undefined): 
     `- Research status: ${kv(r.counts.research_status)}`,
     `- ICP status: ${kv(r.counts.icp_status)}`,
     `- Analysis status: ${kv(r.counts.analysis_status)}`,
+    `- Social activity: ${kv(r.counts.activity_status ?? {})}`,
     `- Coverage (% of researched): ${kv(r.coverage_pct_of_researched)}`,
     `- Cost: $${r.cost_usd.total} total, $${r.cost_usd.per_company_avg} per company`,
     `- Company latency: p50 ${r.latency_ms.company_p50 ?? "-"} ms, p95 ${r.latency_ms.company_p95 ?? "-"} ms`,

@@ -9,7 +9,7 @@ import type { PlannedPerson, SeedRow } from "../schemas/lead";
  */
 
 export type ExaEffort = "minimal" | "low" | "medium" | "high" | "xhigh" | "auto";
-export type LeadModuleId = "M0" | "M1" | "M2" | "M3" | "M4" | "M5";
+export type LeadModuleId = "M0" | "M1" | "M2" | "M3" | "M4" | "M5" | "M6";
 
 /** Fixed-effort prices (exa.ai/docs/admin/pricing, verified 2026-09-30). */
 export const EXA_FIXED_EFFORT_PRICE_USD: Record<Exclude<ExaEffort, "auto">, number> = {
@@ -38,7 +38,9 @@ export interface LeadModuleDef {
   schemaVersion: string;
   effort: ExaEffort;
   /** Config key holding budget.maxCostDollars for auto-effort modules. */
-  budgetKey?: "m1BudgetUsd" | "m5BudgetUsd";
+  budgetKey?: "m1BudgetUsd" | "m5BudgetUsd" | "m6BudgetUsd";
+  /** Exa Connect providers to attach (e.g. ["fiber"]). Part of the cache key. */
+  dataSources?(config: LeadConfig): string[];
   dependsOn: LeadModuleId[];
   chunked: boolean;
   systemPrompt: string;
@@ -473,7 +475,88 @@ const M5: LeadModuleDef = {
   worstCaseCostUsd: (ctx, config) => config.m5BudgetUsd + contactWorstCase(ctx.people?.length ?? 0, config, false),
 };
 
-export const LEAD_MODULES: Record<LeadModuleId, LeadModuleDef> = { M0, M1, M2, M3, M4, M5 };
+// ---------- M6: social activity (company + founders) ----------
+
+const platformActivity = (platform: string) =>
+  nObj(
+    {
+      profile_url: nUrl(`The ${platform} profile/page URL that was checked.`),
+      followers: nInt("Follower count, if shown."),
+      total_posts: nInt("Lifetime post count, ONLY if the platform displays it (X, Instagram). null for LinkedIn."),
+      posts_last_90_days: nInt("Number of posts in the last 90 days, if it can be counted."),
+      last_post_date: nStr("Date of the most recent post, YYYY-MM-DD. null if unknown."),
+    },
+    `${platform} activity. null when no ${platform} account was found.`,
+  );
+
+const activityBlock = () =>
+  obj({ linkedin: platformActivity("LinkedIn"), x: platformActivity("X"), instagram: platformActivity("Instagram") });
+
+const M6: LeadModuleDef = {
+  id: "M6",
+  stepId: "lead-m6-social-activity",
+  title: "Social activity",
+  schemaVersion: "m6.v1",
+  effort: "auto",
+  budgetKey: "m6BudgetUsd",
+  dependsOn: ["M0", "M1"],
+  chunked: false,
+  dataSources: (config) => config.m6DataSources,
+  systemPrompt:
+    `You measure how active a startup and its founders are on social media. ${EVIDENCE_RULES} ` +
+    "Only report an account when it clearly belongs to this company or this person (match name, company and role). " +
+    "Dates and counts must come from the account itself or a data provider, never estimated. " +
+    "When a LinkedIn data provider is available, use it for LinkedIn posts. " +
+    "Do not return emails or phone numbers.",
+  buildQuery: (ctx) =>
+    `For ${companyLabel(ctx)} and for each person in input.data (its founders/leaders), report activity on LinkedIn, X (Twitter) and Instagram: ` +
+    "the profile URL, follower count, lifetime post count where the platform shows it, number of posts in the last 90 days, and the date of the most recent post. " +
+    "Use the known profile URLs in input.data when given; otherwise find the official accounts.",
+  buildInputData: (ctx) => {
+    const ref = companyRef(ctx);
+    const socials = (ctx.identity?.socials ?? {}) as Record<string, unknown>;
+    const company = {
+      entity: "company",
+      name: ref.company_name,
+      official_domain: ref.official_domain,
+      linkedin_url: idStr(ctx.identity, "company_linkedin_url"),
+      x_url: typeof socials.x_url === "string" ? socials.x_url : null,
+      instagram_url: typeof socials.instagram_url === "string" ? socials.instagram_url : null,
+    };
+    const people = (ctx.people ?? []).map((p) => ({
+      entity: "person",
+      name: p.name,
+      title: p.title,
+      linkedin_url: p.linkedin_url,
+      company_name: ref.company_name,
+    }));
+    return [company, ...people];
+  },
+  outputSchema: (ctx) =>
+    obj(
+      {
+        company: activityBlock(),
+        people: arr(
+          obj(
+            {
+              input_name: { type: "string", description: "Exactly the name given in input.data for this person." },
+              linkedin: platformActivity("LinkedIn"),
+              x: platformActivity("X"),
+              instagram: platformActivity("Instagram"),
+            },
+            ["input_name"],
+          ),
+          Math.max(1, ctx.people?.length ?? 1),
+        ),
+      },
+      ["company", "people"],
+    ),
+  // Connect provider calls (e.g. Fiber credits) are billed on top of the run budget.
+  worstCaseCostUsd: (_ctx, config) =>
+    config.m6BudgetUsd + (config.m6DataSources.length ? config.m6ConnectReserveUsd : 0),
+};
+
+export const LEAD_MODULES: Record<LeadModuleId, LeadModuleDef> = { M0, M1, M2, M3, M4, M5, M6 };
 
 /** Sarvam judgement step version (part of its cache key). */
 export const S1_SCHEMA_VERSION = "s1.v1";

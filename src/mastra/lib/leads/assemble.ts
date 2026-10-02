@@ -8,8 +8,9 @@ import type {
   ResearchStatus,
 } from "../../schemas/lead";
 import type { RunModuleResult } from "./exaAgentRunner";
-import type { EvidenceModuleId, ModuleEvidence } from "./evidence";
+import { JUDGE_MODULES, type EvidenceModuleId, type ModuleEvidence } from "./evidence";
 import { mergePeople } from "./contacts";
+import { activityCriterion, summarizeActivity } from "./activity";
 import { computeIcpStatus, decisionMakerCriterion, readTeamSize, SARVAM_CRITERIA, teamSizeCriterion, unknownCriterion } from "./icp";
 import type { JudgeResult } from "./judge";
 
@@ -75,7 +76,7 @@ export async function loadEvidenceModules(
   state: CompanyState,
 ): Promise<Partial<Record<EvidenceModuleId, ModuleEvidence | null>>> {
   const out: Partial<Record<EvidenceModuleId, ModuleEvidence | null>> = {};
-  for (const id of ["M0", "M1", "M2", "M3"] as EvidenceModuleId[]) {
+  for (const id of JUDGE_MODULES) {
     const summary = state.modules[id];
     const [rec] = await loadRecords(store, summary);
     out[id] = rec
@@ -116,15 +117,29 @@ export async function assembleCompany(store: LeadStore, state: CompanyState, jud
   const teamSize = readTeamSize(m1);
   const m1Status = state.modules.M1?.status ?? "missing";
 
+  // M6 social activity: status computed in code from cited post dates only.
+  const m6Status = state.modules.M6?.status ?? "missing";
+  const [m6Rec] = await loadRecords(store, state.modules.M6);
+  const activity =
+    m6Rec?.state === "completed" && m6Rec.structured
+      ? summarizeActivity({
+          structured: m6Rec.structured,
+          grounding: m6Rec.grounding,
+          companyName: String(m0?.brand_name ?? m0?.legal_name ?? row.company_name),
+          people: state.activityPeople ?? [],
+        })
+      : null;
+
   const criteria: Record<string, CriterionOutcome> = {};
   if (research_status === "unresolved" || research_status === "not_started" || research_status === "failed") {
-    for (const id of ["team_size", ...SARVAM_CRITERIA, "decision_maker"]) criteria[id] = unknownCriterion(`research ${research_status}`);
+    for (const id of ["team_size", ...SARVAM_CRITERIA, "decision_maker", "social_activity"]) criteria[id] = unknownCriterion(`research ${research_status}`);
   } else {
     criteria.team_size = teamSizeCriterion(teamSize);
     for (const id of SARVAM_CRITERIA) {
       criteria[id] = judge?.judgement?.criteria[id] ?? unknownCriterion(`analysis ${judge?.status ?? "skipped"}`);
     }
     criteria.decision_maker = decisionMakerCriterion(m1, m1Status, row);
+    criteria.social_activity = activityCriterion(activity, m6Status);
   }
 
   const merged = mergePeople({ row, m1, contactOutputs });
@@ -146,6 +161,7 @@ export async function assembleCompany(store: LeadStore, state: CompanyState, jud
     company_contacts: merged.companyContacts,
     signals: m2,
     tools: m3,
+    activity,
     team_size: teamSize,
     criteria,
     triggers: j?.triggers ?? [],

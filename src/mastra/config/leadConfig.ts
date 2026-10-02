@@ -54,6 +54,17 @@ const LeadEnvSchema = z.object({
   /** Exa contact-enrichment rates (verified on exa.ai/docs/admin/pricing, 2026-09-30). */
   LEAD_EXA_EMAIL_RATE_USD: num("LEAD_EXA_EMAIL_RATE_USD", { min: 0 }).default(0.02),
   LEAD_EXA_PHONE_RATE_USD: num("LEAD_EXA_PHONE_RATE_USD", { min: 0 }).default(0.07),
+
+  // --- M6 social activity (company + founders on LinkedIn / X / Instagram) ---
+  LEAD_M6_ENABLED: z.enum(["true", "false"]).default("true"),
+  /** Exa Connect providers for M6, comma-separated ("fiber"), or "none" for web search only. */
+  LEAD_M6_DATA_SOURCES: z.string().default("fiber"),
+  /** budget.maxCostDollars for M6 (auto effort). Exa accepts 1–100. */
+  LEAD_M6_BUDGET_USD: num("LEAD_M6_BUDGET_USD", { min: 1, max: 100 }).default(1),
+  /** Extra worst-case reserve for Exa Connect provider charges (billed on top of the run). */
+  LEAD_M6_CONNECT_RESERVE_USD: num("LEAD_M6_CONNECT_RESERVE_USD", { min: 0 }).default(1),
+  /** Max founders/leaders checked for activity per company (founders first). */
+  LEAD_M6_MAX_PEOPLE: num("LEAD_M6_MAX_PEOPLE", { int: true, min: 0, max: 15 }).default(5),
 });
 
 export interface LeadConfig {
@@ -81,6 +92,12 @@ export interface LeadConfig {
   teamChunkSize: number;
   emailRateUsd: number;
   phoneRateUsd: number;
+  m6Enabled: boolean;
+  /** Exa Connect providers for M6 (empty = web search only). */
+  m6DataSources: string[];
+  m6BudgetUsd: number;
+  m6ConnectReserveUsd: number;
+  m6MaxPeople: number;
 }
 
 export class LeadConfigError extends Error {
@@ -118,6 +135,11 @@ export function loadLeadConfig(env: NodeJS.ProcessEnv = process.env): LeadConfig
   if (!e.LEAD_SARVAM_MODEL.startsWith("sarvam/")) {
     problems.push(`LEAD_SARVAM_MODEL must be a Mastra router id like "sarvam/sarvam-105b"`);
   }
+  const m6Sources = /^none$/i.test(e.LEAD_M6_DATA_SOURCES)
+    ? []
+    : e.LEAD_M6_DATA_SOURCES.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const badSource = m6Sources.find((s) => !/^[a-z0-9_-]{2,40}$/.test(s));
+  if (badSource) problems.push(`LEAD_M6_DATA_SOURCES has an invalid provider name: "${badSource}"`);
   if (problems.length) throw new LeadConfigError(problems);
 
   return {
@@ -145,6 +167,11 @@ export function loadLeadConfig(env: NodeJS.ProcessEnv = process.env): LeadConfig
     teamChunkSize: e.LEAD_TEAM_CHUNK_SIZE,
     emailRateUsd: e.LEAD_EXA_EMAIL_RATE_USD,
     phoneRateUsd: e.LEAD_EXA_PHONE_RATE_USD,
+    m6Enabled: e.LEAD_M6_ENABLED === "true",
+    m6DataSources: [...new Set(m6Sources)],
+    m6BudgetUsd: e.LEAD_M6_BUDGET_USD,
+    m6ConnectReserveUsd: e.LEAD_M6_CONNECT_RESERVE_USD,
+    m6MaxPeople: e.LEAD_M6_MAX_PEOPLE,
   };
 }
 

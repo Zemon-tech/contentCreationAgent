@@ -20,7 +20,8 @@ KeilHQ's ideal customer:
 - Shows problem-fit signals: tool sprawl, scattered docs/knowledge, meeting overload, coordination or handoff pain, slow onboarding, founders acting as the ops bottleneck, rapid hiring straining processes.
 - Has a current trigger: hiring surge, new leader, recent funding, product launch, public tool/process complaints.
 
-Evidence format: keys SEED (the input CSV row; not independently verified), M0 (identity), M1 (founders & team), M2 (funding, revenue, hiring, news), M3 (tools & tooling signals), module_status (success|partial|failed|skipped|missing).
+Evidence format: keys SEED (the input CSV row; not independently verified), M0 (identity), M1 (founders & team), M2 (funding, revenue, hiring, news), M3 (tools & tooling signals), M6 (social activity of the company and founders on LinkedIn / X / Instagram: followers, post counts, last post dates), module_status (success|partial|failed|skipped|missing).
+Social activity is scored separately in code; you may cite M6 (e.g. a recent founder post about hiring) as a trigger or problem-fit signal.
 
 Rules:
 1. Use ONLY facts present in the evidence. Never add facts from your own knowledge. If evidence is missing, the answer is "unknown".

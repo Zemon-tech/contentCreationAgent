@@ -101,6 +101,8 @@ export const CompanyStateSchema = CompanyInputSchema.extend({
   gate: CompanyGateSchema,
   modules: z.record(z.string(), ModuleSummarySchema),
   contactPlan: ContactPlanSchema.nullable(),
+  /** Founders/leaders chosen for the M6 social-activity check. */
+  activityPeople: z.array(PlannedPersonSchema).nullable(),
   analysis: z
     .object({ status: AnalysisStatusSchema, reason: z.string().nullable(), cache_key: z.string().nullable() })
     .nullable(),
@@ -262,6 +264,43 @@ export interface CriterionOutcome {
   decided_by: "code" | "sarvam" | "code_downgrade";
 }
 
+// ---------- Social activity (M6) ----------
+
+export type ActivityStatus = "active" | "low_activity" | "dormant" | "unknown";
+export type SocialPlatform = "linkedin" | "x" | "instagram";
+
+export interface PlatformActivitySummary {
+  platform: SocialPlatform;
+  profile_url: string | null;
+  followers: number | null;
+  total_posts: number | null;
+  posts_last_90_days: number | null;
+  last_post_date: string | null;
+  days_since_last_post: number | null;
+  status: ActivityStatus;
+  /** False when Exa returned values without a citation (values are then ignored). */
+  grounded: boolean;
+  /** Evidence path, e.g. "M6.company.linkedin.last_post_date". */
+  ref: string;
+}
+
+export interface EntityActivity {
+  kind: "company" | "person";
+  name: string;
+  title: string | null;
+  platforms: PlatformActivitySummary[];
+  status: ActivityStatus;
+}
+
+export interface ActivitySummary {
+  as_of: string;
+  company: EntityActivity;
+  founders: EntityActivity[];
+  company_status: ActivityStatus;
+  founders_status: ActivityStatus;
+  overall: ActivityStatus;
+}
+
 export interface CompanyRecord {
   batch_id: string;
   row_id: string;
@@ -276,6 +315,7 @@ export interface CompanyRecord {
   company_contacts: { emails: ContactValue[]; phones: ContactValue[] };
   signals: Record<string, unknown> | null;
   tools: Record<string, unknown> | null;
+  activity: ActivitySummary | null;
   team_size: { low: number | null; high: number | null; basis: string | null; confidence: string | null };
   criteria: Record<string, CriterionOutcome>;
   triggers: IcpJudgement["triggers"];

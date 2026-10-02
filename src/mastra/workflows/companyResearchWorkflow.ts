@@ -22,6 +22,7 @@ import {
   toSummary,
 } from "../lib/leads/assemble";
 import { planContacts } from "../lib/leads/contacts";
+import { selectActivityPeople } from "../lib/leads/activity";
 import { batchControl } from "../lib/leads/control";
 import { enforceEpistemics } from "../lib/leads/epistemic";
 import { runExaModule, type RunModuleResult } from "../lib/leads/exaAgentRunner";
@@ -98,6 +99,7 @@ const initStep = createStep({
       gate: "pending",
       modules: {},
       contactPlan: null,
+      activityPeople: null,
       analysis: null,
       errors: [],
     };
@@ -193,6 +195,7 @@ function mergeStates(states: CompanyState[]): CompanyState {
     Object.assign(merged.modules, s.modules);
     for (const e of s.errors) if (!merged.errors.includes(e)) merged.errors.push(e);
     merged.contactPlan = merged.contactPlan ?? s.contactPlan;
+    merged.activityPeople = merged.activityPeople ?? s.activityPeople;
   }
   return merged;
 }
@@ -220,7 +223,15 @@ const planContactsStep = createStep({
     try {
       const { config, store } = await leadCtx(state.batchId);
       const m1 = await loadStructured(store, state.modules.M1);
-      const remainingUsd = await batchControl.companyRemainingUsd(state.batchId, state.row.row_id, config.maxCostPerCompanyUsd, store);
+      // Deterministic plan: cap minus the stage-1 research cost (stable across re-runs,
+      // cached or not). Using "cap - everything spent so far" would shrink the plan on a
+      // re-run, change the M5 chunks and their cache keys, and pay for contacts twice.
+      // Real spend is still enforced per run by batchControl.reserve().
+      const stage1Cost = (["M0", "M1", "M2", "M3"] as const).reduce((s, id) => s + (state.modules[id]?.cost_usd ?? 0), 0);
+      // M6 runs alongside M4/M5: set its worst case aside first so contacts can't starve it.
+      const activityPeople = config.m6Enabled ? selectActivityPeople(state.row, m1, config.m6MaxPeople) : null;
+      const m6Reserve = config.m6Enabled ? LEAD_MODULES.M6.worstCaseCostUsd({ row: state.row, people: activityPeople ?? [] }, config) : 0;
+      const remainingUsd = Math.max(0, Number((config.maxCostPerCompanyUsd - stage1Cost - m6Reserve).toFixed(6)));
       const plan = planContacts({ row: state.row, m1, config, remainingUsd });
       leadLog("contact-plan", {
         batchId: state.batchId,
@@ -232,8 +243,10 @@ const planContactsStep = createStep({
         reason: plan.truncation_reason,
         remainingUsd,
         worstCaseUsd: plan.estimated_worst_case_usd,
+        activityPeople: activityPeople?.length ?? 0,
+        m6ReserveUsd: m6Reserve,
       });
-      return { ...state, contactPlan: plan };
+      return { ...state, contactPlan: plan, activityPeople };
     } catch (err) {
       return withError(state, "plan-contacts", err);
     }
@@ -318,10 +331,42 @@ const m5Step = createStep({
   },
 });
 
+const m6Step = createStep({
+  id: LEAD_MODULES.M6.stepId,
+  description:
+    "M6 Social activity of the company and its founders on LinkedIn / X / Instagram (Exa Agent + LEAD_M6_DATA_SOURCES, e.g. Fiber).",
+  inputSchema: CompanyStateSchema,
+  outputSchema: CompanyStateSchema,
+  execute: async ({ inputData }) => {
+    const state = inputData;
+    if (state.gate !== "resolved") {
+      return withModule(state, skippedSummary("M6", `${NA_PREFIX} identity gate ${state.gate}`, state.gate === "aborted" ? "not_started" : "skipped"));
+    }
+    const t0 = Date.now();
+    try {
+      const { config, store } = await leadCtx(state.batchId);
+      if (!config.m6Enabled) return withModule(state, skippedSummary("M6", `${NA_PREFIX} disabled (LEAD_M6_ENABLED=false)`));
+      const identity = (await loadStructured(store, state.modules.M0)) as Record<string, unknown> | null;
+      const res = await runExaModule({
+        config,
+        store,
+        batchId: state.batchId,
+        rowId: state.row.row_id,
+        module: LEAD_MODULES.M6,
+        ctx: { row: state.row, identity, people: state.activityPeople ?? [] },
+        refresh: state.refresh,
+      });
+      return withModule(state, cleanSummary(toSummary("M6", [res], t0)));
+    } catch (err) {
+      return withError(withModule(state, cleanSummary(toSummary("M6", [failedResult("M6", err)], t0))), "M6", err);
+    }
+  },
+});
+
 const mergeStage2Step = createStep({
   id: "lead-merge-stage-2",
-  description: "Merge the parallel M4/M5 results.",
-  inputSchema: z.object({ [m4Step.id]: CompanyStateSchema, [m5Step.id]: CompanyStateSchema }),
+  description: "Merge the parallel M4/M5/M6 results.",
+  inputSchema: z.object({ [m4Step.id]: CompanyStateSchema, [m5Step.id]: CompanyStateSchema, [m6Step.id]: CompanyStateSchema }),
   outputSchema: CompanyStateSchema,
   execute: async ({ inputData }) => mergeStates(Object.values(inputData) as CompanyState[]),
 });
@@ -422,7 +467,7 @@ const assembleStep = createStep({
 export const companyResearchWorkflow = createWorkflow({
   id: "company-research-workflow",
   description:
-    "ICP research for ONE company: M0 identity gate -> M1/M2/M3 in parallel -> contact plan -> M4/M5 in parallel -> Sarvam ICP judge -> assemble. Never throws; results persisted as they arrive.",
+    "ICP research for ONE company: M0 identity gate -> M1/M2/M3 in parallel -> contact plan -> M4/M5 contacts + M6 social activity in parallel -> Sarvam ICP judge -> assemble. Never throws; results persisted as they arrive.",
   inputSchema: CompanyInputSchema,
   outputSchema: CompanyResultSchema,
 })
@@ -431,7 +476,7 @@ export const companyResearchWorkflow = createWorkflow({
   .parallel([m1Step, m2Step, m3Step])
   .then(mergeStage1Step)
   .then(planContactsStep)
-  .parallel([m4Step, m5Step])
+  .parallel([m4Step, m5Step, m6Step])
   .then(mergeStage2Step)
   .then(judgeStep)
   .then(assembleStep)

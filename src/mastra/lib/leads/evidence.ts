@@ -9,8 +9,9 @@ import type { SeedRow } from "../../schemas/lead";
  *   carries an Exa citation in the module's output.grounding.
  */
 
-export type EvidenceModuleId = "M0" | "M1" | "M2" | "M3";
-export const JUDGE_MODULES: EvidenceModuleId[] = ["M0", "M1", "M2", "M3"];
+export type EvidenceModuleId = "M0" | "M1" | "M2" | "M3" | "M6";
+/** Modules whose (contact-stripped) output the Sarvam judge sees. M4/M5 (contacts) never. */
+export const JUDGE_MODULES: EvidenceModuleId[] = ["M0", "M1", "M2", "M3", "M6"];
 
 export interface ModuleEvidence {
   status: string;
