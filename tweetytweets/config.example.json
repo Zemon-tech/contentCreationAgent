@@ -1,0 +1,44 @@
+{
+  "_readme": "Copy to config.json (git-ignored) and fill in. The agent asks the questions during onboarding; every field below is documented in README.md.",
+
+  "handle": "yourhandle_without_the_at",
+
+  "_limits": "Do NOT guess these and never hardcode a ceiling: it is a property of YOUR account, not of this tool. Free accounts cap at 280 chars, Premium accounts do not, and it decides what content is even possible. Leave both as null and run:  python scripts/post.py measure --save   (it types into the composer and reads the Post button's state - it never clicks Post). It fills in both fields.",
+  "premium": null,
+  "max_chars": null,
+  "max_chars_verified": false,
+
+  "timezone": "local",
+  "_timezone_hint": "e.g. 'Asia/Kolkata', 'America/New_York', or 'local' for the machine's timezone",
+
+  "slots": ["13:00", "16:00", "20:00", "00:00"],
+  "jitter_minutes": 45,
+  "min_gap_hours": 3,
+
+  "ai_update_enabled": true,
+  "ai_update_slot": "16:00",
+  "ai_update_header": "Daily AI updates | Day {day}",
+
+  "research_hour": 11,
+  "window_hours": 36,
+
+  "subreddits": ["LocalLLaMA", "artificial", "singularity", "ChatGPTCoding", "n8n", "SideProject"],
+  "x_queries": ["AI agents", "AI coding", "open source LLM", "developer tools"],
+
+  "feeds": {
+    "techcrunch-ai": "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "verge-ai": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    "hn-frontpage": "https://hnrss.org/frontpage?points=150",
+    "arxiv-cs-ai": "https://export.arxiv.org/rss/cs.AI",
+    "simonwillison": "https://simonwillison.net/atom/everything/"
+  },
+
+  "require_verified_source": true,
+
+  "browser": {
+    "port": 9222,
+    "profile_dir": "",
+    "chrome_path": "",
+    "headless": false
+  }
+}

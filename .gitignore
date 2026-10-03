@@ -14,3 +14,13 @@ src/mastra/public/
 *.duckdb.wal
 # ICP lead exports contain personal contact data
 workspace/leads/
+
+# tweetytweets local data
+tweetytweets/config.json
+tweetytweets/state.json
+tweetytweets/shots/
+tweetytweets/scratch/
+tweetytweets/drafts/
+tweetytweets/swipe/
+tweetytweets/references/voice-profile.local.md
+

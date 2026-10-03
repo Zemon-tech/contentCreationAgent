@@ -16,6 +16,14 @@ import {
   publishDesignJobToInstagramTool,
   publishStoryToInstagramTool,
 } from "../tools/instagram-tools";
+import {
+  checkXSessionTool,
+  launchXBrowserTool,
+  measureXLimitTool,
+  publishToXTool,
+  directNewsToXTool,
+  publishApprovedStoryToXTool,
+} from "../tools/x-tools";
 import { Agent } from "@mastra/core/agent";
 import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
@@ -293,5 +301,11 @@ SEARCH-THEN-READ LOOP (for live investigation)
     publishToInstagram: publishToInstagramTool,
     publishDesignJobToInstagram: publishDesignJobToInstagramTool,
     publishStoryToInstagram: publishStoryToInstagramTool,
+    checkXSession: checkXSessionTool,
+    launchXBrowser: launchXBrowserTool,
+    measureXLimit: measureXLimitTool,
+    publishToX: publishToXTool,
+    directNewsToX: directNewsToXTool,
+    publishApprovedStoryToX: publishApprovedStoryToXTool,
   },
 });

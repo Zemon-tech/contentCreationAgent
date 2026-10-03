@@ -19,6 +19,7 @@
     "radar:demo": "npx -y tsx src/mastra/cron/runScheduledRadar.ts --demo --once",
     "leads": "npx -y tsx --env-file=.env src/mastra/cli/leads.ts",
     "verify:leads": "npx -y tsx src/mastra/demo/verifyLeads.ts",
+    "verify:x": "npx -y tsx src/mastra/demo/verifyXPublisher.ts",
     "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts"
   },
   "keywords": [],

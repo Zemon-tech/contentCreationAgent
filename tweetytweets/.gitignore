@@ -1,0 +1,29 @@
+# nothing here is part of the shared skill - it is your install
+config.json
+state.json
+.tick
+
+# generated content
+swipe/
+drafts/
+shots/
+scratch/
+
+# your voice profile: measured from your own posts, deliberately not committed
+references/voice-profile.local.md
+
+# browser profile (cookies live here - never commit)
+.chrome-profile/
+chrome-profile/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# os noise
+.DS_Store
+Thumbs.db
+desktop.ini

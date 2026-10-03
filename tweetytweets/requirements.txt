@@ -1,0 +1,6 @@
+# tweetytweets — one dependency.
+#
+# The whole pipeline is stdlib + this. No Playwright, no Selenium, no browser
+# automation framework: the CDP driver in scripts/browser.py talks to Chrome's
+# debugging port directly.
+websockets>=12.0

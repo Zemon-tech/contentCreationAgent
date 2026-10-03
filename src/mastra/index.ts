@@ -41,6 +41,14 @@ import {
   publishDesignJobToInstagramTool,
   publishStoryToInstagramTool,
 } from './tools/instagram-tools';
+import {
+  checkXSessionTool,
+  launchXBrowserTool,
+  measureXLimitTool,
+  publishToXTool,
+  directNewsToXTool,
+  publishApprovedStoryToXTool,
+} from './tools/x-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
 import {
@@ -58,6 +66,7 @@ import {
 
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
+import { newsToXWorkflow } from './workflows/newsToXWorkflow';
 import { companyResearchWorkflow } from './workflows/companyResearchWorkflow';
 import { leadQualificationWorkflow } from './workflows/leadQualificationWorkflow';
 
@@ -74,6 +83,7 @@ export const mastra = new Mastra({
   workflows: {
     industryAggregationWorkflow,
     newsToPostWorkflow,
+    newsToXWorkflow,
     leadQualificationWorkflow,
     companyResearchWorkflow,
   },
@@ -98,6 +108,12 @@ export const mastra = new Mastra({
     publishToInstagramTool,
     publishDesignJobToInstagramTool,
     publishStoryToInstagramTool,
+    checkXSessionTool,
+    launchXBrowserTool,
+    measureXLimitTool,
+    publishToXTool,
+    directNewsToXTool,
+    publishApprovedStoryToXTool,
     fetchRSSTool,
     fetchWebPageTool,
     fetchGitHubReleasesTool,
