@@ -38,7 +38,7 @@ const INBOX_DIR = fluxInboxDir();
 export const fetchReferenceImageTool = createTool({
   id: "fetchReferenceImage",
   description:
-    "Fetches ONE reference image (logo, person's face, product shot, brand asset, style/theme reference) from a direct image URL, data URI, or base64 string, validates it, and uploads it into the local ComfyUI input directory. Returns comfyInputName — pass that in generateFluxImage.referenceImageNames to condition the generation on this reference. Use exa_search/web_fetch first to find fresh, direct image URLs.",
+    "Fetches ONE reference image (logo, person's face, product shot, brand asset, style/theme reference) from a direct image URL, data URI, or base64 string, validates it, and uploads it into the local ComfyUI input directory. Returns comfyInputName — pass that in generateFluxImage.referenceImageNames to condition the generation on this reference. Use exa_search/exa_scrape first to find fresh, direct image URLs.",
   inputSchema: z.object({
     source: z
       .string()

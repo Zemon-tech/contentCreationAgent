@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { askUserTool, webFetchTool } from "@mastra/core/tools";
+import { askUserTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { resolveChatModel } from "../config/model";
 import { exaScrapeTool, exaSearchTool } from "../tools/exa-tools";
@@ -20,7 +20,7 @@ import { imageIntakeProcessor } from "../lib/image-intake-processor";
  * encoder, flux2 VAE, optional 8-step Turbo LoRA). It can:
  *   - understand a natural-language image request,
  *   - find FRESH visual references itself (logos, faces, products, themes)
- *     from the live web via exa_search + web_fetch, OR use references the
+ *     from the live web via exa_search + exa_scrape, OR use references the
  *     user supplies (URL / data URI / base64),
  *   - fetch + upload each reference into ComfyUI (fetchReferenceImage),
  *   - generate a reference-conditioned image with Flux.2 (generateFluxImage),
@@ -50,7 +50,7 @@ TOOLS
   image URLs (logos, a person's photo, a product, a visual theme).
   searchType must be "auto" | "fast" | "deep". For news use category: "news"
   (never searchType: "news").
-- exa_scrape / web_fetch: open a promising page to locate the DIRECT image URL
+- exa_scrape: open a promising page to locate the DIRECT image URL
   (one ending in .png/.jpg/.webp), or to confirm what something looks like.
 - savePastedImage: when the user PASTED/ATTACHED image DATA in chat (a data:
   URI or base64), save it into the local inbox so it can reach the ComfyUI VM.
@@ -95,8 +95,8 @@ CORE LOOP
    - If the user gave image URLs / data / base64 / a local path, use those via
      fetchReferenceImage.
    - Otherwise FIND them yourself: exa_search for each entity ("<brand> logo
-     png", "<person> photo", "<product> official image"), then exa_scrape or
-     web_fetch the best result to extract a DIRECT image URL. Prefer official
+     png", "<person> photo", "<product> official image"), then exa_scrape
+     the best result to extract a DIRECT image URL. Prefer official
      / primary sources for logos and people. Get the freshest version (brands
      rebrand — search for the current logo).
    - Call fetchReferenceImage for each reference. Keep the set small (1-4);
@@ -157,7 +157,6 @@ Always display generated images inline using the Markdown image from generateFlu
   }),
   tools: {
     ask_user: askUserTool,
-    web_fetch: webFetchTool,
     exa_search: exaSearchTool,
     exa_scrape: exaScrapeTool,
     savePastedImage: savePastedImageTool,

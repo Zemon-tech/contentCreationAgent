@@ -12,9 +12,11 @@ import {
 import { aggregatorAgent } from './agents/aggregatorAgent';
 import { imageGenAgent } from './agents/imageGenAgent';
 import { icpJudgeAgent } from './agents/icpJudgeAgent';
+import { rasDesignAgent } from './agents/rasDesignAgent';
 
 import { fluxOutputRoute } from './lib/flux-output-route';
 import { postAssetRoute } from './routes/post-assets';
+import { rasAssetRoute } from './routes/ras-assets';
 
 import {
   extractArticleContentTool,
@@ -63,6 +65,8 @@ import {
   saveContentOpportunityTool,
   saveStoriesTool,
 } from './tools/industry-tools';
+import { renderRasStoryTool, renderRasCarouselTool } from './tools/ras-render-tools';
+import { publishRasToInstagramTool } from './tools/ras-instagram-tool';
 
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
@@ -77,9 +81,9 @@ export const mastra = new Mastra({
   server: {
     // postAssetRoute: Design Agent slides; fluxOutputRoute: Flux.2 renders.
     // Both let images display inline in Studio chat.
-    apiRoutes: [postAssetRoute, fluxOutputRoute],
+    apiRoutes: [postAssetRoute, fluxOutputRoute, rasAssetRoute],
   },
-  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent },
+  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent },
   workflows: {
     industryAggregationWorkflow,
     newsToPostWorkflow,
@@ -122,6 +126,9 @@ export const mastra = new Mastra({
     useInboxReferencesTool,
     fetchReferenceImageTool,
     generateFluxImageTool,
+    renderRasStoryTool,
+    renderRasCarouselTool,
+    publishRasToInstagramTool,
   },
   storage: new MastraCompositeStore({
     id: 'composite-storage',

@@ -25,7 +25,6 @@ import {
   publishApprovedStoryToXTool,
 } from "../tools/x-tools";
 import { Agent } from "@mastra/core/agent";
-import { webFetchTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { resolveChatModel } from "../config/model";
 
@@ -212,7 +211,6 @@ TOOLS
   when recency matters.
 - exaScrape: read the full text of the most promising URLs from exaSearch
   (up to 10 at a time). Check failedUrls and retry important misses once.
-- web_fetch: cheap fallback scraper for a single URL when Exa is not needed.
 - fetchRSS / fetchWebPage / fetchGitHubReleases / extractArticleContent: collection.
 - generateEmbedding / findSimilarContent: dedup and clustering support.
 - saveStory / saveStories / saveContentOpportunity: persist results.
@@ -276,7 +274,6 @@ SEARCH-THEN-READ LOOP (for live investigation)
     sweepSources: sweepSourcesTool,
     exaSearch: exaSearchTool,
     exaScrape: exaScrapeTool,
-    web_fetch: webFetchTool,
     fetchRSS: fetchRSSTool,
     fetchWebPage: fetchWebPageTool,
     fetchGitHubReleases: fetchGitHubReleasesTool,

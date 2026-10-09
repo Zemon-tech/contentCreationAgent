@@ -87,6 +87,7 @@ def ensure_chrome(wait: float = 25, url: str = "about:blank") -> bool:
         str(chrome),
         f"--remote-debugging-port={_port()}",
         f"--user-data-dir={prof}",
+        "--remote-allow-origins=*",
         "--no-first-run",
         "--no-default-browser-check",
         "--disable-background-timer-throttling",
@@ -95,7 +96,9 @@ def ensure_chrome(wait: float = 25, url: str = "about:blank") -> bool:
         url,
     ]
     if bcfg.get("headless"):
-        flags.append("--headless=new")
+        flags.extend(["--headless=new", "--disable-gpu"])
+    if not sys.platform.startswith("win"):
+        flags.append("--no-sandbox")
     DETACHED = 0x00000008 | 0x00000200           # Windows: DETACHED_PROCESS|NEW_GROUP
     kwargs: dict[str, Any] = {"stdout": subprocess.DEVNULL,
                               "stderr": subprocess.DEVNULL,

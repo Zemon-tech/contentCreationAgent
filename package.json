@@ -35,11 +35,16 @@
     "@mastra/libsql": "1.23.0",
     "@mastra/memory": "1.30.0",
     "@mastra/observability": "1.17.8",
+    "@resvg/resvg-js": "^2.6.2",
     "exa-js": "2.23.0",
+    "react": "^19.3.0",
+    "satori": "^0.44.3",
+    "sharp": "^0.35.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@types/react": "^19.3.0",
     "mastra": "1.30.0",
     "typescript": "^6.0.3"
   }
