@@ -20,7 +20,10 @@
     "leads": "npx -y tsx --env-file=.env src/mastra/cli/leads.ts",
     "verify:leads": "npx -y tsx src/mastra/demo/verifyLeads.ts",
     "verify:x": "npx -y tsx src/mastra/demo/verifyXPublisher.ts",
-    "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts"
+    "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts",
+    "rank:seed": "npx -y tsx --env-file=.env src/mastra/eval/seedFixtures.ts",
+    "rank:eval": "npx -y tsx --env-file=.env src/mastra/eval/rankEval.ts",
+    "test": "npx -y tsx --test tests/ranking/hardFilter.test.ts tests/ranking/score.test.ts"
   },
   "keywords": [],
   "author": "",

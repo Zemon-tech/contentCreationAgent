@@ -1,0 +1,125 @@
+{
+  "notes": "Golden set for `npm run rank:eval`. Each fixture has a human `label` (post | maybe | skip) and an `item` (RankInputItem WITHOUT publishedAt). `ageHours` (default 2) is turned into a fresh publishedAt at eval time so recency is reproducible and items don't age out of the hard filter. Run `npm run rank:seed` to append ~30 real recent headlines (unlabeled), then fill in each `label`. The rows below are a labeled starter so the eval runs out of the box.",
+  "fixtures": [
+    {
+      "label": "post",
+      "ageHours": 1,
+      "item": {
+        "id": "gold-1",
+        "clusterId": "c-gold-1",
+        "title": "Anthropic launches Claude for Enterprise with 500K-token context",
+        "summary": "Anthropic released Claude for Enterprise, adding a 500K-token context window, SSO, and audit logs. Available today; priced per seat with usage-based tiers.",
+        "url": "https://www.theverge.com/anthropic-claude-enterprise",
+        "source": "The Verge",
+        "region": "US",
+        "rawCategories": ["ai", "enterprise"],
+        "clusterSourceCount": 4
+      }
+    },
+    {
+      "label": "post",
+      "ageHours": 2,
+      "item": {
+        "id": "gold-2",
+        "clusterId": "c-gold-2",
+        "title": "Chennai deeptech startup raises $20M Series A to build indigenous AI chips",
+        "summary": "A Chennai-based semiconductor startup raised a $20M Series A led by Peak XV to tape out its first AI inference chip, aiming at edge devices in India.",
+        "url": "https://inc42.com/chennai-ai-chip-series-a",
+        "source": "Inc42",
+        "region": "IN",
+        "rawCategories": ["deeptech", "funding", "semiconductors"],
+        "clusterSourceCount": 3
+      }
+    },
+    {
+      "label": "maybe",
+      "ageHours": 3,
+      "item": {
+        "id": "gold-3",
+        "clusterId": "c-gold-3",
+        "title": "Figma adds an AI layout assistant to its design tool",
+        "summary": "Figma introduced an AI assistant that suggests layouts and auto-arranges frames, rolling out to Professional and Organization plans over the coming weeks.",
+        "url": "https://techcrunch.com/figma-ai-layout",
+        "source": "TechCrunch",
+        "region": "US",
+        "rawCategories": ["ai", "product"],
+        "clusterSourceCount": 2
+      }
+    },
+    {
+      "label": "maybe",
+      "ageHours": 4,
+      "item": {
+        "id": "gold-4",
+        "clusterId": "c-gold-4",
+        "title": "Indian SaaS startup crosses $10M ARR two years after launch",
+        "summary": "A Bengaluru SaaS company said it crossed $10M in annual recurring revenue, two years after launch, driven by US mid-market customers.",
+        "url": "https://yourstory.com/saas-10m-arr",
+        "source": "YourStory",
+        "region": "IN",
+        "rawCategories": ["startups", "saas"],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "skip",
+      "ageHours": 2,
+      "item": {
+        "id": "gold-5",
+        "clusterId": "c-gold-5",
+        "title": "Why artificial intelligence is the most important technology of our time",
+        "summary": "An essay arguing that AI will reshape every industry and why leaders must pay attention now, with broad predictions about the coming decade.",
+        "url": "https://example.com/ai-most-important",
+        "source": "Unknown Blog",
+        "region": "US",
+        "rawCategories": ["ai", "opinion"],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "skip",
+      "ageHours": 3,
+      "item": {
+        "id": "gold-6",
+        "clusterId": "c-gold-6",
+        "title": "You won't BELIEVE what this AI startup just did to Big Tech",
+        "summary": "Experts are stunned by a tiny startup's move. Here's everything you need to know about the company that could change the industry forever.",
+        "url": "https://example.com/ai-shock",
+        "source": "Unknown Blog",
+        "region": "US",
+        "rawCategories": ["startups"],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "skip",
+      "ageHours": 5,
+      "item": {
+        "id": "gold-7",
+        "clusterId": "c-gold-7",
+        "title": "Report: OpenAI may be considering a new hardware device, sources say",
+        "summary": "People familiar with the matter say OpenAI has discussed building a consumer hardware device. Plans are early and could change; OpenAI declined to comment.",
+        "url": "https://example.com/openai-hardware-rumor",
+        "source": "The Information",
+        "region": "US",
+        "rawCategories": ["ai", "hardware"],
+        "clusterSourceCount": 2
+      }
+    },
+    {
+      "label": "maybe",
+      "ageHours": 2,
+      "item": {
+        "id": "gold-8",
+        "clusterId": "c-gold-8",
+        "title": "Google DeepMind open-sources a protein-folding model for researchers",
+        "summary": "Google DeepMind released weights for a smaller protein-structure prediction model under a research license, letting labs run it locally.",
+        "url": "https://arstechnica.com/deepmind-protein-oss",
+        "source": "Ars Technica",
+        "region": "US",
+        "rawCategories": ["deeptech", "research", "biotech"],
+        "clusterSourceCount": 3
+      }
+    }
+  ]
+}
