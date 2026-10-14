@@ -21,6 +21,12 @@ interface EntryOpts {
   authority?: number;
   active?: boolean;
   note?: string;
+  /** Geographic focus — read by the ranker's region-balance signal. */
+  region?: "US" | "IN" | "GLOBAL";
+  /** Paywalled: ingest feed title + summary only, never fetch body. */
+  paywalled?: boolean;
+  /** Signal-only: can inform ranking but never be cited as primary source. */
+  signalOnly?: boolean;
 }
 
 function base(
@@ -41,6 +47,9 @@ function base(
     ...(opts.role ? { role: opts.role } : {}),
     ...(opts.tier ? { tier: opts.tier } : {}),
     ...(opts.note ? { note: opts.note } : {}),
+    ...(opts.region ? { region: opts.region } : {}),
+    ...(opts.paywalled ? { paywalled: opts.paywalled } : {}),
+    ...(opts.signalOnly ? { signalOnly: opts.signalOnly } : {}),
   };
 }
 

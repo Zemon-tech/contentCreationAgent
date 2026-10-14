@@ -86,6 +86,15 @@ export const SourceSchema = z.object({
   defaultUse: SourceDefaultUseSchema.optional(),
   /** Publisher / outlet name for attribution. */
   publisher: z.string().optional(),
+  /** Geographic focus — used by the ranker's region-balance signal. */
+  region: z.enum(["US", "IN", "GLOBAL"]).optional(),
+  /** Paywalled outlet: ingest feed title + summary ONLY, never fetch body. */
+  paywalled: z.boolean().optional(),
+  /**
+   * Signal-only source (e.g. Hacker News, Reddit, Product Hunt): may inform
+   * ranking (coverage/velocity) but must NEVER be cited as the primary source.
+   */
+  signalOnly: z.boolean().optional(),
 });
 
 export type Source = z.infer<typeof SourceSchema>;

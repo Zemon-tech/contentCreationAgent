@@ -20,13 +20,20 @@ import {
   VC_SOURCES,
 } from "./sourceCatalog2";
 import { X_SOURCES } from "./xSources";
+import { NEWS_FEED_SOURCES, SUPERSEDED_SOURCE_IDS } from "./newsFeeds";
 
 /**
  * Live source registry — built EXCLUSIVELY from the curated catalog.
  * Machine-collectable sources (rss/github/web/paper with URLs) are active;
  * social/newsletter/podcast/video stubs without endpoints are registered
  * but inactive until an official integration is wired.
+ *
+ * NEWS_FEED_SOURCES (config/newsFeeds.ts) are the RSS-first replacements for
+ * the old homepage scrapes; the originals they replace are listed in
+ * SUPERSEDED_SOURCE_IDS and forced inactive here (kept for attribution only).
  */
+const SUPERSEDED = new Set(SUPERSEDED_SOURCE_IDS);
+
 export const CATALOG_SOURCES: Source[] = [
   ...FRONTIER_AI,
   ...DEV_INFRA,
@@ -45,7 +52,8 @@ export const CATALOG_SOURCES: Source[] = [
   ...SECURITY_SOURCES,
   ...MORE_SOURCES,
   ...X_SOURCES,
-];
+  ...NEWS_FEED_SOURCES,
+].map((s) => (SUPERSEDED.has(s.id) ? { ...s, active: false } : s));
 
 assertUniqueIds(CATALOG_SOURCES);
 

@@ -49,6 +49,43 @@ Recurring schedules continue to use model tokens until you pause them. Ask the a
 - Edit `src/mastra/index.ts` to change storage and observability.
 - Add files or reusable skills under `workspace/` for the agent to use.
 
+## News sources & feed health
+
+The RAS news pipeline polls **RSS/Atom feeds first** (proper per-article items),
+not homepage scrapes. The curated, region-tagged feed set lives in
+[`src/mastra/config/newsFeeds.ts`](src/mastra/config/newsFeeds.ts); it is merged
+into the registry in [`config/sources.ts`](src/mastra/config/sources.ts), which
+also force-disables the old homepage entries these feeds replace
+(`SUPERSEDED_SOURCE_IDS`).
+
+Each source carries: `region` (`US | IN | GLOBAL`), `topics` (category hints),
+`authorityScore` (credibility, 0–100), and optional `paywalled` / `signalOnly`.
+The ranker reads these.
+
+- **`paywalled: true`** (e.g. WSJ): ingest feed **title + summary only** — never
+  fetch or reproduce article body text.
+- **`signalOnly: true`** (Hacker News, Reddit, Product Hunt): may inform ranking
+  (coverage/velocity) but is **never cited as a story's primary source**.
+- **Inshorts** is intentionally kept `active: false` (no official feed/API; not scraped).
+
+### Verify feeds are alive
+
+```bash
+npm run feeds:verify
+```
+
+Fetches every active RSS feed and prints a table: HTTP status, parsed?, item
+count, newest-item age, and a LIVE / STALE / DEAD verdict. Run it after adding or
+editing a source.
+
+### Add or edit a source
+
+Add a `feed(id, name, url, region, topics, authority, opts)` line to the right
+array in `newsFeeds.ts` (`opts` takes `tier`, `role`, `paywalled`, `signalOnly`,
+`active`, `note`), then run `npm run feeds:verify`. If a feed is dead or blocked,
+set `active: false` with a `note` and rely on the Google News fallback rather than
+spoofing a browser User-Agent.
+
 ## News ranker (`rankStories`)
 
 Stage 3 of the news pipeline. Takes N deduplicated, clustered items and returns a
