@@ -86,6 +86,46 @@ array in `newsFeeds.ts` (`opts` takes `tier`, `role`, `paywalled`, `signalOnly`,
 set `active: false` with a `note` and rely on the Google News fallback rather than
 spoofing a browser User-Agent.
 
+### Ingestion hygiene
+
+Feed fetching ([`lib/ingest-feeds.ts`](src/mastra/lib/ingest-feeds.ts)) is
+health-aware and polite — all knobs live in
+[`config/ingestion.config.ts`](src/mastra/config/ingestion.config.ts) (`FEED_*` /
+`GOOGLE_NEWS_*` / `INGEST_*` env overrides):
+
+- **Conditional GET** (ETag / If-Modified-Since); a `304` is a success, not a failure.
+- **Per-domain rate limiting** (default 2s min interval) + an honest User-Agent.
+- **robots.txt respected** — fail-**open** for feeds when robots is unreachable/5xx,
+  fail-**closed** for the article scraper (a 404 means allowed). Note: some hosts
+  (`reddit.com`, `news.google.com`) return `Disallow: /` for generic bots, so with
+  robots respected those feeds/queries are blocked by design.
+- **Feed health** ([`repositories/feedHealth.ts`](src/mastra/repositories/feedHealth.ts)):
+  tracks consecutive failures, last success/item dates; auto-disables after
+  `FEED_AUTO_DISABLE_AFTER` (5) failures, re-probes after `FEED_REPROBE_HOURS` (24),
+  and re-enables on a successful probe. Manually-disabled sources are never
+  auto-enabled. A **stale** feed (newest item older than `FEED_STALE_DAYS`) is a
+  warning, not a failure. One bad feed never fails the run.
+- **Paywall guard** ([`lib/article-body.ts`](src/mastra/lib/article-body.ts)):
+  `fetchArticleBody` is the ONLY path that fetches article bodies and it refuses
+  for `paywalled:true` sources and known paywalled domains (WSJ etc.), including
+  items that resolve there via the fallback. Paywalled items carry
+  `factPackLimited:true`. No paywall bypass is attempted.
+- **Image candidates**: extracted from feed data only (`media:content` /
+  `media:thumbnail` / `enclosure`) and stored `cleared:false` — never downloaded,
+  re-hosted, or rights-checked here (that's the later image-sourcing step).
+- **Google News fallback** ([`lib/google-news-fallback.ts`](src/mastra/lib/google-news-fallback.ts)):
+  auto-activates for dropped/auto-disabled sources (headline-level, capped, items
+  marked `viaFallback:true`).
+
+Dry-run the whole thing (nothing persisted, nothing published):
+
+```bash
+npm run ingest:dry
+```
+
+prints a run-summary block (fetched / failed / newly-disabled / re-enabled / stale /
+fallback) and a per-source health table.
+
 ## News ranker (`rankStories`)
 
 Stage 3 of the news pipeline. Takes N deduplicated, clustered items and returns a
@@ -126,9 +166,16 @@ can be overridden at deploy time with the `RANK_*` env vars in `.env.example`.
 Calibrate against labels instead of guessing:
 
 ```shell
-npm run rank:seed     # append ~30 real recent headlines (needs EXA_API_KEY) to label
-npm run rank:eval     # score the golden set, report agreement + variance
+npm run rank:seed:feeds   # append ~40 real headlines from the LIVE feeds to label (no API key)
+npm run rank:seed         # alternative: ~30 headlines via Exa (needs EXA_API_KEY)
+npm run rank:preview      # rank the fixtures now with a heuristic stand-in (no model) — wiring demo
+npm run rank:eval         # score with the real model, report agreement + variance
 ```
+
+Downstream, the selected story becomes a verified **fact pack**
+([`lib/fact-pack.ts`](src/mastra/lib/fact-pack.ts)) — headline, 3–5 grounded facts,
+figures, names, source URLs, and any cross-source conflicts — with `factPackLimited`
+set for paywalled/thin material so nothing is invented.
 
 `rank:eval` prints tier agreement with your `post | maybe | skip` labels, the biggest
 disagreements (with the model's reason), whether the top pick matches a story you

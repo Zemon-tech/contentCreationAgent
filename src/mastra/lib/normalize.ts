@@ -20,17 +20,45 @@ const TRACKING_PARAMS = new Set([
   "igshid",
   "ref",
   "source",
+  "amp",
+  "outputtype",
+  "__twitter_impression",
+  "guccounter",
 ]);
 
-/** Remove tracking query params where safe; drop the hash fragment. */
+/**
+ * Canonicalize a URL for dedup: resolve Google News redirects, strip tracking
+ * (utm_*, fbclid, amp flags, …), drop the hash, strip AMP path segments, and
+ * remove trailing slashes. Best-effort and lossless for identity.
+ */
 export function normalizeUrl(url: string): string {
   try {
-    const u = new URL(url);
+    let u = new URL(url.trim());
+
+    // Google News redirect -> embedded real URL when present.
+    if (/(^|\.)news\.google\.com$/i.test(u.hostname)) {
+      const real = u.searchParams.get("url");
+      if (real) {
+        try {
+          u = new URL(real);
+        } catch {
+          /* keep GN url */
+        }
+      }
+    }
+
     for (const key of [...u.searchParams.keys()]) {
-      if (TRACKING_PARAMS.has(key.toLowerCase())) u.searchParams.delete(key);
+      const k = key.toLowerCase();
+      if (TRACKING_PARAMS.has(k) || k.startsWith("utm_")) u.searchParams.delete(key);
     }
     u.hash = "";
-    // Trailing-slash canonicalization for bare origins.
+
+    // AMP path segments: /amp, /amp/ (trailing or mid-path).
+    let path = u.pathname.replace(/\/amp(?=\/|$)/i, "");
+    // Trailing slash (keep root "/").
+    if (path.length > 1) path = path.replace(/\/+$/, "");
+    u.pathname = path || "/";
+
     return u.toString();
   } catch {
     return url.trim();

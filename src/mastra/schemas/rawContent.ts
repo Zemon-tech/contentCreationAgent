@@ -18,6 +18,23 @@ const EngagementSchema = z.object({
   views: z.number().optional(),
 });
 
+/**
+ * Image candidate extracted FROM FEED DATA ONLY (media:content / media:thumbnail
+ * / enclosure). `cleared` is ALWAYS false here — this stage never downloads,
+ * re-hosts, or rights-checks an image. Validation/clearing belongs to the later
+ * image-sourcing step.
+ */
+export const ImageCandidateSchema = z.object({
+  url: z.string(),
+  origin: z.enum(["media:content", "media:thumbnail", "enclosure"]),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  credit: z.string().optional(),
+  cleared: z.literal(false),
+});
+
+export type ImageCandidate = z.infer<typeof ImageCandidateSchema>;
+
 export const RawContentSchema = z.object({
   id: z.string().min(1),
   sourceId: z.string().min(1),
@@ -34,6 +51,16 @@ export const RawContentSchema = z.object({
   media: z.array(MediaSchema).optional(),
   engagement: EngagementSchema.optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /** Image candidates pulled from the feed (never cleared for use here). */
+  imageCandidates: z.array(ImageCandidateSchema).optional(),
+  /** Source is paywalled: only feed title+summary available; never body. */
+  paywalled: z.boolean().optional(),
+  /** Thin material (paywalled/headline-only) — the fact pack must not invent. */
+  factPackLimited: z.boolean().optional(),
+  /** Discovered via the Google News fallback (headline-level only). */
+  viaFallback: z.boolean().optional(),
+  /** From a signal-only source — never citable as a primary source. */
+  signalOnly: z.boolean().optional(),
 });
 
 export type RawContent = z.infer<typeof RawContentSchema>;

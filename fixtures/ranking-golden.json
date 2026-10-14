@@ -12,7 +12,10 @@
         "url": "https://www.theverge.com/anthropic-claude-enterprise",
         "source": "The Verge",
         "region": "US",
-        "rawCategories": ["ai", "enterprise"],
+        "rawCategories": [
+          "ai",
+          "enterprise"
+        ],
         "clusterSourceCount": 4
       }
     },
@@ -27,7 +30,11 @@
         "url": "https://inc42.com/chennai-ai-chip-series-a",
         "source": "Inc42",
         "region": "IN",
-        "rawCategories": ["deeptech", "funding", "semiconductors"],
+        "rawCategories": [
+          "deeptech",
+          "funding",
+          "semiconductors"
+        ],
         "clusterSourceCount": 3
       }
     },
@@ -42,7 +49,10 @@
         "url": "https://techcrunch.com/figma-ai-layout",
         "source": "TechCrunch",
         "region": "US",
-        "rawCategories": ["ai", "product"],
+        "rawCategories": [
+          "ai",
+          "product"
+        ],
         "clusterSourceCount": 2
       }
     },
@@ -57,7 +67,10 @@
         "url": "https://yourstory.com/saas-10m-arr",
         "source": "YourStory",
         "region": "IN",
-        "rawCategories": ["startups", "saas"],
+        "rawCategories": [
+          "startups",
+          "saas"
+        ],
         "clusterSourceCount": 1
       }
     },
@@ -72,7 +85,10 @@
         "url": "https://example.com/ai-most-important",
         "source": "Unknown Blog",
         "region": "US",
-        "rawCategories": ["ai", "opinion"],
+        "rawCategories": [
+          "ai",
+          "opinion"
+        ],
         "clusterSourceCount": 1
       }
     },
@@ -87,7 +103,9 @@
         "url": "https://example.com/ai-shock",
         "source": "Unknown Blog",
         "region": "US",
-        "rawCategories": ["startups"],
+        "rawCategories": [
+          "startups"
+        ],
         "clusterSourceCount": 1
       }
     },
@@ -102,7 +120,10 @@
         "url": "https://example.com/openai-hardware-rumor",
         "source": "The Information",
         "region": "US",
-        "rawCategories": ["ai", "hardware"],
+        "rawCategories": [
+          "ai",
+          "hardware"
+        ],
         "clusterSourceCount": 2
       }
     },
@@ -117,8 +138,723 @@
         "url": "https://arstechnica.com/deepmind-protein-oss",
         "source": "Ars Technica",
         "region": "US",
-        "rawCategories": ["deeptech", "research", "biotech"],
+        "rawCategories": [
+          "deeptech",
+          "research",
+          "biotech"
+        ],
         "clusterSourceCount": 3
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.1,
+      "item": {
+        "id": "gold_ef0be751cf96",
+        "clusterId": "c-gold_13c3af268e1f",
+        "title": "AI could &#8216;self-replicate&#8217; and hijack internet, warns Anthropic: What does it mean?",
+        "summary": "AI could &#8216;self-replicate&#8217; and hijack internet, warns Anthropic: What does it mean?",
+        "url": "https://indianexpress.com/article/technology/artificial-intelligence/ai-self-replicate-internet-anthropic-what-it-means-10921529",
+        "source": "Indian Express Technology",
+        "region": "IN",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.1,
+      "item": {
+        "id": "gold_fccc74199f96",
+        "clusterId": "c-gold_01c277ccae16",
+        "title": "US and European regulators question banks about AI agents and cyber risks",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/05/European-Central-Bank.avif\" width=\"868\" height=\"488\"><br /><p>Banking regulators in the US and Europe are stepping up efforts to contain the risks AI poses to banks, Reuters reported, citing six people familiar with the matter. Some fear that cyberattacks or rogue AI agents could shake the financial system. In the US, the Federal Reserve and two other",
+        "url": "https://thenextweb.com/news/us-and-european-regulators-question-banks-about-ai-agents-and-cyber-risks",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.2,
+      "item": {
+        "id": "gold_0ef83e1066ba",
+        "clusterId": "c-gold_e54934bb7ee6",
+        "title": "Vast Data bets stitched-together AI pipelines can&#8217;t keep sensitive data in sync",
+        "summary": "<p>Data sovereignty is becoming an architectural problem as enterprises push artificial intelligence inference toward their most sensitive information. Pipelines assembled from separate tools struggle to keep embeddings, permissions and source data aligned, leaving many valuable data sets out of AI&#8217;s reach. The shift from model training to inference is changing what AI infrastructure has to ",
+        "url": "https://siliconangle.com/2026/10/14/data-sovereignty-strains-best-breed-ai-pipelines-aidatapipelineforum",
+        "source": "SiliconANGLE",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.2,
+      "item": {
+        "id": "gold_c1413866d695",
+        "clusterId": "c-gold_c825aa16143f",
+        "title": "ScaleFlux bets smarter SSD controllers can break the AI memory bottleneck",
+        "summary": "<p>AI factories run on graphics processing units that cost a fortune and work at blistering speed, yet those chips increasingly sit idle waiting for data. As the bottleneck moves from compute to memory and storage, NAND flash is being asked to do far more than hold files. That shift is putting data movement constraints at [&#8230;]</p> <p>The post <a href=\"https://siliconangle.com/2026/10/14/ai-fa",
+        "url": "https://siliconangle.com/2026/10/14/ai-factories-stall-gpus-wait-memory-storage-data-aidatapipelineforum",
+        "source": "SiliconANGLE",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.2,
+      "item": {
+        "id": "gold_b7cc150b4a98",
+        "clusterId": "c-gold_90696bfe7b4a",
+        "title": "Copper&#8217;s days are numbered inside AI racks as Cisco bets on optics",
+        "summary": "<p>AI infrastructure networking is approaching a physical turning point as the copper links that tie GPUs together inside a rack strain under ever-faster signaling speeds. The move to light-based interconnects could redraw the boundaries of what counts as a single AI system. Cisco Systems Inc. is pressing that transition on several fronts, from new silicon [&#8230;]</p> <p>The post <a href=\"https:",
+        "url": "https://siliconangle.com/2026/10/14/ai-infrastructure-networking-moves-from-copper-optics-aidatapipelineforum",
+        "source": "SiliconANGLE",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.3,
+      "item": {
+        "id": "gold_021b2e2b9202",
+        "clusterId": "c-gold_f35d8835976d",
+        "title": "Ofcom says it still has concerns over how X removes illegal hate content",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/05/xai-cursor-gun-jumping-antitrust-spacex-ipo.avif\" width=\"868\" height=\"488\"><br /><p>Britain’s online safety regulator, Ofcom, says it still has concerns about how well X removes illegal hate and terror content. This comes even though X is now reviewing these reports more quickly. In May, X promised to review posts reported through its UK illegal conte",
+        "url": "https://thenextweb.com/news/ofcom-x-illegal-hate-content-grok-investigation",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.4,
+      "item": {
+        "id": "gold_11ee7757a2e4",
+        "clusterId": "c-gold_ec57688ea5eb",
+        "title": "Festive Shopping Set To Smash Records? CAIT Chief Praveen Khandelwal Explains",
+        "summary": "India’s festive economy is gearing up for a record shopping season! The Confederation of All India Traders (CAIT) projects festive trade of over ₹7 lakh crore from Navratri to Diwali, with sales expected to grow 15–18% over last year. In this exclusive conversation, CAIT Secretary General Praveen Khandelwal explains what is driving consumer sentiment despite rising wholesale inflation. From grocer",
+        "url": "https://www.businesstoday.in/bt-tv/market-today/video/festive-shopping-set-to-smash-records-cait-chief-praveen-khandelwal-explains-561570-2026-10-14",
+        "source": "Business Today Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.4,
+      "item": {
+        "id": "gold_2b4d26749d8d",
+        "clusterId": "c-gold_ce77456c30a6",
+        "title": "US charges 14 over North Korean IT worker scheme at more than 70 companies",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/08/The-US-Justice-Department.avif\" width=\"868\" height=\"488\"><br /><p>The US Justice Department has charged 14 people over a North Korean job scam, announced on Tuesday. North Korean IT workers used stolen names to get remote jobs at more than 70 US firms. The workers earned about $3 million, which went to North Korean groups under US sanctions, prosecuto",
+        "url": "https://thenextweb.com/news/north-korean-it-workers-doj-charges-laptop-farms",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.4,
+      "item": {
+        "id": "gold_e0431ed8e68e",
+        "clusterId": "c-gold_68b4badc8b1d",
+        "title": "How I Learned That Some Startup Problems Are Too Big For A Minimum Viable Product",
+        "summary": "Complex, interconnected problems like compliance require a comprehensive product from the outset, argues guest columnist Daniel Kjellén, CEO and co-founder of Freda. Drawing on his experience selling Tink, he explains how repeat founders can combine capital, credibility and hard-earned lessons with AI’s development speed to pursue bigger ambitions without shrinking their vision.",
+        "url": "https://news.crunchbase.com/startups/minimum-viable-product-problems-ai-fintech-kjellen-freda",
+        "source": "Crunchbase News",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Funding"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.4,
+      "item": {
+        "id": "gold_e0b8f19a0e84",
+        "clusterId": "c-gold_a0593c91d54f",
+        "title": "38 Companies Join The Crunchbase Unicorn Board In Blockbuster September, Led By Semiconductor, Fintech And Space Tech Companies",
+        "summary": "Semiconductors, financial services and space technology led for new Unicorn Board counts with the remainder hailing from a broad swath of industries including biotech, AI infrastructure, AI training, security and frontier labs.",
+        "url": "https://news.crunchbase.com/venture/september-2026-new-unicorns-semiconductors-ai-fintech-space",
+        "source": "Crunchbase News",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Funding"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_4726e0ea915a",
+        "clusterId": "c-gold_f9fe1b4ca8a4",
+        "title": "The Tesla Roadster could have stayed vaporware",
+        "summary": "For a car that's supposed to be one of the fastest ever made, the new Tesla Roadster certainly took its sweet-ass time getting here. It's been nearly a decade since Elon Musk made the surprise announcement about plans to build a next-gen Roadster. Now, the Tesla Roadster is finally expected to make its production-ready debut [&#8230;]",
+        "url": "https://www.theverge.com/transportation/1010694/tesla-roadster-reveal-vaporware-spacex-elon-musk",
+        "source": "The Verge",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_596101560742",
+        "clusterId": "c-gold_401bf9c24a96",
+        "title": "Fairphone’s latest repairable earbuds are smaller, lighter, and longer-lasting",
+        "summary": "Repairable, ethical phone brand Fairphone has released its second pair of earbuds. The Fairbuds 2 are just as repairable as the first generation, but deliver improved audio and almost twice the battery life. The Fairbuds 2 are out now in the UK and Europe from &#163;99 / &#8364;119, and a US launch at $119 will [&#8230;]",
+        "url": "https://www.theverge.com/tech/1010906/fairphone-fairbuds-2-price-release-audio-repairability",
+        "source": "The Verge",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_4d1b37795880",
+        "clusterId": "c-gold_627841168d6a",
+        "title": "My Friend Has No Soul",
+        "summary": "The second iteration of the viral Friend AI necklace is louder and less interesting.",
+        "url": "https://www.wired.com/story/my-friend-has-no-soul",
+        "source": "Wired",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_220a2a37ca42",
+        "clusterId": "c-gold_fa3376e296fa",
+        "title": "Breville Eye Q Toaster Review: Neat Sensors, but Less-Than-Perfect Toast",
+        "summary": "The Breville Eye Q uses optical sensors to measure the darkness of your toast. Cool tech, but the toasting quality needs improvement.",
+        "url": "https://www.wired.com/review/breville-eye-q-toaster",
+        "source": "Wired",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_75c456edcc36",
+        "clusterId": "c-gold_b4d49254f243",
+        "title": "Beat the iPhone Duo pre-order rush with Apple's Get Ready tool",
+        "summary": "You can already set up your pre-order now, before the pre-orders open on Friday (October 16).",
+        "url": "https://www.engadget.com/2284584/beat-preorder-iphone-duo-rush-apple-get-ready-tool",
+        "source": "Engadget",
+        "region": "US",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_0991b910e8fe",
+        "clusterId": "c-gold_a5083897c991",
+        "title": "Piyush Goyal: “India’s Trade Agreements Now Cover $70 Trillion In GDP” | Bloomberg New Economy Forum",
+        "summary": "Commerce and Industry Minister Piyush Goyal has outlined India’s approach to self-reliance and global trade at the Bloomberg New Economy Forum. Reflecting on supply-chain disruptions during COVID-19, Goyal said India recognised the need to strengthen domestic capabilities in critical sectors, including semiconductors, food and energy. He stressed that self-reliance does not mean isolation, pointin",
+        "url": "https://www.businesstoday.in/bt-tv/whats-hot/video/piyush-goyal-indias-trade-agreements-now-cover-70-trillion-in-gdp-bloomberg-new-economy-forum-561565-2026-10-14",
+        "source": "Business Today Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_1a28206d1ac8",
+        "clusterId": "c-gold_6fe45ed7d1be",
+        "title": "Fed&#x2019;s Bowman Says Inflation Above Goal, But No Urgency to Act",
+        "summary": "There is room to assess economic developments before taking further monetary policy action, said Michelle Bowman, the Federal Reserve&#x2019;s vice chair of supervision.",
+        "url": "https://www.wsj.com/economy/central-banking/feds-bowman-says-inflation-above-goal-but-no-urgency-to-act-e20f9529?mod=rss_markets_main",
+        "source": "WSJ Markets",
+        "region": "US",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_27090eda9b26",
+        "clusterId": "c-gold_f4a2fce30044",
+        "title": "IDBI Bank shares jump 13%, CSB Bank also gain 6% after Fairfax approval; here's why",
+        "summary": "To recall, Fairfax, led by investor Prem Watsa, had submitted a $5 billion bid for IDBI Bank and offered to fully divest its stake in CSB Bank as part of the process.",
+        "url": "https://www.businesstoday.in/markets/stocks/story/idbi-bank-shares-jump-13-csb-bank-also-gain-6-after-fairfax-approval-heres-why-561592-2026-10-14",
+        "source": "Business Today Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_2c4acc9d84ae",
+        "clusterId": "c-gold_50cd6abef59a",
+        "title": "BJP Seeks Bimol Akoijam’s Suspension Over JNU Sexual Harassment Allegations",
+        "summary": "Congress MP Bimol Akoijam is facing sexual harassment allegations linked to Jawaharlal Nehru University (JNU), triggering a political showdown between the BJP and Congress. BJP women MPs met President Droupadi Murmu, seeking her intervention to suspend the MP, while BJP leaders protested outside Congress headquarters for a second consecutive day. The BJP also criticised Rahul Gandhi over the Congr",
+        "url": "https://www.businesstoday.in/bt-tv/whats-hot/video/bjp-seeks-bimol-akoijams-suspension-over-jnu-sexual-harassment-allegations-561563-2026-10-14",
+        "source": "Business Today Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.5,
+      "item": {
+        "id": "gold_f0c70480badf",
+        "clusterId": "c-gold_cb6447ef5f82",
+        "title": "ASUS ExpertBook laptops get up to  ₹21,000 off during Flipkart Big Billion Days Sale 2026",
+        "summary": "ASUS ExpertBook laptops are available at discounted prices during Flipkart's Big Billion Days Sale 2026, with prices starting at ₹49,990 and discounts of up to ₹21,000. Buyers can also get bank offers of up to ₹10,000, no-cost EMI and exchange benefits on select models.",
+        "url": "https://www.livemint.com/technology/asus-expertbook-laptops-get-up-to-21-000-off-during-flipkart-big-billion-days-sale-2026-11791973849216.html",
+        "source": "Livemint Technology",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.6,
+      "item": {
+        "id": "gold_ff7a4367a589",
+        "clusterId": "c-gold_367168176650",
+        "title": "Centre approves Fairfax Financial’s ₹52,878 crore bid for 60.72% stake in IDBI Bank",
+        "summary": "The transaction involves the sale of a 30.48% stake held by the Government of India and a 30.24% stake held by Life Insurance Corporation of India (LIC). Following the transaction, the government will retain a 15% stake in the bank, while LIC will continue to hold 19%.",
+        "url": "https://www.businesstoday.in/latest/corporate/story/centre-approves-fairfax-financials-rs52878-crore-bid-for-60-72-stake-in-idbi-bank-561590-2026-10-14",
+        "source": "Business Today Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.6,
+      "item": {
+        "id": "gold_95de8d441962",
+        "clusterId": "c-gold_4b993f73975c",
+        "title": "Microsoft Azure executive asked teams to find 20% cost cuts, report says",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/10/microsoft-logo-office-building-curved-facade.avif\" width=\"868\" height=\"488\"><br /><p>A senior Microsoft cloud boss has asked team leaders to find ways to cut costs by at least 20%, The Information reported, citing people who know about the plans. We have not independently verified the report, and Microsoft disputes it. “Azure leadership has not direct",
+        "url": "https://thenextweb.com/news/microsoft-azure-20-percent-cost-cuts-report",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.6,
+      "item": {
+        "id": "gold_070023f5c037",
+        "clusterId": "c-gold_5e6e98ca510d",
+        "title": "Tejas Goenka and Nupur Goenka on how Tally stayed relevant for 40 years",
+        "summary": "Tally's Tejas Goenka and Nupur Goenka attributed the company's success to ownership and staying focused on cost, trust and privacy.",
+        "url": "https://yourstory.com/2026/10/tejas-nupur-goenka-how-tally-has-stayed-relevant-for-40-years",
+        "source": "YourStory",
+        "region": "IN",
+        "rawCategories": [
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.7,
+      "item": {
+        "id": "gold_1388b0ae6246",
+        "clusterId": "c-gold_211c1eeda861",
+        "title": "Pre-owned goods marketplace Circle raises Rs 25 Cr led by Nexus Venture Partners",
+        "summary": "<img src=\"https://img-cdn.publive.online/fit-in/1280x960/entrackr/media/media_files/2026/10/14/chirag-2026-10-14-15-32-57.jpeg\"><p dir=\"ltr\"><span>Bengaluru based pre-owned goods marketplace Circle has raised Rs 25 crore in a seed funding round led by Nexus Venture Partners. </span><span>Existing investor Titan Capital and Myntra co-founder Raveen Sastry also participated in the round, along with ",
+        "url": "https://entrackr.com/snippets/pre-owned-goods-marketplace-circle-raises-rs-25-cr-led-by-nexus-venture-partners-12675485",
+        "source": "Entrackr",
+        "region": "IN",
+        "rawCategories": [
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.8,
+      "item": {
+        "id": "gold_a9179e84ef70",
+        "clusterId": "c-gold_bb3d911ea7fc",
+        "title": "Anthropic opens a Singapore office and signs an AI safety MOU with the government",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/08/anthropic-in-house-chip-team-custom-silicon-claude.avif\" width=\"868\" height=\"488\"><br /><p>Anthropic has opened an office in Singapore, its fifth in Asia-Pacific, and signed a memorandum of understanding with the government. Neither comes with a figure or a headcount. The memorandum covers AI safety, security and model evaluation, research on adoption",
+        "url": "https://thenextweb.com/news/anthropic-singapore-office-government-mou",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.8,
+      "item": {
+        "id": "gold_0ef3ae06fcfb",
+        "clusterId": "c-gold_e531e3d9546f",
+        "title": "Storm May Not Provide Relief for Insurance Market",
+        "summary": "Some of the best analysis and insight on investing, the wealth-management business and more.",
+        "url": "https://www.wsj.com/finance/investing/storm-may-not-provide-relief-for-insurance-market-7e629b29?mod=rss_markets_main",
+        "source": "WSJ Markets",
+        "region": "US",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.8,
+      "item": {
+        "id": "gold_683d3fff9ff3",
+        "clusterId": "c-gold_7f065b1408e0",
+        "title": "Fund Managers Are Bullish&#x2014;Watch Out",
+        "summary": "Plus, investors await inflation data",
+        "url": "https://www.wsj.com/finance/investing/fund-managers-are-bullishwatch-out-0597c06b?mod=rss_markets_main",
+        "source": "WSJ Markets",
+        "region": "US",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.8,
+      "item": {
+        "id": "gold_e1308c16b890",
+        "clusterId": "c-gold_c4d3a1475a27",
+        "title": "GTA 6 PC launch tipped for early 2027, months after PS5 and Xbox release",
+        "summary": "GTA 6 could launch on PC between January and March 2027, according to a report citing four industry sources. Rockstar has confirmed a November 19, 2026, release for PS5 and Xbox Series X/S but has yet to announce a PC launch date.",
+        "url": "https://www.livemint.com/technology/gta-6-pc-launch-tipped-for-early-2027-months-after-ps5-and-xbox-release-11791972547263.html",
+        "source": "Livemint Technology",
+        "region": "IN",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.9,
+      "item": {
+        "id": "gold_45e8c3f96ecb",
+        "clusterId": "c-gold_774eefb48314",
+        "title": "Health Care Roundup: Market Talk",
+        "summary": "Find insight on Johnson &amp; Johnson and more in the latest Market Talks covering Health Care.",
+        "url": "https://www.wsj.com/business/health-care-roundup-market-talk-1d895b75?mod=rss_markets_main",
+        "source": "WSJ Markets",
+        "region": "US",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 0.9,
+      "item": {
+        "id": "gold_afcc940984bf",
+        "clusterId": "c-gold_98dc54f2637f",
+        "title": "Nothing’s CMF debuts wireless speakers that look like milk cartons",
+        "summary": "Nothing’s CMF debuts wireless speakers that look like milk cartons",
+        "url": "https://indianexpress.com/article/technology/tech-news-technology/nothings-cmf-debuts-wireless-speakers-that-look-like-milk-cartons-10921396",
+        "source": "Indian Express Technology",
+        "region": "IN",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1,
+      "item": {
+        "id": "gold_dccc11b7886c",
+        "clusterId": "c-gold_c2ad26d84da8",
+        "title": "JackRabbit MG Cargo Bike Review (2026): Compact and Powerful",
+        "summary": "This compact, plucky ride is the cargo ebike for people who don’t want a cargo ebike. It’s even fun to ride.",
+        "url": "https://www.wired.com/review/jackrabbit-mg-cargo-electric-bicycle",
+        "source": "Wired",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1,
+      "item": {
+        "id": "gold_ebd298094b74",
+        "clusterId": "c-gold_e02a9e9d86ec",
+        "title": "The Politics of Solar Energy Are Getting Weird, Mean, and a Little MAGA",
+        "summary": "A mysterious super PAC that doubles as a pro-solar-energy outfit is funding some of the most knives-out attack ads of the midterms season.",
+        "url": "https://www.wired.com/story/the-politics-of-solar-energy-are-getting-weird-mean-and-a-little-maga",
+        "source": "Wired",
+        "region": "US",
+        "rawCategories": [
+          "Generative AI",
+          "LLMs"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1,
+      "item": {
+        "id": "gold_cceef346d44c",
+        "clusterId": "c-gold_76a4ff6f08e0",
+        "title": "Basic Materials Roundup: Market Talk",
+        "summary": "Find insight on Rio Tinto, Paladin Energy, Mineral Resources and more in the latest Market Talks covering Basic Materials.",
+        "url": "https://www.wsj.com/business/basic-materials-roundup-market-talk-4f9f083f?mod=rss_markets_main",
+        "source": "WSJ Markets",
+        "region": "US",
+        "rawCategories": [
+          "Business",
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.1,
+      "item": {
+        "id": "gold_ec23bf5706fb",
+        "clusterId": "c-gold_4c0a45127f58",
+        "title": "Bumble agrees to be bought by Ithaca Holdings for about $1.3bn",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/10/whitney-wolfe-herd-onstage-techcrunch-disrupt.avif\" width=\"868\" height=\"488\"><br /><p>Bumble has agreed to be acquired by Ithaca Holdings in an all-cash deal valuing the dating app at about $1.3 billion, the companies said on Tuesday. Ithaca will pay $6.05 per Bumble Class A share, about 138% more than the stock’s closing price on October 9, before re",
+        "url": "https://thenextweb.com/news/bumble-ithaca-holdings-1-3bn-deal",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.1,
+      "item": {
+        "id": "gold_f0d5335342fe",
+        "clusterId": "c-gold_17cb9891975d",
+        "title": "Anthropic’s international chief says open models carry more risk by definition",
+        "summary": "<img src=\"https://media.thenextweb.com/2026/07/claude-cowork-sandbox-escape-mac-files-sharedroot.avif\" width=\"868\" height=\"488\"><br /><p>Anthropic’s head of international told Bloomberg TV in Dublin that open alternatives to its models carry more risk by definition. That is a broader claim than the one Dario Amodei set out in July, when he wrote that open-weight models without dangerous capabiliti",
+        "url": "https://thenextweb.com/news/anthropic-princen-open-weights-risk",
+        "source": "The Next Web",
+        "region": "US",
+        "rawCategories": [
+          "AI Startups",
+          "Generative AI"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.2,
+      "item": {
+        "id": "gold_f243db672442",
+        "clusterId": "c-gold_4fd0c84424e2",
+        "title": "Thailand floods villages to protect capital",
+        "summary": "After devastating floods in 2011, the government expanded embankments, water gates, and other infrastructure to direct water away from Bangkok, the historic city of Ayutthaya and industrial zones along the Chao Phraya River",
+        "url": "https://www.thehindu.com/sci-tech/energy-and-environment/thailand-floods-villages-to-protect-capital/article71583180.ece",
+        "source": "The Hindu Sci-Tech",
+        "region": "IN",
+        "rawCategories": [
+          "Deeptech",
+          "AI Research"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.3,
+      "item": {
+        "id": "gold_c0204d93b782",
+        "clusterId": "c-gold_ad4a3ece999b",
+        "title": "Nvidia, worth $5.5tn, donates $250m to UK for AI safety research",
+        "summary": "&lt;p&gt;Pledge spanning five years from world’s most valuable firm comes as concerns about AI agents have risen&lt;/p&gt;&lt;p&gt;The $5.5tn (£4.1tn) US chipmaker Nvidia is donating $250m worth of computing power to the UK to support AI safety research.&lt;/p&gt;&lt;p&gt;The donation from the world’s most valuable company comes as the UK government confirmed its AI Security Institute, which tests",
+        "url": "https://www.theguardian.com/technology/2026/oct/14/nvidia-donates-to-uk-ai-safety-research",
+        "source": "Guardian Technology",
+        "region": "GLOBAL",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.4,
+      "item": {
+        "id": "gold_d6235fb7cfa4",
+        "clusterId": "c-gold_ca295099402a",
+        "title": "TechSparks 2026: meet the innovators exhibiting at India’s premier startup tech summit",
+        "summary": "In our photo essay from YourStory's flagship TechSparks 2026 conference, we showcase a range of innovators. Sign up to attend!",
+        "url": "https://yourstory.com/2026/10/techsparks-innovators-exhibition-photography",
+        "source": "YourStory",
+        "region": "IN",
+        "rawCategories": [
+          "AI Startups"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.4,
+      "item": {
+        "id": "gold_e32d45dc5489",
+        "clusterId": "c-gold_dd46c41a2c4b",
+        "title": "Tool and target: US law enforcement grapple with AI-enabled terrorism and anti-tech extremism",
+        "summary": "&lt;p&gt;From the FBI to local police departments, US authorities are increasingly warning of would-be terrorists using chatbots to plan attacks and anti-AI extremist threats &lt;/p&gt;&lt;p&gt;In May 2025, a 25-year-old man &lt;a href=\"https://www.nbcnews.com/news/us-news/bombing-ivf-clinic-security-wake-call-fertility-centers-experts-say-rcna207675\"&gt;detonated&lt;/a&gt; a car bomb outside a Pa",
+        "url": "https://www.theguardian.com/technology/ng-interactive/2026/oct/14/ai-terror-plots-fbi-extremism",
+        "source": "Guardian Technology",
+        "region": "GLOBAL",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
+      }
+    },
+    {
+      "label": "",
+      "ageHours": 1.5,
+      "item": {
+        "id": "gold_17d8eb9fb28a",
+        "clusterId": "c-gold_9eb2c76bd19e",
+        "title": "‘Like being in a vortex’: US report details extent of ‘devastating’ dating-app scams",
+        "summary": "&lt;p&gt;Congress calls for Match Group and others to do more to help victims like Mary, who lost $100,000 to app scammer&lt;/p&gt;&lt;p&gt;Mary met a man on the dating app Plenty of Fish in 2024. She told the Guardian she had been looking for a connection, but instead became the victim of a romance scam that cost her almost $100,000.&lt;/p&gt;&lt;p&gt;“There was a lot of conversation, and then it",
+        "url": "https://www.theguardian.com/us-news/2026/oct/14/dating-app-scams-us-congress",
+        "source": "Guardian Technology",
+        "region": "GLOBAL",
+        "rawCategories": [
+          "Technology"
+        ],
+        "clusterSourceCount": 1
       }
     }
   ]

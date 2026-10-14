@@ -6,6 +6,13 @@ import {
   type SourceCollector,
 } from "./types";
 
+export interface FeedImage {
+  url: string;
+  origin: "media:content" | "media:thumbnail" | "enclosure";
+  width?: number;
+  height?: number;
+}
+
 interface RssItem {
   title?: string;
   link?: string;
@@ -13,6 +20,42 @@ interface RssItem {
   content?: string;
   pubDate?: string;
   author?: string;
+  images?: FeedImage[];
+}
+
+const IMG_EXT_RE = /\.(jpe?g|png|webp|gif)(\?|$)/i;
+
+/** Extract image candidates from one <item>/<entry> block (feed data only). */
+export function extractFeedImages(block: string): FeedImage[] {
+  const out: FeedImage[] = [];
+  const push = (url: string | undefined, origin: FeedImage["origin"], w?: string, h?: string) => {
+    if (!url) return;
+    const num = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) : undefined);
+    out.push({ url, origin, ...(num(w) ? { width: num(w) } : {}), ...(num(h) ? { height: num(h) } : {}) });
+  };
+  for (const m of block.matchAll(/<media:content\b[^>]*>/gi)) {
+    const t = m[0];
+    const type = attrValue(t, "type");
+    const medium = attrValue(t, "medium");
+    const url = attrValue(t, "url");
+    if (url && (medium === "image" || /^image\//i.test(type ?? "") || IMG_EXT_RE.test(url))) {
+      push(url, "media:content", attrValue(t, "width"), attrValue(t, "height"));
+    }
+  }
+  for (const m of block.matchAll(/<media:thumbnail\b[^>]*>/gi)) {
+    const t = m[0];
+    push(attrValue(t, "url"), "media:thumbnail", attrValue(t, "width"), attrValue(t, "height"));
+  }
+  for (const m of block.matchAll(/<enclosure\b[^>]*>/gi)) {
+    const t = m[0];
+    const type = attrValue(t, "type");
+    const url = attrValue(t, "url");
+    if (url && (/^image\//i.test(type ?? "") || IMG_EXT_RE.test(url))) {
+      push(url, "enclosure");
+    }
+  }
+  // Largest first when dimensions are known.
+  return out.sort((a, b) => (b.width ?? 0) * (b.height ?? 0) - (a.width ?? 0) * (a.height ?? 0));
 }
 
 function tagValue(block: string, tag: string): string | undefined {
@@ -38,6 +81,7 @@ export function parseFeedXml(xml: string): RssItem[] {
   const items: RssItem[] = [];
   const rssBlocks = xml.match(/<item[\s\S]*?<\/item>/gi) ?? [];
   for (const b of rssBlocks) {
+    const images = extractFeedImages(b);
     items.push({
       title: tagValue(b, "title"),
       link: tagValue(b, "link"),
@@ -45,12 +89,14 @@ export function parseFeedXml(xml: string): RssItem[] {
         tagValue(b, "description") ?? tagValue(b, "content:encoded"),
       pubDate: tagValue(b, "pubDate") ?? tagValue(b, "dc:date"),
       author: tagValue(b, "author") ?? tagValue(b, "dc:creator"),
+      ...(images.length ? { images } : {}),
     });
   }
   if (items.length === 0) {
     const entryBlocks = xml.match(/<entry[\s\S]*?<\/entry>/gi) ?? [];
     for (const b of entryBlocks) {
       const linkBlock = b.match(/<link[^>]*>/i)?.[0];
+      const images = extractFeedImages(b);
       items.push({
         title: tagValue(b, "title"),
         link:
@@ -61,6 +107,7 @@ export function parseFeedXml(xml: string): RssItem[] {
         author:
           b.match(/<author[\s\S]*?<name>([\s\S]*?)<\/name>/i)?.[1]?.trim() ??
           tagValue(b, "author"),
+        ...(images.length ? { images } : {}),
       });
     }
   }
