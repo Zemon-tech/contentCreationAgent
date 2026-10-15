@@ -22,6 +22,7 @@
     "verify:x": "npx -y tsx src/mastra/demo/verifyXPublisher.ts",
     "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts",
     "feeds:verify": "npx -y tsx src/mastra/demo/verifyFeeds.ts",
+    "sources:verify": "npx -y tsx src/mastra/demo/verifySources.ts",
     "ingest:dry": "npx -y tsx src/mastra/demo/ingestDryRun.ts",
     "rank:preview": "npx -y tsx src/mastra/demo/rankPreview.ts",
     "rank:seed:feeds": "npx -y tsx src/mastra/demo/seedGoldenFromFeeds.ts",
