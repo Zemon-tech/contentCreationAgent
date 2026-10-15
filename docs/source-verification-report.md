@@ -1,6 +1,6 @@
 # Source Verification Report
 
-**Run (IST):** Thursday, 15 October 2026 at 11:58:25 am IST
+**Run (IST):** Thursday, 15 October 2026 at 12:16:01 pm IST
 **Scope:** every source in the curated news registry (`src/mastra/config/newsFeeds.ts`) — active, disabled, and Google News fallbacks. Fetched live through the pipeline's robots-respecting path. Results reflect ONLY what was fetched in this run.
 
 | Source | Region | Feed URL | Status | HTTP | Parsed | Items | Newest | Stale | Notes |

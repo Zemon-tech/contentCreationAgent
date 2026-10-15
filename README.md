@@ -204,6 +204,48 @@ as the authoritative pick for the RAS path. Note: `region` resolution depends on
 `Source.region` tag added by the ingestion stage — until that lands, the adapter defaults
 region to `GLOBAL` (no region-balance nudge), which is harmless.
 
+## Auto news → RAS pipeline
+
+`autoNewsToRasWorkflow` ([workflows/autoNewsToRasWorkflow.ts](src/mastra/workflows/autoNewsToRasWorkflow.ts))
+chains: **ingest → rank (`rankStories`) → fact pack → image sourcing → approval
+gate (suspend/resume) → RAS handoff → ledger record.** It is registered in
+[index.ts](src/mastra/index.ts) and runnable from Studio or on a schedule.
+
+**Nothing publishes** unless `INSTAGRAM_DRY_RUN=false` **and** approval is granted
+(`REQUIRE_APPROVAL`, suspend/resume). Both default **true**.
+
+- **Idempotency:** the posted-ledger ([postedLedger.ts](src/mastra/repositories/postedLedger.ts))
+  is keyed on canonical URL + content hash, so a story is never posted twice;
+  posted/pending block forever, rejected/failed block for a window.
+- **Rate caps** ([posting.config.ts](src/mastra/config/posting.config.ts)): max
+  posts/day, min gap, min score — the last gate before publish.
+- **Images** download to `IMAGE_DIR` (local; not publicly served — RAS composites
+  the file into its rendered PNG, and only that PNG is fetched by Instagram via
+  `PUBLIC_BASE_URL` + `/ras-assets`). `rightsStatus` is always `unverified`.
+
+Dry-run the whole thing (nothing persisted or published) — shows top-5 ranked,
+the chosen story, the image + why, and the exact RAS payload:
+
+```bash
+npm run auto:dry
+```
+
+Check Instagram creds (read-only, never posts):
+
+```bash
+npm run ig:check
+```
+
+Schedule it (every `AUTO_INTERVAL_MINUTES`, default 30) under PM2/systemd:
+
+```bash
+npm run auto:radar
+```
+
+`npm run auto:radar:once` runs a single cycle. In dry-run it only records what it
+would do; with `REQUIRE_APPROVAL` a live run suspends for approval in Studio.
+"Nothing worth posting this run" is a valid outcome, not an error.
+
 ## Learn more
 
 To learn more about Mastra, visit our [documentation](https://mastra.ai/docs/). If you're new to AI agents, check out our [course](https://mastra.ai/learn) and [YouTube videos](https://youtube.com/@mastra-ai). You can also join our [Discord](https://discord.gg/mastra-ai) community to get help and share your projects.

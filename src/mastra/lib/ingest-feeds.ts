@@ -4,6 +4,7 @@ import type { Source } from "../schemas/source";
 import { getSourceRegistry } from "../config/sources";
 import { parseFeedXml, type FeedImage } from "../collectors/rss";
 import { makeBaseRaw } from "../collectors/types";
+import { stripHtml, normalizeWhitespace } from "./normalize";
 import { politeFetch } from "./http-polite";
 import { fetchGoogleNewsFallback } from "./google-news-fallback";
 import { hostOf } from "./article-body";
@@ -90,13 +91,14 @@ function buildItems(source: Source, xml: string, cfg: IngestionConfig): { items:
       const t = Date.parse(publishedAt);
       if (!Number.isNaN(t) && t > newest) newest = t;
     }
+    const cleanContent = normalizeWhitespace(stripHtml(i.description ?? i.content ?? i.title ?? "")).slice(0, 5000);
     const raw = makeBaseRaw({
       sourceId: source.id,
       sourceName: source.name,
       sourceType: source.type,
       url: i.link,
-      title: i.title,
-      content: i.description ?? i.content ?? i.title ?? "",
+      title: normalizeWhitespace(stripHtml(i.title ?? "")),
+      content: cleanContent || (i.title ?? ""),
       authorName: i.author,
       publishedAt,
       metadata: { collector: "ingest-feeds", region: source.region },

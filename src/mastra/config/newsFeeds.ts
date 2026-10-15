@@ -130,14 +130,20 @@ export const SIGNAL_FEEDS: Source[] = [
   feed("signal-hn", "Hacker News (front page)", "https://news.ycombinator.com/rss", "GLOBAL", [...STARTUPS, "AI Coding"], 60, {
     role: "community", tier: 1, signalOnly: true,
   }),
+  // Reddit disallows all generic bots in robots.txt (`User-agent: * Disallow: /`).
+  // With robots respected we cannot poll these — disabled cleanly so they don't
+  // churn the run log. Re-enable only via the official Reddit API (not built).
   feed("signal-reddit-ml", "r/MachineLearning", "https://www.reddit.com/r/MachineLearning/.rss", "GLOBAL", ["AI Research"], 55, {
-    role: "community", tier: 2, signalOnly: true,
+    role: "community", tier: 2, signalOnly: true, active: false,
+    note: "Blocked by reddit robots.txt (Disallow: /). Needs the official Reddit API to enable.",
   }),
   feed("signal-reddit-startups", "r/startups", "https://www.reddit.com/r/startups/.rss", "GLOBAL", STARTUPS, 50, {
-    role: "community", tier: 3, signalOnly: true,
+    role: "community", tier: 3, signalOnly: true, active: false,
+    note: "Blocked by reddit robots.txt (Disallow: /). Needs the official Reddit API to enable.",
   }),
   feed("signal-reddit-indiatech", "r/IndiaTech", "https://www.reddit.com/r/IndiaTech/.rss", "IN", ["Technology"], 50, {
-    role: "community", tier: 3, signalOnly: true,
+    role: "community", tier: 3, signalOnly: true, active: false,
+    note: "Blocked by reddit robots.txt (Disallow: /). Needs the official Reddit API to enable.",
   }),
   feed("signal-producthunt", "Product Hunt", "https://www.producthunt.com/feed", "US", [...STARTUPS, ...AI], 55, {
     role: "launch", tier: 2, signalOnly: true,

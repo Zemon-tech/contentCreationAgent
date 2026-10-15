@@ -15,6 +15,11 @@ src/mastra/public/
 # ICP lead exports contain personal contact data
 workspace/leads/
 
+# Downloaded post images (IMAGE_DIR) and rendered RAS output
+data/images/
+data/
+workspace/output/
+
 # tweetytweets local data
 tweetytweets/config.json
 tweetytweets/state.json

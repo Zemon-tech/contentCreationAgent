@@ -23,12 +23,17 @@
     "inbox": "npx -y tsx --env-file=.env src/mastra/demo/inboxDropServer.ts",
     "feeds:verify": "npx -y tsx src/mastra/demo/verifyFeeds.ts",
     "sources:verify": "npx -y tsx src/mastra/demo/verifySources.ts",
+    "ig:check": "npx -y tsx --env-file=.env src/mastra/demo/igCheck.ts",
     "ingest:dry": "npx -y tsx src/mastra/demo/ingestDryRun.ts",
+    "auto:dry": "npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts",
+    "ras:render:test": "npx -y tsx --env-file=.env src/mastra/demo/rasRenderTest.ts",
+    "auto:radar": "npx -y tsx --env-file=.env src/mastra/cron/runAutoNewsRadar.ts",
+    "auto:radar:once": "npx -y tsx --env-file=.env src/mastra/cron/runAutoNewsRadar.ts --once",
     "rank:preview": "npx -y tsx src/mastra/demo/rankPreview.ts",
     "rank:seed:feeds": "npx -y tsx src/mastra/demo/seedGoldenFromFeeds.ts",
     "rank:seed": "npx -y tsx --env-file=.env src/mastra/eval/seedFixtures.ts",
     "rank:eval": "npx -y tsx --env-file=.env src/mastra/eval/rankEval.ts",
-    "test": "npx -y tsx --test tests/ranking/hardFilter.test.ts tests/ranking/score.test.ts tests/ranking/factPack.test.ts tests/ingestion/paywall.test.ts tests/ingestion/feedImages.test.ts tests/ingestion/feedHealth.test.ts tests/ingestion/robots.test.ts tests/ingestion/canonicalize.test.ts"
+    "test": "npx -y tsx --test tests/ranking/hardFilter.test.ts tests/ranking/score.test.ts tests/ranking/factPack.test.ts tests/ingestion/paywall.test.ts tests/ingestion/feedImages.test.ts tests/ingestion/feedHealth.test.ts tests/ingestion/robots.test.ts tests/ingestion/canonicalize.test.ts tests/safety/ledger.test.ts tests/image/validate.test.ts tests/ras/handoff.test.ts"
   },
   "keywords": [],
   "author": "",

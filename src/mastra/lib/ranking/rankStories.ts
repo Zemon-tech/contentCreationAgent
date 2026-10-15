@@ -1,7 +1,8 @@
 import { rankingConfig, type RankingConfig } from "../../config/ranking.config";
 import type { RankInputItem, RankResult, RankedStory } from "../../schemas/ranking";
 import { makeId, nowIso } from "../ids";
-import { hardFilter } from "./hardFilter";
+import { hardFilter, type BlockState } from "./hardFilter";
+import { canonicalKeyForItem } from "../safety/ledger-key";
 import { scoreItems, type RankGenerate } from "./llmScore";
 import { computeRankedStory } from "./score";
 import { selectTop } from "./select";
@@ -45,12 +46,20 @@ export async function rankStories(
   log("rank-start", { inputCount: items.length });
 
   // ---- Stage A: hard filters ----
-  const blocked = await gateway
+  // Blocked set is keyed by CANONICAL key (url + content hash); translate to
+  // item ids so an already-posted/rejected story is never re-selected, even
+  // though its cluster/story id is regenerated each run.
+  const blockedKeys = await gateway
     .getBlocked({ rejectedWithinHours: config.rejectedWithinHours, now })
     .catch((err) => {
       log("rank-storage-warn", { op: "getBlocked", error: String(err) });
-      return new Map();
+      return new Map<string, BlockState>();
     });
+  const blocked = new Map<string, BlockState>();
+  for (const it of items) {
+    const st = blockedKeys.get(canonicalKeyForItem(it));
+    if (st) blocked.set(it.id, st);
+  }
   const { kept, drops, droppedByReason } = hardFilter({ items, config, now, blocked });
   log("rank-hard-filter", {
     input: items.length,

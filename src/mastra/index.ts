@@ -13,6 +13,7 @@ import { aggregatorAgent } from './agents/aggregatorAgent';
 import { imageGenAgent } from './agents/imageGenAgent';
 import { icpJudgeAgent } from './agents/icpJudgeAgent';
 import { rasDesignAgent } from './agents/rasDesignAgent';
+import { rankScoringAgent } from './agents/rankScoringAgent';
 
 import { fluxOutputRoute } from './lib/flux-output-route';
 import { postAssetRoute } from './routes/post-assets';
@@ -69,6 +70,7 @@ import { renderRasStoryTool, renderRasCarouselTool } from './tools/ras-render-to
 import { publishRasToInstagramTool } from './tools/ras-instagram-tool';
 
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
+import { autoNewsToRasWorkflow } from './workflows/autoNewsToRasWorkflow';
 import { newsToPostWorkflow } from './workflows/newsToPostWorkflow';
 import { newsToXWorkflow } from './workflows/newsToXWorkflow';
 import { companyResearchWorkflow } from './workflows/companyResearchWorkflow';
@@ -83,9 +85,10 @@ export const mastra = new Mastra({
     // Both let images display inline in Studio chat.
     apiRoutes: [postAssetRoute, fluxOutputRoute, rasAssetRoute],
   },
-  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent },
+  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent, rankScoringAgent },
   workflows: {
     industryAggregationWorkflow,
+    autoNewsToRasWorkflow,
     newsToPostWorkflow,
     newsToXWorkflow,
     leadQualificationWorkflow,

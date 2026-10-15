@@ -1,5 +1,6 @@
 import type { RankResult, Region } from "../../schemas/ranking";
 import { createLibSqlRepository, type Repository } from "../../repositories/store";
+import { getBlockedKeys, recentPostedRegions, recordAttempt } from "../../repositories/postedLedger";
 import type { BlockState } from "./hardFilter";
 
 /**
@@ -34,36 +35,27 @@ export interface RankStorageGateway {
 }
 
 // ---------- LibSQL-backed gateway (production) ----------
+//
+// Blocking + region balance are now backed by the canonical-keyed posted-ledger
+// (repositories/postedLedger.ts). getBlocked returns CANONICAL KEYS (url +
+// content hash), which rankStories translates to item ids. pending/failed map
+// onto the BlockState the hard filter understands (posted/rejected).
 
 const runRepo: Repository<RankResult & { id: string }> =
   createLibSqlRepository<RankResult & { id: string }>("rank_runs");
-const ledgerRepo: Repository<RankLedgerRow> =
-  createLibSqlRepository<RankLedgerRow>("rank_ledger");
 
 export const libSqlRankGateway: RankStorageGateway = {
-  async getBlocked({ rejectedWithinHours, now }) {
-    const rows = await ledgerRepo.list();
-    const cutoff = (now ?? new Date()).getTime() - rejectedWithinHours * 3_600_000;
+  async getBlocked({ now }) {
+    const keys = await getBlockedKeys({ now });
     const map = new Map<string, BlockState>();
-    for (const r of rows) {
-      if (r.state === "posted") {
-        map.set(r.id, "posted");
-      } else if (r.state === "rejected") {
-        const t = Date.parse(r.at);
-        if (!Number.isNaN(t) && t >= cutoff && map.get(r.id) !== "posted") {
-          map.set(r.id, "rejected");
-        }
-      }
+    for (const [key, outcome] of keys) {
+      map.set(key, outcome === "posted" || outcome === "pending" ? "posted" : "rejected");
     }
     return map;
   },
 
   async getRecentRegions(n) {
-    const rows = await ledgerRepo.list(); // created_at DESC
-    return rows
-      .filter((r) => r.state === "posted")
-      .slice(0, n)
-      .map((r) => r.region);
+    return recentPostedRegions(n);
   },
 
   async saveRunLog(result) {
@@ -71,8 +63,15 @@ export const libSqlRankGateway: RankStorageGateway = {
   },
 
   async recordDecision(row) {
-    // createdAt drives ordering in list(); stamp it from the decision time.
-    await ledgerRepo.save({ ...row, createdAt: row.at } as RankLedgerRow & { createdAt: string });
+    await recordAttempt({
+      id: row.id,
+      status: row.state === "posted" ? "posted" : "rejected",
+      storyId: row.id,
+      url: "",
+      title: "",
+      region: row.region,
+      at: row.at,
+    });
   },
 };
 

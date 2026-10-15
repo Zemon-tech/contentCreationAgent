@@ -1,5 +1,6 @@
 import type { Story } from "../schemas/story";
 import type { FactPack } from "../schemas/factpack";
+import { stripHtml, normalizeWhitespace } from "./normalize";
 
 /**
  * buildFactPack — assemble a verified fact pack from a clustered Story.
@@ -37,9 +38,9 @@ export function buildFactPack(
   opts: { limited?: boolean; sourceUrls?: string[] } = {},
 ): FactPack {
   const evidence = story.evidence;
-  // Thin material if explicitly flagged, or when there's no real body beyond the summary.
-  const body = (story.whatHappened ?? "").trim();
-  const summary = (story.summary ?? "").trim();
+  // Strip any HTML defensively, then decide if material is thin.
+  const body = normalizeWhitespace(stripHtml(story.whatHappened ?? "")).trim();
+  const summary = normalizeWhitespace(stripHtml(story.summary ?? "")).trim();
   const limited = opts.limited ?? (body.length === 0 || body === summary);
 
   const factSource = limited ? [story.title, summary].filter(Boolean).join(". ") : `${body} ${summary}`;

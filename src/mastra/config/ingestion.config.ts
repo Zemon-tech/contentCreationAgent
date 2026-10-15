@@ -86,7 +86,10 @@ export const ingestionConfig: IngestionConfig = {
   },
 
   googleNews: {
-    enabled: envBool("GOOGLE_NEWS_FALLBACK_ENABLED", true),
+    // Disabled by default: news.google.com returns `Disallow: /` for generic
+    // bots, so with robots.txt respected the fallback endpoint is blocked.
+    // Left in the codebase (behind this flag) in case an allowed route appears.
+    enabled: envBool("GOOGLE_NEWS_FALLBACK_ENABLED", false),
     maxItemsPerRun: envNum("GOOGLE_NEWS_MAX_ITEMS", 10),
     when: process.env["GOOGLE_NEWS_WHEN"] ?? "1d",
     localeByRegion: {

@@ -111,9 +111,15 @@ export const rankingConfig: RankingConfig = {
   ],
   disabledSources: [],
 
-  batchSize: envNum("RANK_BATCH_SIZE", 10),
+  // Sarvam-tuned: Sarvam spends ~2k REASONING tokens per item on top of the
+  // JSON text, so a big budget + small batch prevents the JSON being truncated
+  // (which leaves items unscored). Matches lib/leads/judge.ts (16384 budget).
+  // batchSize 1 is the robust default for Sarvam: a single item's JSON always
+  // fits well under the budget even with its ~2k reasoning tokens, so nothing
+  // is lost to truncation. Raise RANK_BATCH_SIZE for a cheaper model.
+  batchSize: envNum("RANK_BATCH_SIZE", 1),
   temperature: envNum("RANK_TEMPERATURE", 0.15),
-  maxOutputTokens: envNum("RANK_MAX_OUTPUT_TOKENS", 4000),
+  maxOutputTokens: envNum("RANK_MAX_OUTPUT_TOKENS", 16384),
   costPer1kTokensUsd: envNum("RANK_COST_PER_1K_TOKENS_USD", 0),
 
   weights: {

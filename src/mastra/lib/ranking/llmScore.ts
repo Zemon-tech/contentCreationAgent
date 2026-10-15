@@ -41,6 +41,9 @@ const defaultGenerate: RankGenerate = async (prompt) => {
       maxOutputTokens: rankingConfig.maxOutputTokens,
       maxRetries: 2,
     },
+    // Nudge Sarvam's reasoning down so it doesn't eat the output budget and
+    // truncate the JSON (reasoning tokens are billed separately from text).
+    providerOptions: { sarvam: { reasoning_effort: "none", reasoningEffort: "none" } },
   });
   return { text: res.text ?? "", usage: res.usage };
 };
