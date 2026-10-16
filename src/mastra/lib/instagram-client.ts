@@ -30,7 +30,23 @@
  */
 
 const DEFAULT_GRAPH_VERSION = "v23.0";
-const GRAPH_BASE = "https://graph.facebook.com";
+const DEFAULT_GRAPH_HOST = "https://graph.facebook.com";
+
+/**
+ * API host. Default is graph.facebook.com ("API setup with Facebook login",
+ * Page-linked tokens). For "API setup with Instagram login" (tokens generated
+ * in the Meta dashboard, no Facebook Page) set
+ * INSTAGRAM_GRAPH_HOST=https://graph.instagram.com. Read at call time so a
+ * restart is the only thing needed after changing .env.
+ */
+export function graphBase(): string {
+  return (process.env.INSTAGRAM_GRAPH_HOST?.trim() || DEFAULT_GRAPH_HOST).replace(/\/+$/, "");
+}
+
+/** True when talking to the Instagram-login host (different /me semantics). */
+export function usesInstagramLogin(): boolean {
+  return /graph\.instagram\.com/i.test(graphBase());
+}
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -145,7 +161,7 @@ async function graphRequest<T>(
   const retries = opts?.retries ?? 3;
   const baseDelayMs = opts?.baseDelayMs ?? 800;
 
-  const url = new URL(`${GRAPH_BASE}/${config.graphVersion}/${path}`);
+  const url = new URL(`${graphBase()}/${config.graphVersion}/${path}`);
   const body = new URLSearchParams();
   body.set("access_token", config.accessToken);
   for (const [key, value] of Object.entries(params)) {
@@ -255,13 +271,33 @@ export async function checkInstagramConnection(): Promise<InstagramConnectionSta
   }
 
   try {
-    const account = await graphRequest<{
-      id: string;
-      username?: string;
-      account_type?: string;
-    }>(config, "GET", config.igUserId, {
-      fields: "id,username,account_type",
-    });
+    // Instagram-login tokens identify the account via /me (user_id is the
+    // professional account id used in publishing paths); Facebook-login tokens
+    // read the account node directly.
+    const account = usesInstagramLogin()
+      ? await graphRequest<{ user_id?: string; id?: string; username?: string; account_type?: string }>(
+          config,
+          "GET",
+          "me",
+          { fields: "user_id,username,account_type" },
+        ).then((r) => ({ id: String(r.user_id ?? r.id ?? ""), username: r.username, account_type: r.account_type }))
+      : await graphRequest<{ id: string; username?: string; account_type?: string }>(
+          config,
+          "GET",
+          config.igUserId,
+          { fields: "id,username,account_type" },
+        );
+
+    if (usesInstagramLogin() && account.id && account.id !== config.igUserId) {
+      return {
+        connected: false,
+        dryRun: config.dryRun,
+        graphVersion: config.graphVersion,
+        accountId: config.igUserId,
+        missing: [],
+        error: `INSTAGRAM_ACCOUNT_ID (${config.igUserId}) does not match the account this token belongs to (${account.id}, @${account.username ?? "?"}). Fix INSTAGRAM_ACCOUNT_ID.`,
+      };
+    }
 
     const status: InstagramConnectionStatus = {
       connected: true,

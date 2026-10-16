@@ -3,6 +3,7 @@ import { z } from "zod";
 import { collectRankSelect, pickPostableCandidate } from "../lib/workflow/autoNewsToRas";
 import { postingConfig } from "../config/posting.config";
 import { runHandoff, renderRasPost } from "../lib/ras/handoff";
+import { publishPreflight } from "../lib/ras/preflight";
 import { canonicalKeyForItem } from "../lib/safety/ledger-key";
 
 /**
@@ -107,6 +108,23 @@ const autoStep = createStep({
       };
     }
     const renderedPost = { filePath: rendered.filePath, viewUrl: rendered.viewUrls[0] ?? "" };
+
+    // Live mode needs a token, a public URL and the env dry-run switched off.
+    // Check BEFORE touching the ledger: a config gap must not burn the story.
+    // The post is already rendered above, so you can still review it.
+    if (!dryRun) {
+      const pre = publishPreflight();
+      if (!pre.ok) {
+        return {
+          status: "skipped" as const,
+          reason: `post created but NOT published: live publishing is not configured (${pre.missing.join("; ")})`,
+          headline: selected.item.title,
+          score: selected.finalScore,
+          renderedPost,
+          top5,
+        };
+      }
+    }
 
     // Approval gate. DRY_RUN: never suspend, hand off as dry_run. Live: suspend
     // for approval unless REQUIRE_APPROVAL is off.

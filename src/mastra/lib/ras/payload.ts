@@ -31,6 +31,18 @@ function safeLatin(text: string): string {
     .trim();
 }
 
+/**
+ * Fit short on-image text (deck lines) by cutting at a WORD boundary with no
+ * ellipsis, so a line never ends mid-word ("...for its Mus...").
+ */
+export function clipWords(text: string, max: number): string {
+  const t = safeLatin(text);
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(" ");
+  return (sp >= Math.floor(max / 2) ? cut.slice(0, sp) : cut).replace(/[\s,;:-]+$/, "").trim();
+}
+
 function clip(text: string, max: number): string {
   const t = safeLatin(text);
   return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
@@ -55,9 +67,9 @@ export function buildRasPayload(args: {
   const accentColor = accentFor(topics, `${item.title} ${factPack.keyFacts.join(" ")}`);
 
   const categoryTag = (topics.length ? topics : ["AI"]).slice(0, 3).map((t) => safeLatin(t).toUpperCase()).join(" · ");
-  const deckLead = clip(factPack.keyFacts[0] ?? item.summary, 60);
-  const deckHighlight = clip(factPack.figures[0] ?? factPack.names[0] ?? "Why it matters", 40);
-  const deckTail = clip(factPack.keyFacts[1] ?? "", 60);
+  const deckLead = clipWords(factPack.keyFacts[0] ?? item.summary, 60);
+  const deckHighlight = clipWords(factPack.figures[0] ?? factPack.names[0] ?? "Why it matters", 40);
+  const deckTail = clipWords(factPack.keyFacts[1] ?? "", 60);
 
   const srcLine = factPack.primarySource ?? factPack.sourceUrls[0] ?? item.url;
   const limitNote = factPack.factPackLimited ? " (headline-level; details limited)" : "";
