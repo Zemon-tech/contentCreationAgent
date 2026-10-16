@@ -1,7 +1,8 @@
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
-import { collectRankSelect, prepareForHandoff } from "../lib/workflow/autoNewsToRas";
-import { runHandoff } from "../lib/ras/handoff";
+import { collectRankSelect, pickPostableCandidate } from "../lib/workflow/autoNewsToRas";
+import { postingConfig } from "../config/posting.config";
+import { runHandoff, renderRasPost } from "../lib/ras/handoff";
 import { canonicalKeyForItem } from "../lib/safety/ledger-key";
 
 /**
@@ -38,14 +39,17 @@ const PreviewSchema = z.object({
   caption: z.string(),
   image: z.object({ localPath: z.string().nullable(), source: z.string().nullable(), attribution: z.string().nullable(), under1080: z.boolean(), chosenFrom: z.string() }),
   factPack: z.any(),
+  renderedPost: z.object({ filePath: z.string(), viewUrl: z.string() }),
 });
 
 const OutputSchema = z.object({
   status: z.enum(["posted", "dry_run", "failed", "skipped", "no_story"]),
   reason: z.string().optional(),
+  error: z.string().optional(),
   headline: z.string().optional(),
   score: z.number().optional(),
   ledgerKey: z.string().optional(),
+  renderedPost: z.object({ filePath: z.string(), viewUrl: z.string() }).optional(),
   permalink: z.string().optional(),
   top5: z.array(z.object({ title: z.string(), score: z.number(), region: z.string() })).default([]),
 });
@@ -59,18 +63,50 @@ const autoStep = createStep({
   execute: async ({ inputData, resumeData, suspend }) => {
     const { dryRun, requireApproval } = inputData;
 
-    const { rankResult, selected, feedCandidateUrls, selectedRaw } = await collectRankSelect({ persist: !dryRun });
+    const { rankResult, rawById } = await collectRankSelect({ persist: !dryRun });
     const top5 = rankResult.ranked.slice(0, 5).map((r) => ({ title: r.item.title.slice(0, 100), score: r.finalScore, region: r.item.region }));
 
-    if (!selected) {
+    if (rankResult.selected.length === 0) {
       return { status: "no_story" as const, reason: rankResult.note ?? "no story worthy this run", top5 };
     }
 
-    const prepared = await prepareForHandoff({ item: selected.item, finalScore: selected.finalScore, raw: selectedRaw, feedCandidateUrls });
+    // RAS's story template needs a hero image, so take the best-ranked story
+    // that clears the threshold AND has a validated image (not just rank #1).
+    const { candidate, tried, skippedNoImage } = await pickPostableCandidate({
+      rankResult,
+      rawById,
+      minScore: postingConfig.minScore,
+    });
+    if (!candidate) {
+      return {
+        status: "skipped" as const,
+        reason: `no postable story: ${tried} top-ranked stor${tried === 1 ? "y" : "ies"} had no usable image (${skippedNoImage.join(" | ") || "none tried"})`,
+        top5,
+      };
+    }
+    const selected = { item: candidate.item, finalScore: candidate.finalScore, reason: candidate.reason };
+    const prepared = candidate.prepared;
 
     // Safety: score threshold + rate caps.
     if (!prepared.scoreOk) return { status: "skipped" as const, reason: "below post score threshold", headline: selected.item.title, score: selected.finalScore, top5 };
     if (!prepared.caps.ok) return { status: "skipped" as const, reason: prepared.caps.reason, headline: selected.item.title, score: selected.finalScore, top5 };
+
+    // Create the post graphic BEFORE the approval gate (and in dry-run too) so
+    // the approver sees the real created image. Rendering publishes nothing.
+    let rendered: { viewUrls: string[]; filePath: string };
+    try {
+      rendered = await renderRasPost(prepared.payload);
+    } catch (err) {
+      return {
+        status: "failed" as const,
+        reason: "render failed (nothing was published)",
+        error: err instanceof Error ? err.message : String(err),
+        headline: selected.item.title,
+        score: selected.finalScore,
+        top5,
+      };
+    }
+    const renderedPost = { filePath: rendered.filePath, viewUrl: rendered.viewUrls[0] ?? "" };
 
     // Approval gate. DRY_RUN: never suspend, hand off as dry_run. Live: suspend
     // for approval unless REQUIRE_APPROVAL is off.
@@ -98,6 +134,7 @@ const autoStep = createStep({
               chosenFrom: prepared.image.chosenFrom,
             },
             factPack: prepared.payload.factPack,
+            renderedPost,
           },
           requestedAt: new Date().toISOString(),
         }) as never;
@@ -110,14 +147,18 @@ const autoStep = createStep({
       storyId: selected.item.id,
       dryRun,
       approved,
+      // Reuse the already-created graphic instead of rendering twice.
+      deps: { render: async () => rendered },
     });
 
     return {
       status: result.status,
       reason: result.reason,
+      ...(result.error ? { error: result.error } : {}),
       headline: selected.item.title,
       score: selected.finalScore,
       ledgerKey: result.ledgerKey,
+      renderedPost,
       ...(result.permalink ? { permalink: result.permalink } : {}),
       top5,
     };

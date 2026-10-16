@@ -5,6 +5,7 @@ import type { RasPayload } from "../../schemas/handoff";
 import { NEWS_FEED_SOURCES } from "../../config/newsFeeds";
 import { ingestFeeds } from "../ingest-feeds";
 import { rankStories } from "../ranking/rankStories";
+import { createScoreCache, cacheEnabled } from "../ranking/scoreCache";
 import type { RankGenerate } from "../ranking/llmScore";
 import { canonicalKey } from "../safety/ledger-key";
 import { buildFactPack } from "../fact-pack";
@@ -68,6 +69,8 @@ export async function collectRankSelect(opts: {
 
   const rankResult = await rankStories(rankItems, {
     generate: opts.rankGenerate,
+    // Re-use judgements for articles already scored in a recent cycle.
+    ...(cacheEnabled() && !opts.rankGenerate ? { scoreCache: createScoreCache() } : {}),
     now: opts.now,
     persist: opts.persist ?? false,
     log: opts.log,
@@ -105,6 +108,57 @@ export interface PreparedPost {
   image: ImageResult;
   caps: GateResult;
   scoreOk: boolean;
+}
+
+export interface PostableCandidate {
+  item: RankInputItem;
+  finalScore: number;
+  reason: string;
+  prepared: PreparedPost;
+}
+
+/**
+ * Walk down the ranked list (score >= threshold, one per cluster, best first)
+ * and return the first story that ALSO has a validated image. RAS's story
+ * template needs a hero image, so an image-less top story must not block the
+ * run — we move to the next-best. Returns null when none qualifies (a valid
+ * "nothing postable this run" outcome, not an error).
+ */
+export async function pickPostableCandidate(args: {
+  rankResult: RankResult;
+  rawById: Map<string, RawContent>;
+  minScore: number;
+  maxTries?: number;
+  now?: Date;
+  prepare?: typeof prepareForHandoff;
+}): Promise<{ candidate: PostableCandidate | null; tried: number; skippedNoImage: string[] }> {
+  const prepare = args.prepare ?? prepareForHandoff;
+  const maxTries = args.maxTries ?? 5;
+  const seenClusters = new Set<string>();
+  const skippedNoImage: string[] = [];
+  let tried = 0;
+
+  for (const r of args.rankResult.ranked) {
+    if (tried >= maxTries) break;
+    if (r.finalScore < args.minScore) break; // ranked is sorted desc
+    if (seenClusters.has(r.item.clusterId)) continue;
+    seenClusters.add(r.item.clusterId);
+    tried++;
+
+    const raw = args.rawById.get(r.item.id) ?? null;
+    const prepared = await prepare({
+      item: r.item,
+      finalScore: r.finalScore,
+      raw,
+      feedCandidateUrls: feedCandidatesFor(raw),
+      now: args.now,
+    });
+    if (prepared.payload.imageLocalPath) {
+      return { candidate: { item: r.item, finalScore: r.finalScore, reason: r.reason, prepared }, tried, skippedNoImage };
+    }
+    skippedNoImage.push(r.item.title.slice(0, 80));
+  }
+  return { candidate: null, tried, skippedNoImage };
 }
 
 export async function prepareForHandoff(args: {

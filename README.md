@@ -153,6 +153,16 @@ Every run persists a full, inspectable log (items in, drops per filter, scored/u
 top 10 with component breakdown, the selection, and a token/cost estimate) to the
 `rank_runs` table.
 
+### Speed
+
+Stage B is the slow part (Sarvam spends ~2k hidden reasoning tokens per item). Two
+levers, both in `.env`: `RANK_CONCURRENCY` (default 4 parallel calls; measured 16 items
+168s -> 46s) and the **score cache** (`RANK_CACHE_*`): the 30-minute workflow re-uses a
+recent judgement for any article it already scored, so a re-run only pays the model for
+new articles (measured 8.7s warm). `rank:eval` never uses the cache, so calibration
+always reflects the live model. Bump `RANK_CACHE_VERSION` after editing the prompt or
+few-shots.
+
 ### Tuning the weights
 
 Everything is in **`src/mastra/config/ranking.config.ts`** — do not edit the step code.

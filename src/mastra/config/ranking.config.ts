@@ -47,6 +47,7 @@ export interface RankingConfig {
 
   // ---- Stage B: LLM scoring ----
   batchSize: number;
+  concurrency: number;
   temperature: number;
   maxOutputTokens: number;
   /** USD per 1k total tokens, for the cost estimate. 0 for a free local model. */
@@ -118,6 +119,10 @@ export const rankingConfig: RankingConfig = {
   // fits well under the budget even with its ~2k reasoning tokens, so nothing
   // is lost to truncation. Raise RANK_BATCH_SIZE for a cheaper model.
   batchSize: envNum("RANK_BATCH_SIZE", 1),
+  // Model calls in flight at once. Sarvam calls are slow (~5s each) but
+  // independent, so running a few in parallel cuts wall-clock time ~linearly.
+  // Lower it (or set 1) if the provider starts returning 429s.
+  concurrency: envNum("RANK_CONCURRENCY", 4),
   temperature: envNum("RANK_TEMPERATURE", 0.15),
   maxOutputTokens: envNum("RANK_MAX_OUTPUT_TOKENS", 16384),
   costPer1kTokensUsd: envNum("RANK_COST_PER_1K_TOKENS_USD", 0),

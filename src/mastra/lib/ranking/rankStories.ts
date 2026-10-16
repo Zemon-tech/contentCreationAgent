@@ -3,7 +3,7 @@ import type { RankInputItem, RankResult, RankedStory } from "../../schemas/ranki
 import { makeId, nowIso } from "../ids";
 import { hardFilter, type BlockState } from "./hardFilter";
 import { canonicalKeyForItem } from "../safety/ledger-key";
-import { scoreItems, type RankGenerate } from "./llmScore";
+import { scoreItems, type RankGenerate, type ScoreCache } from "./llmScore";
 import { computeRankedStory } from "./score";
 import { selectTop } from "./select";
 import { libSqlRankGateway, type RankStorageGateway } from "./storage";
@@ -23,6 +23,8 @@ export interface RankStoriesOptions {
   /** Injectable Stage B generator (tests/eval); defaults to the real model. */
   generate?: RankGenerate;
   now?: Date;
+  /** Optional Stage-B score cache (scheduled workflow only; never used by rank:eval). */
+  scoreCache?: ScoreCache;
   /** Persist the run log (default true). */
   persist?: boolean;
   /** Structured logger; defaults to JSON lines on the console. */
@@ -69,13 +71,18 @@ export async function rankStories(
   });
 
   // ---- Stage B: LLM scoring ----
-  const { scores, unscoredIds, tokenEstimate } = await scoreItems(kept, {
+  const scoringStarted = Date.now();
+  const { scores, unscoredIds, tokenEstimate, cacheHits } = await scoreItems(kept, {
     config,
     generate: opts.generate,
     log,
+    cache: opts.scoreCache,
   });
   log("rank-llm-score", {
     scored: scores.size,
+    cacheHits,
+    modelCalls: tokenEstimate.calls,
+    elapsedMs: Date.now() - scoringStarted,
     unscored: unscoredIds.length,
     tokens: tokenEstimate.totalTokens,
     costUsd: tokenEstimate.costUsd,

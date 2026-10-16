@@ -48,10 +48,41 @@ const defaultGenerate: RankGenerate = async (prompt) => {
   return { text: res.text ?? "", usage: res.usage };
 };
 
+/**
+ * Optional score cache. The same article is re-ranked every 30-minute cycle,
+ * so remembering its judgement means a re-run only pays the model for NEW
+ * articles. Keyed by the caller (canonical URL + content hash + model tag).
+ * Only successfully validated scores are cached; unscored items never are.
+ */
+export interface ScoreCache {
+  get(item: RankInputItem): Promise<LlmScore | undefined>;
+  set(item: RankInputItem, score: LlmScore): Promise<void>;
+}
+
+/** Run `worker` over `tasks` with at most `limit` in flight. */
+async function runPool<T>(tasks: T[], limit: number, worker: (t: T) => Promise<void>): Promise<void> {
+  let cursor = 0;
+  const n = Math.max(1, Math.min(limit, tasks.length));
+  await Promise.all(
+    Array.from({ length: n }, async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= tasks.length) return;
+        await worker(tasks[i]!);
+      }
+    }),
+  );
+}
+
 export async function scoreItems(
   items: RankInputItem[],
-  opts: { config?: RankingConfig; generate?: RankGenerate; log?: (ev: string, data: Record<string, unknown>) => void } = {},
-): Promise<LlmScoreOutput> {
+  opts: {
+    config?: RankingConfig;
+    generate?: RankGenerate;
+    log?: (ev: string, data: Record<string, unknown>) => void;
+    cache?: ScoreCache;
+  } = {},
+): Promise<LlmScoreOutput & { cacheHits: number }> {
   const config = opts.config ?? rankingConfig;
   const generate = opts.generate ?? defaultGenerate;
   const log = opts.log ?? (() => {});
@@ -59,7 +90,24 @@ export async function scoreItems(
   const scores = new Map<string, LlmScore>();
   const usageTotals = { prompt: 0, completion: 0, total: 0, calls: 0 };
 
-  for (const batch of chunk(items, config.batchSize)) {
+  // Cache lookups first: hits skip the model entirely (id remapped to this run's id).
+  let cacheHits = 0;
+  let toScore = items;
+  if (opts.cache) {
+    const misses: RankInputItem[] = [];
+    for (const it of items) {
+      const hit = await opts.cache.get(it).catch(() => undefined);
+      if (hit) {
+        scores.set(it.id, { ...hit, id: it.id });
+        cacheHits++;
+      } else {
+        misses.push(it);
+      }
+    }
+    toScore = misses;
+  }
+
+  await runPool(chunk(toScore, config.batchSize), config.concurrency, async (batch) => {
     const validIds = new Set(batch.map((b) => b.id));
     const basePrompt = buildBatchPrompt(batch);
     let prompt = basePrompt;
@@ -96,7 +144,15 @@ export async function scoreItems(
       // Stop early once every id in this batch is covered.
       if (batch.every((b) => scores.has(b.id))) break;
     }
-  }
+
+    // Remember good judgements for the next cycle (never cache unscored).
+    if (opts.cache) {
+      for (const b of batch) {
+        const s = scores.get(b.id);
+        if (s) await opts.cache.set(b, s).catch(() => undefined);
+      }
+    }
+  });
 
   const unscoredIds = items.filter((it) => !scores.has(it.id)).map((it) => it.id);
   const totalTokens = usageTotals.total || usageTotals.prompt + usageTotals.completion;
@@ -108,7 +164,7 @@ export async function scoreItems(
     costUsd: Math.round((totalTokens / 1000) * config.costPer1kTokensUsd * 1e6) / 1e6,
   };
 
-  return { scores, unscoredIds, tokenEstimate };
+  return { scores, unscoredIds, tokenEstimate, cacheHits };
 }
 
 // ---------- helpers ----------

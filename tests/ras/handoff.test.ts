@@ -64,3 +64,12 @@ test("publish failure marks failed and does NOT re-publish", async () => {
   assert.equal(calls.publish, 1); // exactly one publish attempt
   assert.ok(calls.recorded.includes("failed"));
 });
+
+test("client declines to publish (env dry-run): records dry_run, NEVER posted", async () => {
+  const { deps, calls } = fakeDeps();
+  deps.publish = async () => { calls.publish++; return { published: false, dryRun: true }; };
+  const res = await runHandoff({ ledgerKey: "k", payload: payload(), storyId: "s", dryRun: false, approved: true, deps });
+  assert.equal(res.status, "dry_run");
+  assert.ok(!calls.recorded.includes("posted"));
+  assert.deepEqual(calls.recorded, ["pending", "dry_run"]);
+});

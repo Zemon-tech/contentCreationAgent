@@ -28,14 +28,14 @@ import { ensureRasOutputDir, rasViewUrl, sanitizeSlug } from "../../renderer/out
  */
 
 export interface HandoffDeps {
-  render: (p: RasPayload) => Promise<{ viewUrls: string[] }>;
+  render: (p: RasPayload) => Promise<{ viewUrls: string[]; filePath?: string }>;
   publish: (a: { viewUrls: string[]; caption: string; hashtags: string[] }) => Promise<{ published: boolean; dryRun?: boolean; mediaId?: string; permalink?: string }>;
   getRow: (key: string) => Promise<{ status: string } | undefined>;
   record: (row: Omit<PostedLedgerRow, "createdAt"> & { createdAt?: string }) => Promise<void>;
 }
 
 export const defaultHandoffDeps: HandoffDeps = {
-  render: defaultRender,
+  render: (p) => renderRasPost(p),
   publish: defaultPublish,
   getRow: (key) => getRow(key),
   record: (row) => recordAttempt(row),
@@ -100,6 +100,13 @@ export async function runHandoff(args: {
   // Publish ONCE (no re-invoke after a throw — see retry policy above).
   try {
     const res = await deps.publish({ viewUrls, caption: payload.caption, hashtags: payload.hashtags });
+    // The Instagram client has its OWN dry-run switch (INSTAGRAM_DRY_RUN env).
+    // If it declined to publish, nothing went live: record dry_run, NEVER
+    // "posted" — a fake "posted" row would block this story forever.
+    if (!res.published) {
+      await deps.record({ ...base, status: "dry_run", at: new Date().toISOString() });
+      return { status: "dry_run", ledgerKey, reason: "Instagram client did not publish (INSTAGRAM_DRY_RUN=true in env)" };
+    }
     await deps.record({
       ...base,
       status: "posted",
@@ -117,7 +124,8 @@ export async function runHandoff(args: {
 
 // ---------- default deps (only invoked in live, approved mode) ----------
 
-async function defaultRender(payload: RasPayload): Promise<{ viewUrls: string[] }> {
+/** Render the RAS story PNG (no publish). Exported so the workflow can show the created post BEFORE approval. */
+export async function renderRasPost(payload: RasPayload): Promise<{ viewUrls: string[]; filePath: string }> {
   if (!payload.imageLocalPath) {
     // RAS's story template requires a hero image; text-only single posts are
     // not supported by RAS's current tools. Flagged for a product decision.
@@ -140,13 +148,17 @@ async function defaultRender(payload: RasPayload): Promise<{ viewUrls: string[] 
     logoHeight: logo.height,
   });
   const png = await renderComponentToPng(component, RAS_CANVAS);
-  writeFileSync(path.join(outputDir, "01.png"), png);
-  return { viewUrls: [rasViewUrl(slug, "01.png")] };
+  const filePath = path.join(outputDir, "01.png");
+  writeFileSync(filePath, png);
+  return { viewUrls: [rasViewUrl(slug, "01.png")], filePath };
 }
 
 async function defaultPublish(a: { viewUrls: string[]; caption: string; hashtags: string[] }): Promise<{ published: boolean; dryRun?: boolean; mediaId?: string; permalink?: string }> {
   const caption = a.hashtags.length ? assembleCaption(a.caption, a.hashtags) : a.caption;
   const base = getPublicBaseUrl();
+  if (!base) {
+    throw new Error("PUBLIC_BASE_URL is not set. Instagram must fetch the rendered post from a public HTTPS URL (set it to your deployed host or an ngrok/cloudflared tunnel that serves /ras-assets).");
+  }
   const imageUrls = a.viewUrls.map((v) => base + toAssetPath(v));
   const res = await publishImagesToInstagram({ imageUrls, caption });
   return { published: res.published, dryRun: res.dryRun, mediaId: res.mediaId, permalink: res.permalink };
