@@ -18,6 +18,7 @@ import { rankScoringAgent } from './agents/rankScoringAgent';
 import { fluxOutputRoute } from './lib/flux-output-route';
 import { postAssetRoute } from './routes/post-assets';
 import { rasAssetRoute } from './routes/ras-assets';
+import { rasPublishRoute } from './routes/ras-publish';
 
 import {
   extractArticleContentTool,
@@ -83,7 +84,7 @@ export const mastra = new Mastra({
   server: {
     // postAssetRoute: Design Agent slides; fluxOutputRoute: Flux.2 renders.
     // Both let images display inline in Studio chat.
-    apiRoutes: [postAssetRoute, fluxOutputRoute, rasAssetRoute],
+    apiRoutes: [postAssetRoute, fluxOutputRoute, rasAssetRoute, rasPublishRoute],
   },
   agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent, rankScoringAgent },
   workflows: {

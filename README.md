@@ -232,6 +232,17 @@ gate (suspend/resume) → RAS handoff → ledger record.** It is registered in
 - **Images** download to `IMAGE_DIR` (local; not publicly served — RAS composites
   the file into its rendered PNG, and only that PNG is fetched by Instagram via
   `PUBLIC_BASE_URL` + `/ras-assets`). `rightsStatus` is always `unverified`.
+- **Instagram needs JPEG, so the workflow publishes a JPEG copy.** Every post we render
+  also gets a `01.jpg`, served by a separate route `/ras-publish/<slug>/01.jpg`
+  ([routes/ras-publish.ts](src/mastra/routes/ras-publish.ts)); RAS's PNG route is untouched.
+  **Never point a tunnel at the Mastra server (port 4111)** — it also serves agent and
+  workflow endpoints. Run `npm run publish:serve` instead (a tiny read-only server on
+  port 4112 that serves only those JPEGs, bound to localhost) and tunnel *that*:
+  `cloudflared tunnel --url http://localhost:4112`, then set `PUBLIC_BASE_URL` to the
+  printed `https://…` host.
+- **Instagram login:** set `INSTAGRAM_GRAPH_HOST=https://graph.instagram.com` for tokens
+  generated in the Meta dashboard (no Facebook Page needed). Leave it unset for
+  Facebook-login tokens.
 
 Dry-run the whole thing (nothing persisted or published) — shows top-5 ranked,
 the chosen story, the image + why, and the exact RAS payload:

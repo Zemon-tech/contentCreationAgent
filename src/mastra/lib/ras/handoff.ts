@@ -11,6 +11,7 @@ import { renderComponentToPng, RAS_CANVAS } from "../../renderer/satori-renderer
 import { resolveHeroImage, loadLocalLogo } from "../../renderer/images";
 import { logoPath } from "../../renderer/assets";
 import { ensureRasOutputDir, rasViewUrl, sanitizeSlug } from "../../renderer/output";
+import { pngToInstagramJpeg, IG_MAX_BYTES } from "./jpeg";
 
 /**
  * RAS handoff (Step 6). Builds nothing itself — it takes a finished payload and:
@@ -28,7 +29,12 @@ import { ensureRasOutputDir, rasViewUrl, sanitizeSlug } from "../../renderer/out
  */
 
 export interface HandoffDeps {
-  render: (p: RasPayload) => Promise<{ viewUrls: string[]; filePath?: string }>;
+  /**
+   * `viewUrls` = preview (PNG, for Studio). `publishPaths` = server-relative
+   * JPEG paths Instagram will fetch (Instagram accepts JPEG only); publish uses
+   * these when present.
+   */
+  render: (p: RasPayload) => Promise<{ viewUrls: string[]; filePath?: string; publishPaths?: string[] }>;
   publish: (a: { viewUrls: string[]; caption: string; hashtags: string[] }) => Promise<{ published: boolean; dryRun?: boolean; mediaId?: string; permalink?: string }>;
   getRow: (key: string) => Promise<{ status: string } | undefined>;
   record: (row: Omit<PostedLedgerRow, "createdAt"> & { createdAt?: string }) => Promise<void>;
@@ -85,11 +91,12 @@ export async function runHandoff(args: {
 
   // Render (retry once — idempotent).
   let viewUrls: string[];
+  const forPublish = (r: { viewUrls: string[]; publishPaths?: string[] }) => r.publishPaths ?? r.viewUrls;
   try {
-    viewUrls = (await deps.render(payload)).viewUrls;
+    viewUrls = forPublish(await deps.render(payload));
   } catch {
     try {
-      viewUrls = (await deps.render(payload)).viewUrls;
+      viewUrls = forPublish(await deps.render(payload));
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
       await deps.record({ ...base, status: "failed", at: new Date().toISOString(), error: `render: ${error}` });
@@ -125,7 +132,7 @@ export async function runHandoff(args: {
 // ---------- default deps (only invoked in live, approved mode) ----------
 
 /** Render the RAS story PNG (no publish). Exported so the workflow can show the created post BEFORE approval. */
-export async function renderRasPost(payload: RasPayload): Promise<{ viewUrls: string[]; filePath: string }> {
+export async function renderRasPost(payload: RasPayload): Promise<{ viewUrls: string[]; filePath: string; publishPaths: string[] }> {
   if (!payload.imageLocalPath) {
     // RAS's story template requires a hero image; text-only single posts are
     // not supported by RAS's current tools. Flagged for a product decision.
@@ -150,7 +157,17 @@ export async function renderRasPost(payload: RasPayload): Promise<{ viewUrls: st
   const png = await renderComponentToPng(component, RAS_CANVAS);
   const filePath = path.join(outputDir, "01.png");
   writeFileSync(filePath, png);
-  return { viewUrls: [rasViewUrl(slug, "01.png")], filePath };
+
+  // Instagram only accepts JPEG: write a JPEG sibling and publish THAT.
+  const jpeg = await pngToInstagramJpeg(png);
+  if (jpeg.length > IG_MAX_BYTES) throw new Error(`rendered JPEG is ${jpeg.length} bytes (> Instagram's 8 MB limit)`);
+  writeFileSync(path.join(outputDir, "01.jpg"), jpeg);
+
+  return {
+    viewUrls: [rasViewUrl(slug, "01.png")],
+    filePath,
+    publishPaths: [`/ras-publish/${encodeURIComponent(slug)}/01.jpg`],
+  };
 }
 
 async function defaultPublish(a: { viewUrls: string[]; caption: string; hashtags: string[] }): Promise<{ published: boolean; dryRun?: boolean; mediaId?: string; permalink?: string }> {
