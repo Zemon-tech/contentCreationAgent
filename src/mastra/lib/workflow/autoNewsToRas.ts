@@ -11,6 +11,8 @@ import { canonicalKey } from "../safety/ledger-key";
 import { buildFactPack } from "../fact-pack";
 import { sourceImage, type ImageResult } from "../image/sourcing";
 import { buildRasPayload } from "../ras/payload";
+import { writeEditorialCopy, type CopyGenerate } from "../ras/copywriter";
+import type { CopyConfig } from "../../config/copy.config";
 import { canPostNow, meetsScoreThreshold, type GateResult } from "../safety/posting-gate";
 
 /**
@@ -60,7 +62,16 @@ function rawToRankItem(raw: RawContent): RankInputItem {
 export async function collectRankSelect(opts: {
   rankGenerate?: RankGenerate;
   now?: Date;
+  /** Persist ingestion state (feed health, dedup). Tied to the publish path:
+   *  false in dry-run so a dry-run never mutates ingestion state. */
   persist?: boolean;
+  /**
+   * Persist the ranking RUN LOG to the `rank_runs` table. This is observability,
+   * NOT publish state, so it defaults to ON independently of `persist` — a
+   * dry-run still leaves a queryable, inspectable record for tuning. Set false
+   * only for offline/heuristic previews that shouldn't touch the DB.
+   */
+  persistRankLog?: boolean;
   log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<CollectRankSelect> {
   const { items: raws } = await ingestFeeds({ sources: NEWS_FEED_SOURCES, dryRun: !(opts.persist ?? false), now: opts.now });
@@ -72,7 +83,8 @@ export async function collectRankSelect(opts: {
     // Re-use judgements for articles already scored in a recent cycle.
     ...(cacheEnabled() && !opts.rankGenerate ? { scoreCache: createScoreCache() } : {}),
     now: opts.now,
-    persist: opts.persist ?? false,
+    // Rank log is observability: persist it even in dry-run (decoupled from `persist`).
+    persist: opts.persistRankLog ?? true,
     log: opts.log,
   });
 
@@ -167,12 +179,35 @@ export async function prepareForHandoff(args: {
   raw: RawContent | null;
   feedCandidateUrls: string[];
   now?: Date;
+  /** Inject the copywriter's model (demos stub this offline). Omit = real Sarvam. */
+  copyGenerate?: CopyGenerate;
+  /** Override the copy config (demos disable Exa to stay fully offline). */
+  copyConfig?: CopyConfig;
+  log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<PreparedPost> {
+  const log = args.log ?? ((ev, data) => console.log(JSON.stringify({ step: "copy", ev, ...data })));
   const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback);
   const story = itemToMinimalStory(args.item, args.finalScore);
   const factPack = buildFactPack(story, { limited, sourceUrls: [args.item.url] });
   const image = await sourceImage({ headline: args.item.title, feedCandidateUrls: args.feedCandidateUrls });
-  const payload = buildRasPayload({ item: args.item, factPack, image, suggestedCaptionAngle: "Why it matters" });
+
+  // LLM editorial copy (Exa-enriched). Fails open to the deterministic template.
+  const { copy, enrichedSourceUrls } = await writeEditorialCopy({
+    item: args.item,
+    factPack,
+    ...(args.copyGenerate ? { generate: args.copyGenerate } : {}),
+    ...(args.copyConfig ? { config: args.copyConfig } : {}),
+    log,
+  });
+
+  const payload = buildRasPayload({
+    item: args.item,
+    factPack,
+    image,
+    suggestedCaptionAngle: "Why it matters",
+    llmCopy: copy,
+    extraSourceUrls: enrichedSourceUrls,
+  });
   const caps = await canPostNow({ now: args.now });
   const scoreOk = meetsScoreThreshold(args.finalScore);
   return { payload, image, caps, scoreOk };

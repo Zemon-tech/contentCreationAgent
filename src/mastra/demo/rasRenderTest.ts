@@ -19,12 +19,14 @@ if (typeof process.loadEnvFile === "function") {
 }
 
 import fs from "node:fs";
+import path from "node:path";
 import sharp from "sharp";
 import { collectRankSelect, prepareForHandoff, feedCandidatesFor } from "../lib/workflow/autoNewsToRas";
 import { runHandoff, defaultHandoffDeps } from "../lib/ras/handoff";
 import { canonicalKeyForItem } from "../lib/safety/ledger-key";
 import { getWorkspaceOutputRoot } from "../renderer/output";
 import type { RankGenerate } from "../lib/ranking/llmScore";
+import { offlineCopyStub, offlineCopyConfig } from "./offlineCopyStub";
 
 const heuristic: RankGenerate = async (prompt) => {
   const arr = JSON.parse(prompt.slice(prompt.indexOf("[")));
@@ -38,7 +40,7 @@ const heuristic: RankGenerate = async (prompt) => {
 
 async function main(): Promise<void> {
   console.log("\n=== RAS RENDER TEST (real render, FAKE publish — nothing posted) ===\n");
-  const { rankResult, rawById } = await collectRankSelect({ rankGenerate: heuristic, persist: false });
+  const { rankResult, rawById } = await collectRankSelect({ rankGenerate: heuristic, persist: false, persistRankLog: false });
 
   // Find the first ranked story that yields a usable image, so render runs.
   let pick = null as (typeof rankResult.ranked)[number] | null;
@@ -47,7 +49,7 @@ async function main(): Promise<void> {
   for (const r of rankResult.ranked.slice(0, 15)) {
     scanned++;
     const raw = rawById.get(r.item.id) ?? null;
-    const p = await prepareForHandoff({ item: r.item, finalScore: r.finalScore, raw, feedCandidateUrls: feedCandidatesFor(raw) });
+    const p = await prepareForHandoff({ item: r.item, finalScore: r.finalScore, raw, feedCandidateUrls: feedCandidatesFor(raw), copyGenerate: offlineCopyStub, copyConfig: offlineCopyConfig });
     if (p.image.imageLocalPath) { pick = r; prepared = p; break; }
   }
   if (!pick || !prepared) {
@@ -99,10 +101,12 @@ async function main(): Promise<void> {
 
   console.log(`\nHandoff status: ${res.status} · fake publish called: ${publishCalled}`);
 
-  // Verify the EXACT PNG this render produced (from the captured view URL).
+  // Verify the EXACT PNG this render produced (from the captured publish/view URL).
+  // Render hands back a publish path (/ras-publish/<slug>/01.jpg) or a view URL
+  // (/ras-assets/<slug>/01.png); normalize either to the on-disk PNG sibling.
   const pathname = (() => { try { return new URL(capturedViewUrl).pathname; } catch { return capturedViewUrl; } })();
-  const rel = pathname.replace(/^\/ras-assets\//, "");
-  const pngPath = `${getWorkspaceOutputRoot()}/ras/${rel}`;
+  const rel = pathname.replace(/^\/(ras-assets|ras-publish)\//, "").replace(/\.jpe?g$/i, ".png");
+  const pngPath = path.join(getWorkspaceOutputRoot(), "ras", rel);
   if (fs.existsSync(pngPath)) {
     const meta = await sharp(pngPath).metadata();
     const bytes = fs.statSync(pngPath).size;

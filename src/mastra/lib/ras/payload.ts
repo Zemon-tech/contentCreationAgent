@@ -1,15 +1,21 @@
 import type { RasPayload } from "../../schemas/handoff";
 import type { FactPack } from "../../schemas/factpack";
 import type { RankInputItem } from "../../schemas/ranking";
+import type { EditorialCopy } from "./copywriter";
 import { ACCENT_COLORS } from "../../templates/theme";
 
 /**
- * Build the RAS payload deterministically from the ranked item + fact pack +
- * sourced image. Since we call RAS's render/publish tools directly (not the
- * agent), this fills the render-ready copy too. It NEVER invents details —
- * all copy is drawn from the fact pack; `factPackLimited` keeps it minimal.
+ * Build the RAS payload from the ranked item + fact pack + sourced image. Since
+ * we call RAS's render/publish tools directly (not the agent), this fills the
+ * render-ready copy too.
  *
- * NOTE: this is template-filled copy, not RAS's LLM editorial voice. Flagged.
+ * The five copy fields (serifHeadline, deckLead, deckHighlight, deckTail,
+ * caption) come from the LLM editorial copywriter (lib/ras/copywriter.ts) when
+ * `args.llmCopy` is supplied; otherwise they are filled deterministically from
+ * the fact pack (the fallback — NEVER invents details; `factPackLimited` keeps
+ * it minimal). EITHER WAY the output passes through safeLatin + hard length
+ * clipping below, so brand-font-unsafe glyphs and over-length strings can never
+ * reach the renderer. categoryTag/accentColor/hashtags stay rule-based.
  */
 
 type Accent = (typeof ACCENT_COLORS)[number];
@@ -61,29 +67,41 @@ export function buildRasPayload(args: {
   factPack: FactPack;
   image: { imageLocalPath: string | null; imageSourceUrl: string | null; imageAttribution: string | null; under1080: boolean };
   suggestedCaptionAngle?: string;
+  /** LLM-written copy; when present it overrides the five template fields. */
+  llmCopy?: EditorialCopy | null;
+  /** Extra citable source URLs (e.g. Exa enrichment) merged into sourceUrls. */
+  extraSourceUrls?: string[];
 }): RasPayload {
-  const { item, factPack, image } = args;
+  const { item, factPack, image, llmCopy } = args;
   const topics = item.rawCategories ?? [];
   const accentColor = accentFor(topics, `${item.title} ${factPack.keyFacts.join(" ")}`);
 
   const categoryTag = (topics.length ? topics : ["AI"]).slice(0, 3).map((t) => safeLatin(t).toUpperCase()).join(" · ");
-  const deckLead = clipWords(factPack.keyFacts[0] ?? item.summary, 60);
-  const deckHighlight = clipWords(factPack.figures[0] ?? factPack.names[0] ?? "Why it matters", 40);
-  const deckTail = clipWords(factPack.keyFacts[1] ?? "", 60);
 
   const srcLine = factPack.primarySource ?? factPack.sourceUrls[0] ?? item.url;
   const limitNote = factPack.factPackLimited ? " (headline-level; details limited)" : "";
+
+  // Copy: LLM editorial when available, deterministic template otherwise. Both
+  // paths pass through safeLatin + hard clipping below as the final backstop.
+  const serifHeadline = clip(llmCopy?.serifHeadline || factPack.headline, 120);
+  const deckLead = clipWords(llmCopy?.deckLead || factPack.keyFacts[0] || item.summary, 60);
+  const deckHighlight = clipWords(llmCopy?.deckHighlight || factPack.figures[0] || factPack.names[0] || "Why it matters", 40);
+  const deckTail = clipWords(llmCopy?.deckTail || factPack.keyFacts[1] || "", 60);
   const caption = clip(
-    `${factPack.headline}. ${factPack.keyFacts.slice(0, 2).join(" ")}${limitNote}\n\nSource: ${srcLine}`,
+    llmCopy?.caption ||
+      `${factPack.headline}. ${factPack.keyFacts.slice(0, 2).join(" ")}${limitNote}\n\nSource: ${srcLine}`,
     2000,
   );
+
+  // Merge any enrichment URLs into the citable source list (deduped).
+  const sourceUrls = [...new Set([...factPack.sourceUrls, ...(args.extraSourceUrls ?? [])].map((u) => u.trim()).filter(Boolean))];
 
   const hashtags = buildHashtags(topics, item.region);
 
   return {
     headline: factPack.headline,
     factPack,
-    sourceUrls: factPack.sourceUrls,
+    sourceUrls,
     primaryUrl: item.url,
     region: item.region,
     suggestedFormat: "single",
@@ -93,7 +111,7 @@ export function buildRasPayload(args: {
     imageAttribution: image.imageAttribution,
     rightsStatus: "unverified",
     imageUnder1080: image.under1080,
-    serifHeadline: clip(factPack.headline, 120),
+    serifHeadline,
     categoryTag,
     deckLead,
     deckHighlight,
