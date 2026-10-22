@@ -20,9 +20,38 @@ const MIME: Record<string, string> = {
   ".gif": "image/gif",
 };
 
-/** Public base URL of this Mastra server (what the browser uses). */
+const LOCALHOST_FALLBACK = "http://localhost:4111";
+let warnedLocalhostFallback = false;
+
+/**
+ * Public base URL of this Mastra server — the URL a BROWSER uses to reach it.
+ *
+ * Image URLs (RAS assets, Flux output) are baked with this prefix and pasted
+ * into chat as <img> tags, so it MUST be the externally reachable origin, not
+ * the server's own loopback. On a deployed host (e.g. behind a cloudflared
+ * tunnel) the viewer's browser is a DIFFERENT machine, so a `localhost` prefix
+ * resolves to the viewer's own box and every image 404s.
+ *
+ * Set MASTRA_PUBLIC_URL to the public origin (scheme + host, optional port),
+ * e.g. https://ras.yourdomain.com. We fall back to localhost only for local
+ * dev and warn once so a missing value is obvious in a deployment's logs
+ * instead of silently serving unreachable image URLs.
+ */
 export function mastraPublicUrl(): string {
-  return (process.env.MASTRA_PUBLIC_URL || "http://localhost:4111").replace(/\/+$/, "");
+  const configured = process.env.MASTRA_PUBLIC_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/+$/, "");
+  }
+  if (!warnedLocalhostFallback) {
+    warnedLocalhostFallback = true;
+    console.warn(
+      "[mastraPublicUrl] MASTRA_PUBLIC_URL is not set — falling back to " +
+        `${LOCALHOST_FALLBACK}. Inline image URLs will only load on the same ` +
+        "machine as this server. On a deployed host set MASTRA_PUBLIC_URL to " +
+        "the public origin the browser uses (e.g. your cloudflared domain).",
+    );
+  }
+  return LOCALHOST_FALLBACK;
 }
 
 /** Browser-loadable URL for a file in the Flux output folder. */
