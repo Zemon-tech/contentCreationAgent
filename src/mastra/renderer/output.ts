@@ -17,6 +17,14 @@ const RAS_SUBDIR = "ras";
 
 /** Finds the workspace/output root the server actually serves from. */
 export function getWorkspaceOutputRoot(): string {
+  // Explicit override so every process (the Mastra dev server that renders and
+  // the standalone publish:serve proxy) resolves the SAME root. Without this
+  // they can disagree — the renderer writes under src/mastra/public/... while a
+  // proxy started from the repo root picks ./workspace/output — and Instagram
+  // then fetches a 404 ("Only photo or video can be accepted as media type").
+  const override = process.env.RAS_OUTPUT_ROOT?.trim();
+  if (override) return path.resolve(override);
+
   const cwdCandidate = path.resolve(process.cwd(), "workspace", "output");
   if (existsSync(cwdCandidate)) return cwdCandidate;
 
