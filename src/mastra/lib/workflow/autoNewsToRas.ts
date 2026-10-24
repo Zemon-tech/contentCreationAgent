@@ -4,6 +4,7 @@ import type { Story } from "../../schemas/story";
 import type { RasPayload } from "../../schemas/handoff";
 import { NEWS_FEED_SOURCES } from "../../config/newsFeeds";
 import { ingestFeeds } from "../ingest-feeds";
+import { collectXPosts } from "../collect-x-posts";
 import { rankStories } from "../ranking/rankStories";
 import { createScoreCache, cacheEnabled } from "../ranking/scoreCache";
 import type { RankGenerate } from "../ranking/llmScore";
@@ -63,7 +64,28 @@ export async function collectRankSelect(opts: {
   persist?: boolean;
   log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<CollectRankSelect> {
-  const { items: raws } = await ingestFeeds({ sources: NEWS_FEED_SOURCES, dryRun: !(opts.persist ?? false), now: opts.now });
+  const { items: feedRaws } = await ingestFeeds({ sources: NEWS_FEED_SOURCES, dryRun: !(opts.persist ?? false), now: opts.now });
+
+  // Merge in the X/Twitter signal: scrape the watched accounts (free, via the
+  // logged-in automation browser) and treat each post as a signal-only
+  // candidate story. Fails soft — if X isn't configured or the session isn't
+  // logged in, this contributes nothing and the feed-only run is unchanged.
+  let xRaws: RawContent[] = [];
+  try {
+    const xResult = await collectXPosts({ log: opts.log });
+    xRaws = xResult.items;
+    opts.log?.("x.collected", {
+      items: xRaws.length,
+      sessionNotReady: xResult.sessionNotReady ?? false,
+      perAccount: xResult.perAccount,
+    });
+  } catch (err) {
+    // Belt-and-braces: collectXPosts already fails soft, but never let an X
+    // problem break the news pipeline.
+    opts.log?.("x.collect.error", { error: err instanceof Error ? err.message : String(err) });
+  }
+
+  const raws = [...feedRaws, ...xRaws];
   const rawById = new Map(raws.map((r) => [r.id, r]));
   const rankItems = raws.map(rawToRankItem);
 
@@ -168,7 +190,9 @@ export async function prepareForHandoff(args: {
   feedCandidateUrls: string[];
   now?: Date;
 }): Promise<PreparedPost> {
-  const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback);
+  // signalOnly (X/HN/Reddit) is thin + not independently citable, so the fact
+  // pack must stay headline+summary only and never treat it as corroborated.
+  const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback || args.raw?.signalOnly);
   const story = itemToMinimalStory(args.item, args.finalScore);
   const factPack = buildFactPack(story, { limited, sourceUrls: [args.item.url] });
   const image = await sourceImage({ headline: args.item.title, feedCandidateUrls: args.feedCandidateUrls });

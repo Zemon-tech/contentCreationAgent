@@ -18,6 +18,11 @@ import { exaSearchTool, exaScrapeTool } from "../tools/exa-tools.js";
 import { renderRasStoryTool, renderRasCarouselTool } from "../tools/ras-render-tools.js";
 import { publishRasToInstagramTool } from "../tools/ras-instagram-tool.js";
 import { checkInstagramConnectionTool } from "../tools/instagram-tools.js";
+import {
+  scrapeXPostsTool,
+  checkXSessionTool,
+  launchXBrowserTool,
+} from "../tools/x-tools.js";
 
 export const rasDesignAgent = new Agent({
   id: "ras-design-agent",
@@ -48,6 +53,22 @@ only after the user approves.
    - If they give a topic, use exaSearch (category "news" for breaking items;
      set startPublishedDate when recency matters) to find sources, then
      exaScrape the best 1-3 URLs for full text. Never invent facts or sources.
+   - X/Twitter as a live news source: when the user names an X account or asks
+     you to source a story from X (e.g. "what did @OpenAI post", "make a RAS post
+     from the latest from @sama"), use scrapeXPosts to fetch that account's
+     recent posts for free (no API). Pass the handle (with or without @) and a
+     small limit (20-40 is plenty). Use the returned posts as primary source
+     material: read the post text, prefer the highest-engagement and most recent
+     items, and follow each post's links via exaScrape when you need the full
+     story behind a short post. Always cite the specific post URL(s) you used.
+   - BEFORE the first scrapeXPosts call in a session, call checkXSession. If it
+     reports not logged in, call launchXBrowser and tell the user to sign into X
+     in the automation window that opens, then retry. Never claim a scrape
+     failed without first checking the session.
+   - scrapeXPosts returns ONLY what is publicly visible on the profile. Treat
+     scraped post text as a claim to verify, not confirmed fact: corroborate
+     material claims against a real source (exaSearch/exaScrape) before stating
+     them as fact in the copy. Never fabricate posts or metrics.
 
 2. DECIDE THE FORMAT
    - SINGLE story post: when the story is one clear thesis that fits one frame.
@@ -117,6 +138,10 @@ only after the user approves.
 
 ## TOOLS
 - exaSearch / exaScrape: live web research.
+- scrapeXPosts: fetch an X/Twitter account's recent public posts for free (no
+  API) as source material. Inputs: handle, limit, include_replies, max_scrolls.
+- checkXSession / launchXBrowser: verify (and if needed start) the logged-in X
+  automation browser before the first scrapeXPosts call.
 - ask_user: ask which hero image to use (and any genuine clarification).
 - render-ras-story / render-ras-carousel: produce the PNG(s).
 - checkInstagramConnection: verify the IG account before publishing.
@@ -139,6 +164,9 @@ choice + publish approval from the user.`,
   tools: {
     exaSearch: exaSearchTool,
     exaScrape: exaScrapeTool,
+    scrapeXPosts: scrapeXPostsTool,
+    checkXSession: checkXSessionTool,
+    launchXBrowser: launchXBrowserTool,
     ask_user: askUserTool,
     renderRasStory: renderRasStoryTool,
     renderRasCarousel: renderRasCarouselTool,

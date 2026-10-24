@@ -351,6 +351,20 @@ if __name__ == "__main__":
                      for t in (list_tabs() if alive() else [])],
         }, indent=2))
     elif cmd == "launch":
-        print(json.dumps({"started": ensure_chrome(), "port": _port()}))
+        # Open straight on the X login page so the sign-in form is visible the
+        # moment the window appears. Launching on about:blank leaves the user
+        # staring at an empty tab with no obvious way to sign in.
+        #
+        # ensure_chrome(url=...) only takes effect when it actually starts the
+        # browser; if Chrome is already running it returns early and opens no
+        # tab. So after ensuring it's up, always open the login page explicitly
+        # (works in both the fresh-launch and already-running cases).
+        url = sys.argv[2] if len(sys.argv) > 2 else "https://x.com/login"
+        started = ensure_chrome(url=url)
+        try:
+            asyncio.run(open_page(url))
+        except Exception as err:
+            print(f"  ! could not open login tab: {err}", file=sys.stderr)
+        print(json.dumps({"started": started, "port": _port(), "opened": url}))
     else:
         raise SystemExit(__doc__)

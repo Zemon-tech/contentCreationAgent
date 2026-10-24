@@ -52,6 +52,7 @@ import {
   publishToXTool,
   directNewsToXTool,
   publishApprovedStoryToXTool,
+  scrapeXPostsTool,
 } from './tools/x-tools';
 import { getCurrentTimeTool } from './tools/time-tools';
 import { sweepSourcesTool } from './tools/sweep-tools';
@@ -122,6 +123,7 @@ export const mastra = new Mastra({
     publishToXTool,
     directNewsToXTool,
     publishApprovedStoryToXTool,
+    scrapeXPostsTool,
     fetchRSSTool,
     fetchWebPageTool,
     fetchGitHubReleasesTool,

@@ -129,7 +129,8 @@ export async function launchXBrowser(): Promise<{ success: boolean; message: str
     });
     return {
       success: true,
-      message: 'Dedicated automation browser launched. Please sign into X in that window.',
+      message:
+        'Dedicated automation browser launched on the X login page. Sign into X in that window, then run checkXSession.',
     };
   } catch (err: any) {
     return {
@@ -251,6 +252,123 @@ export async function publishToX(options: XPublishOptions): Promise<XPublishResu
       text,
       error: errMsg,
       message: `Failed to post to X: ${errMsg}`,
+    };
+  }
+}
+
+export interface ScrapedXPost {
+  text: string;
+  url: string;
+  author_handle: string | null;
+  at: string;
+  is_reply: boolean;
+  is_repost: boolean;
+  replies: number | null;
+  reposts: number | null;
+  likes: number | null;
+  views: number | null;
+}
+
+export interface XScrapeOptions {
+  handle: string;
+  limit?: number;
+  includeReplies?: boolean;
+  maxScrolls?: number;
+}
+
+export interface XScrapeResult {
+  success: boolean;
+  handle: string;
+  count: number;
+  profileUrl?: string;
+  posts: ScrapedXPost[];
+  message: string;
+  error?: string;
+  fix?: string;
+}
+
+/**
+ * Scrapes public posts from an X account by reusing the logged-in CDP browser
+ * session (no X API, no paid tier). Shells out to scripts/scrape.py.
+ */
+export async function scrapeXPosts(options: XScrapeOptions): Promise<XScrapeResult> {
+  const { handle, limit = 50, includeReplies = false, maxScrolls = 30 } = options;
+
+  const cleanHandle = handle.trim().replace(/^@/, '');
+  if (!cleanHandle) {
+    return {
+      success: false,
+      handle: '',
+      count: 0,
+      posts: [],
+      message: 'A non-empty account handle is required.',
+      error: 'empty handle',
+    };
+  }
+
+  const scriptPath = path.join(SCRIPTS_DIR, 'scrape.py');
+  const args = [
+    scriptPath,
+    'user',
+    '--handle',
+    cleanHandle,
+    '--limit',
+    String(limit),
+    '--max-scrolls',
+    String(maxScrolls),
+  ];
+  if (includeReplies) {
+    args.push('--include-replies');
+  }
+
+  try {
+    const { stdout } = await execFileAsync(PYTHON_BIN, args, {
+      cwd: TWEETYTWEETS_DIR,
+      timeout: 180000, // scrolling a long timeline can take a while
+      maxBuffer: 32 * 1024 * 1024,
+    });
+
+    const parsed = JSON.parse(stdout.trim());
+
+    if (parsed.error) {
+      return {
+        success: false,
+        handle: cleanHandle,
+        count: 0,
+        posts: [],
+        error: parsed.error,
+        fix: parsed.fix,
+        message: parsed.fix ? `${parsed.error} — ${parsed.fix}` : `Scrape failed: ${parsed.error}`,
+      };
+    }
+
+    const posts: ScrapedXPost[] = Array.isArray(parsed.posts) ? parsed.posts : [];
+    return {
+      success: true,
+      handle: parsed.handle || cleanHandle,
+      count: parsed.count ?? posts.length,
+      profileUrl: parsed.profile_url,
+      posts,
+      message: `Scraped ${posts.length} post(s) from @${parsed.handle || cleanHandle}.`,
+    };
+  } catch (err: any) {
+    const raw = err.stdout || err.stderr || err.message;
+    let errMsg = raw;
+    let fix: string | undefined;
+    try {
+      const jsonErr = JSON.parse(String(raw).trim());
+      errMsg = jsonErr.error || jsonErr.fix || raw;
+      fix = jsonErr.fix;
+    } catch {}
+
+    return {
+      success: false,
+      handle: cleanHandle,
+      count: 0,
+      posts: [],
+      error: errMsg,
+      fix,
+      message: `Failed to scrape @${cleanHandle}: ${errMsg}`,
     };
   }
 }

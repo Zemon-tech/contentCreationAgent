@@ -7,6 +7,7 @@ import {
   launchXBrowser,
   measureXLimit,
   publishToX,
+  scrapeXPosts,
 } from "../lib/x-publisher";
 import { scrapeExa } from "./exa-tools";
 import {
@@ -121,6 +122,73 @@ export const publishToXTool = createTool({
       text,
       imagePath: resolvedImage,
       dryRun: dry_run,
+    });
+  },
+});
+
+/**
+ * Tool: Scrape posts from any public X account (free, no API).
+ *
+ * Reuses the logged-in CDP browser session (same one publishToX uses) to read
+ * a profile timeline. Read-only: nothing is posted, liked, or followed.
+ */
+export const scrapeXPostsTool = createTool({
+  id: "scrapeXPosts",
+  description:
+    "Scrape recent public posts from an X/Twitter account for free (no API, no paid tier) by reading the profile through the logged-in automation browser. Returns post text, URL, timestamp, and engagement counts. Read-only. Requires the X session to be signed in (use checkXSession / launchXBrowser first).",
+  inputSchema: z.object({
+    handle: z
+      .string()
+      .min(1)
+      .describe("The X account handle to scrape, with or without the leading @ (e.g. 'nasa' or '@nasa')."),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(500)
+      .default(50)
+      .describe("Maximum number of posts to return."),
+    include_replies: z
+      .boolean()
+      .default(false)
+      .describe("If true, also include the account's replies. Defaults to original posts only."),
+    max_scrolls: z
+      .number()
+      .int()
+      .min(1)
+      .max(200)
+      .default(30)
+      .describe("Upper bound on scroll iterations used to lazy-load the timeline."),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    handle: z.string(),
+    count: z.number(),
+    profileUrl: z.string().optional(),
+    posts: z.array(
+      z.object({
+        text: z.string(),
+        url: z.string(),
+        author_handle: z.string().nullable(),
+        at: z.string(),
+        is_reply: z.boolean(),
+        is_repost: z.boolean(),
+        replies: z.number().nullable(),
+        reposts: z.number().nullable(),
+        likes: z.number().nullable(),
+        views: z.number().nullable(),
+      }),
+    ),
+    message: z.string(),
+    error: z.string().optional(),
+    fix: z.string().optional(),
+  }),
+  execute: async ({ handle, limit, include_replies, max_scrolls }) => {
+    return await scrapeXPosts({
+      handle,
+      limit,
+      includeReplies: include_replies,
+      maxScrolls: max_scrolls,
     });
   },
 });
