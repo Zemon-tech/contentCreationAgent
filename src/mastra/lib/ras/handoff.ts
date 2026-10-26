@@ -177,8 +177,47 @@ async function defaultPublish(a: { viewUrls: string[]; caption: string; hashtags
     throw new Error("PUBLIC_BASE_URL is not set. Instagram must fetch the rendered post from a public HTTPS URL (set it to your deployed host or an ngrok/cloudflared tunnel that serves /ras-assets).");
   }
   const imageUrls = a.viewUrls.map((v) => base + toAssetPath(v));
+  // Preflight: Instagram fetches these URLs itself and, when a URL returns a
+  // 404/HTML page (wrong port, stale tunnel, output-root mismatch), rejects it
+  // with the opaque "Only photo or video can be accepted as media type". Check
+  // here so that failure mode surfaces as a clear, actionable error instead.
+  await preflightPublicImages(imageUrls);
   const res = await publishImagesToInstagram({ imageUrls, caption });
   return { published: res.published, dryRun: res.dryRun, mediaId: res.mediaId, permalink: res.permalink };
+}
+
+/**
+ * Verifies each public image URL is reachable and actually serves an image
+ * before handing it to Instagram. Throws a descriptive error otherwise.
+ */
+async function preflightPublicImages(imageUrls: string[]): Promise<void> {
+  for (const url of imageUrls) {
+    let res: Response;
+    try {
+      res = await fetch(url, { method: "GET", redirect: "follow" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `preflight: could not fetch the public image URL ${url} (${msg}). ` +
+          `Instagram must be able to fetch it over the internet — check PUBLIC_BASE_URL and that the tunnel/proxy is up.`,
+      );
+    }
+    if (!res.ok) {
+      throw new Error(
+        `preflight: ${url} returned HTTP ${res.status}. Instagram would see the same and reject it. ` +
+          `The tunnel/proxy is not serving this path — verify it points at the server serving /ras-publish ` +
+          `and that RAS_OUTPUT_ROOT matches where the renderer wrote the file.`,
+      );
+    }
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!/^image\//i.test(contentType)) {
+      throw new Error(
+        `preflight: ${url} returned content-type "${contentType || "(none)"}", not an image. ` +
+          `Instagram rejects non-image responses with "Only photo or video can be accepted as media type". ` +
+          `This usually means the URL resolves to an HTML page (404 or an ngrok browser-warning interstitial).`,
+      );
+    }
+  }
 }
 
 function toAssetPath(viewUrlOrPath: string): string {

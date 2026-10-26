@@ -22,6 +22,7 @@ import { collectRankSelect, prepareForHandoff } from "../lib/workflow/autoNewsTo
 import { runHandoff } from "../lib/ras/handoff";
 import { canonicalKeyForItem } from "../lib/safety/ledger-key";
 import type { RankGenerate } from "../lib/ranking/llmScore";
+import { offlineCopyStub, offlineCopyConfig } from "./offlineCopyStub";
 
 const heuristic: RankGenerate = async (prompt) => {
   const arr = JSON.parse(prompt.slice(prompt.indexOf("[")));
@@ -43,7 +44,7 @@ const heuristic: RankGenerate = async (prompt) => {
 
 async function main(): Promise<void> {
   console.log("\n=== AUTO NEWS -> RAS : DRY RUN (nothing persisted or published) ===\n");
-  const { rankResult, selected, feedCandidateUrls, selectedRaw, itemsConsidered } = await collectRankSelect({ rankGenerate: heuristic, persist: false });
+  const { rankResult, selected, feedCandidateUrls, selectedRaw, itemsConsidered } = await collectRankSelect({ rankGenerate: heuristic, persist: false, persistRankLog: false });
 
   console.log(`Items ingested & ranked: ${itemsConsidered} · dropped ${JSON.stringify(rankResult.droppedByReason)} · scored ${rankResult.scoredCount} · unscored ${rankResult.unscoredCount}`);
   console.log(`\n-- Top 5 ranked --`);
@@ -62,7 +63,7 @@ async function main(): Promise<void> {
   console.log(`  why: ${selected.reason}`);
   console.log(`  source: ${selected.item.url}`);
 
-  const prepared = await prepareForHandoff({ item: selected.item, finalScore: selected.finalScore, raw: selectedRaw, feedCandidateUrls, });
+  const prepared = await prepareForHandoff({ item: selected.item, finalScore: selected.finalScore, raw: selectedRaw, feedCandidateUrls, copyGenerate: offlineCopyStub, copyConfig: offlineCopyConfig });
 
   console.log(`\n-- Image --`);
   console.log(`  from: ${prepared.image.chosenFrom} · tried: ${prepared.image.candidatesTried} · feed candidates offered: ${feedCandidateUrls.length}`);

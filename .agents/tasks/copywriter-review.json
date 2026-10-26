@@ -1,0 +1,30 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "label": "Bundled unrelated changes",
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "detail": "persistRankLog on collectRankSelect and the rasRenderTest.ts publish-path PNG-path normalization are unrelated to the copywriter feature. Consider splitting them out or calling them out in the PR description."
+    },
+    {
+      "label": "Caption attribution not schema-enforced",
+      "severity": "non-blocking",
+      "confidence": "likely",
+      "detail": "The 'Source: <url>' trailer is required only by prompt instruction, not by EditorialCopySchema, so an LLM-path caption can validate without it while the template fallback always includes it. Enforce via a .refine on caption or append the source line post-validation if attribution must be guaranteed."
+    },
+    {
+      "label": "Redundant snippet slice",
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "detail": "enrich() re-slices Exa text to 2000 chars though searchExa already caps text at 2000 via contents.text.maxCharacters. Harmless; drop for clarity."
+    },
+    {
+      "label": "Exa enrichment path untested",
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "detail": "The enrich() branch (snippet assembly, URL de-dup, fail-open on thrown search error) and the source-URL merge/de-dup in buildRasPayload have no direct unit test; copywriter tests run with Exa disabled. A stubbed-searchExa test would cover the grounding path."
+    }
+  ],
+  "reviewDoc": "s:\\tmp\\contentCreationAgent\\.agents\\tasks\\copywriter-review.md"
+}
