@@ -6,21 +6,34 @@
  * weights/half-life/caps, per-source credibility, region balance, penalties,
  * and selection thresholds. Change numbers here, never in the step code.
  *
- * Scales (so the final score lands in 0-100):
+ * Scales (so the quality score lands in 0-100):
  *   - LLM components (topicFit, significance, audienceInterest, visualPotential)
- *     and the code components (recency, coverage, sourceCredibility) are each
- *     0-10. The weights `w1..w7` sum to 10, so Σ wᵢ·componentᵢ ∈ [0,100].
- *   - regionBalanceAdjustment and penalties are applied afterwards in
- *     final-score points, then the result is clamped to [0,100].
+ *     and the code components (recency, coverage, sourceCredibility, engagement,
+ *     corroboration) are each 0-10. The nine weights sum to EXACTLY 10, so
+ *     Σ wᵢ·componentᵢ ∈ [0,100]. recency now carries weight 0 — it no longer
+ *     feeds the quality score; freshness is applied LAST as a bounded
+ *     [0.95,1.0] multiplier (recencyTiebreaker) to produce the final score.
+ *   - engagement (0-10) is X-only (relative to the account's own median); RSS
+ *     items score 0 there. corroboration (0-10) rewards an X claim that is
+ *     backed by an RSS source or by multiple credible accounts.
+ *   - regionBalanceAdjustment and penalties are applied to the quality score in
+ *     points, then clamped to [0,100]; the recency multiplier is applied after.
  *
  * Env overrides (optional): RANK_MAX_AGE_HOURS, RANK_MIN_SCORE, RANK_TOP_N,
- * RANK_BATCH_SIZE, RANK_TEMPERATURE, RANK_RECENCY_HALFLIFE_HOURS.
+ * RANK_BATCH_SIZE, RANK_TEMPERATURE, RANK_RECENCY_HALFLIFE_HOURS,
+ * RANK_ALLOW_UNVERIFIED_HIGH_RISK.
  */
 
 function envNum(name: string, fallback: number): number {
   const v = process.env[name];
   const n = v === undefined ? NaN : Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function envFlag(name: string, fallback: boolean): boolean {
+  const v = process.env[name];
+  if (v === undefined) return fallback;
+  return /^(1|true|yes|on)$/i.test(v.trim());
 }
 
 /**
@@ -36,7 +49,10 @@ export interface RankingConfig {
   audience: string;
 
   // ---- Stage A: hard filters (pure code, no LLM) ----
+  /** Max item age in hours; the single source of truth for the `too_old` drop. */
   maxAgeHours: number;
+  /** Hard ceiling maxAgeHours can be raised to via env (defaults to 36). */
+  maxAgeCeilingHours: number;
   /** "Already rejected" counts only if rejected within this many hours. */
   rejectedWithinHours: number;
   minSummaryLength: number;
@@ -59,11 +75,23 @@ export interface RankingConfig {
     significance: number; // w2
     audienceInterest: number; // w3
     visualPotential: number; // w4
-    recency: number; // w5
+    recency: number; // w5 — now 0; freshness is a final multiplier, not a weight
     coverage: number; // w6
     sourceCredibility: number; // w7
+    engagement: number; // w8 — X-only relative engagement
+    corroboration: number; // w9 — X claim backed by RSS or multiple accounts
   };
-  /** Recency half-life in hours (exponential decay). */
+  /**
+   * Recency tiebreaker. After the 0-100 quality score is computed, the final
+   * score = qualityScore * recencyMultiplier, where the multiplier runs from
+   * minMultiplier (oldest, at maxAgeHours) to maxMultiplier (freshest). Bounded
+   * so freshness only breaks near-ties; it never promotes a weak story.
+   */
+  recencyTiebreaker: {
+    minMultiplier: number;
+    maxMultiplier: number;
+  };
+  /** Recency half-life in hours (kept for the recencyScore breakdown + unit test). */
   recencyHalfLifeHours: number;
   /** clusterSourceCount at/above which coverageScore saturates at 10. */
   coverageCap: number;
@@ -88,12 +116,38 @@ export interface RankingConfig {
   // ---- Stage D: selection ----
   topN: number;
   minScore: number;
+
+  // ---- X-signal ranking knobs (global config; RSS items ignore these) ----
+  x: {
+    /** Drop an X item whose likes+reposts+replies is below this (hard filter). */
+    minEngagementFloor: number;
+    /** An X item with no outbound link must have at least this much text. */
+    minTextLength: number;
+    /** Relative-engagement ratio is clamped to [0, cap]. */
+    engagementRatioCap: number;
+    /** Ratio used when the account has too few samples for a reliable median. */
+    neutralEngagementRatio: number;
+    /** A non-zero accountMedianLikes implies at least this many samples. */
+    minSamplesForMedian: number;
+    /** Max points views can add to the engagement component (0 = tiebreak only). */
+    viewsBonusMax: number;
+    /** Share of the corroboration component earned by matching an RSS source. */
+    corroborationRssShare: number;
+    /** Share of the corroboration component earned by >=2 credible accounts. */
+    corroborationMultiAccountShare: number;
+    /** Quality-score penalty when an unverified item makes a high-risk claim. */
+    claimRiskHighPenalty: number;
+    /** Allow selecting an unverified high-risk (blocked) item. Default false. */
+    allowUnverifiedHighRisk: boolean;
+  };
 }
 
 export const rankingConfig: RankingConfig = {
   audience: AUDIENCE,
 
-  maxAgeHours: envNum("RANK_MAX_AGE_HOURS", 6),
+  // Default 24h, env-raisable up to the 36h ceiling (never beyond).
+  maxAgeHours: Math.min(envNum("RANK_MAX_AGE_HOURS", 24), 36),
+  maxAgeCeilingHours: 36,
   rejectedWithinHours: envNum("RANK_REJECTED_WITHIN_HOURS", 24 * 7),
   minSummaryLength: envNum("RANK_MIN_SUMMARY_LENGTH", 40),
   blocklist: [
@@ -127,16 +181,26 @@ export const rankingConfig: RankingConfig = {
   maxOutputTokens: envNum("RANK_MAX_OUTPUT_TOKENS", 16384),
   costPer1kTokensUsd: envNum("RANK_COST_PER_1K_TOKENS_USD", 0),
 
+  // Quality-first weights. recency folded to 0 (freshness is a final
+  // multiplier, see recencyTiebreaker); the freed 1.0 is redistributed to the
+  // two new X-signal components. The nine weights sum to EXACTLY 10.0:
+  //   2.5 + 2.0 + 1.5 + 1.0 + 0.0 + 0.75 + 0.75 + 1.0 + 0.5 = 10.0
   weights: {
     topicFit: 2.0,
     significance: 2.5,
-    audienceInterest: 2.0,
+    audienceInterest: 1.5,
     visualPotential: 1.0,
-    recency: 1.0,
+    recency: 0.0,
     coverage: 0.75,
     sourceCredibility: 0.75,
+    engagement: 1.0,
+    corroboration: 0.5,
   }, // sums to 10.0
 
+  recencyTiebreaker: {
+    minMultiplier: envNum("RANK_RECENCY_MIN_MULTIPLIER", 0.95),
+    maxMultiplier: envNum("RANK_RECENCY_MAX_MULTIPLIER", 1.0),
+  },
   recencyHalfLifeHours: envNum("RANK_RECENCY_HALFLIFE_HOURS", 3),
   coverageCap: envNum("RANK_COVERAGE_CAP", 5),
   sourceCredibility: {
@@ -175,6 +239,21 @@ export const rankingConfig: RankingConfig = {
 
   topN: envNum("RANK_TOP_N", 1),
   minScore: envNum("RANK_MIN_SCORE", 55),
+
+  // Conservative X-signal defaults. Every number env-overridable.
+  x: {
+    minEngagementFloor: envNum("RANK_X_MIN_ENGAGEMENT_FLOOR", 20),
+    minTextLength: envNum("RANK_X_MIN_TEXT_LENGTH", 60),
+    engagementRatioCap: envNum("RANK_X_ENGAGEMENT_RATIO_CAP", 3),
+    neutralEngagementRatio: envNum("RANK_X_NEUTRAL_ENGAGEMENT_RATIO", 1),
+    minSamplesForMedian: envNum("RANK_X_MIN_SAMPLES_FOR_MEDIAN", 3),
+    // FIX #7: views contribute 0 points to the score; they break ties only.
+    viewsBonusMax: envNum("RANK_X_VIEWS_BONUS_MAX", 0),
+    corroborationRssShare: envNum("RANK_X_CORROBORATION_RSS_SHARE", 0.6),
+    corroborationMultiAccountShare: envNum("RANK_X_CORROBORATION_MULTI_ACCOUNT_SHARE", 0.4),
+    claimRiskHighPenalty: envNum("RANK_X_CLAIM_RISK_HIGH_PENALTY", 15),
+    allowUnverifiedHighRisk: envFlag("RANK_ALLOW_UNVERIFIED_HIGH_RISK", false),
+  },
 };
 
 /** Resolve a source's credibility (0-10) by normalized name. */

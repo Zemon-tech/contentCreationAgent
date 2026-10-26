@@ -32,7 +32,8 @@ test("keeps a fresh, valid item", () => {
 });
 
 test("drops items older than maxAgeHours", () => {
-  const old = item({ id: "old", publishedAt: new Date(NOW.getTime() - 10 * 3_600_000).toISOString() });
+  // Default maxAgeHours is 24h (FEAT-003), so use an item well beyond it.
+  const old = item({ id: "old", publishedAt: new Date(NOW.getTime() - 30 * 3_600_000).toISOString() });
   const res = hardFilter({ items: [old], now: NOW });
   assert.equal(res.kept.length, 0);
   assert.equal(res.drops[0]?.reason, DROP_REASONS.TOO_OLD);

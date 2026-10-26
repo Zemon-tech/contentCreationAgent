@@ -3,16 +3,23 @@ import type { LlmScore } from "../../schemas/ranking";
 /**
  * Few-shot examples for Stage B scoring. EDIT THESE to calibrate the model.
  *
- * Keep 4-6 spanning the range: a clear post (high), a solid-but-ordinary item
- * (medium), a thin item (low), a rumor, and a clickbait. Each example is a
- * (title, summary) the model would see plus the judgement it SHOULD return.
- * The final score is computed in code — these only teach the 0-10 judgements
- * and the boolean flags.
+ * Keep a spread across the range: a clear post (high), a solid-but-ordinary
+ * item (medium), a thin item (low), a rumor, a clickbait, plus a few X-mode
+ * examples. Each example is a (title, summary) the model would see plus the
+ * judgement it SHOULD return. The final score is computed in code — these only
+ * teach the 0-10 judgements, the boolean flags, and (X-mode) the derived
+ * factual headline.
+ *
+ * X examples are tagged `synthetic: true`: they use clearly fictional company
+ * and person names and no real facts, as a placeholder until real posts are
+ * swapped in.
  */
 export interface FewShotExample {
   title: string;
   summary: string;
   score: Omit<LlmScore, "id">;
+  /** True for a fabricated/placeholder example (fictional names, no real facts). */
+  synthetic?: boolean;
 }
 
 export const FEW_SHOTS: FewShotExample[] = [
@@ -30,6 +37,14 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: false,
       isClickbait: false,
       isDuplicateAngle: false,
+      isNewInformation: true,
+      isPrimarySource: true,
+      specificity: 9,
+      hookPotential: 8,
+      claimRisk: "low",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "OpenAI releases GPT-5.5 with native agent orchestration",
+      headlineDerived: true,
       reason: "Major model launch, concrete specs and pricing, directly relevant.",
     },
   },
@@ -47,6 +62,14 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: false,
       isClickbait: false,
       isDuplicateAngle: false,
+      isNewInformation: true,
+      isPrimarySource: false,
+      specificity: 8,
+      hookPotential: 6,
+      claimRisk: "low",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Bengaluru deeptech startup Peptris raises $12M Series A for AI drug discovery",
+      headlineDerived: true,
       reason: "Named Indian deeptech Series A with amount and lead investor.",
     },
   },
@@ -64,6 +87,14 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: false,
       isClickbait: false,
       isDuplicateAngle: false,
+      isNewInformation: true,
+      isPrimarySource: false,
+      specificity: 6,
+      hookPotential: 3,
+      claimRisk: "low",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Notion adds a new AI meeting-notes feature to its business plan",
+      headlineDerived: true,
       reason: "Incremental feature on one product; limited real-world impact.",
     },
   },
@@ -81,6 +112,14 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: true,
       isClickbait: false,
       isDuplicateAngle: false,
+      isNewInformation: false,
+      isPrimarySource: false,
+      specificity: 1,
+      hookPotential: 2,
+      claimRisk: "low",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Opinion piece on how AI could reshape work over the next decade",
+      headlineDerived: true,
       reason: "Opinion/analysis with no concrete news or facts.",
     },
   },
@@ -98,6 +137,14 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: true,
       isClickbait: false,
       isDuplicateAngle: false,
+      isNewInformation: false,
+      isPrimarySource: false,
+      specificity: 3,
+      hookPotential: 5,
+      claimRisk: "high",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Report: Apple reportedly in early talks to acquire an AI chip startup",
+      headlineDerived: true,
       reason: "Unconfirmed acquisition talks, hedged sourcing, nothing finalized.",
     },
   },
@@ -115,7 +162,93 @@ export const FEW_SHOTS: FewShotExample[] = [
       isOpinionOrRumor: false,
       isClickbait: true,
       isDuplicateAngle: false,
+      isNewInformation: false,
+      isPrimarySource: false,
+      specificity: 1,
+      hookPotential: 2,
+      claimRisk: "medium",
+      flags: { engagementBait: true, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Unnamed AI startup makes an unspecified claim about competing with Google",
+      headlineDerived: true,
       reason: "Hype headline, no facts, engagement-bait framing.",
+    },
+  },
+  {
+    // X-GOOD (synthetic): fictional company shipping, with an outbound link.
+    title: "@nimbus_robotics: We're shipping Nimbus Dock 1.0",
+    summary:
+      "Nimbus Robotics: Nimbus Dock 1.0 is live — autonomous warehouse docking that cuts unloading time ~30% in our pilot. Full technical writeup and benchmarks here: nimbusrobotics.example/dock",
+    synthetic: true,
+    score: {
+      topic: "deeptech",
+      topicFit: 8,
+      significance: 6,
+      audienceInterest: 7,
+      visualPotential: 6,
+      isOpinionOrRumor: false,
+      isClickbait: false,
+      isDuplicateAngle: false,
+      isNewInformation: true,
+      isPrimarySource: true,
+      specificity: 7,
+      hookPotential: 6,
+      claimRisk: "low",
+      flags: { engagementBait: false, selfPromotion: true, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Nimbus Robotics ships Nimbus Dock 1.0, claims ~30% faster warehouse unloading",
+      headlineDerived: true,
+      reason: "First-party launch with an outbound writeup; concrete, mild self-promo.",
+    },
+  },
+  {
+    // X-MEDIUM (synthetic): single-account bold claim, no corroboration.
+    title: "@fakefounder: Heard Vellum AI just closed a huge round",
+    summary:
+      "Vellum AI apparently closed a massive Series B this week at a crazy valuation. No official word yet but my sources are solid. Big if true.",
+    synthetic: true,
+    score: {
+      topic: "startups",
+      topicFit: 7,
+      significance: 4,
+      audienceInterest: 5,
+      visualPotential: 3,
+      isOpinionOrRumor: true,
+      isClickbait: false,
+      isDuplicateAngle: false,
+      isNewInformation: false,
+      isPrimarySource: false,
+      specificity: 2,
+      hookPotential: 5,
+      claimRisk: "high",
+      flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+      derivedHeadline: "Unverified claim that Vellum AI closed a Series B round",
+      headlineDerived: true,
+      reason: "Single-account rumor, no source, bold unverified funding claim.",
+    },
+  },
+  {
+    // X-BAD (synthetic): giveaway / engagement bait.
+    title: "@fakefounder: 🚀 GIVEAWAY — $500 to one lucky follower!",
+    summary:
+      "GIVEAWAY TIME! 🎉 RT + follow + tag 3 friends and one of you wins $500. Link in bio. Don't miss out, ending soon!!! #giveaway #crypto",
+    synthetic: true,
+    score: {
+      topic: "other",
+      topicFit: 1,
+      significance: 0,
+      audienceInterest: 1,
+      visualPotential: 1,
+      isOpinionOrRumor: false,
+      isClickbait: true,
+      isDuplicateAngle: false,
+      isNewInformation: false,
+      isPrimarySource: false,
+      specificity: 0,
+      hookPotential: 1,
+      claimRisk: "low",
+      flags: { engagementBait: true, selfPromotion: true, giveaway: true, hotTakeThread: false },
+      derivedHeadline: "Promotional giveaway post asking followers to retweet and tag friends",
+      headlineDerived: true,
+      reason: "Pure giveaway engagement-bait, no news value.",
     },
   },
 ];

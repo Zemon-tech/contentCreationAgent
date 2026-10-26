@@ -37,6 +37,10 @@ export const DROP_REASONS = {
   TOO_OLD: "too_old",
   SUMMARY_TOO_SHORT: "summary_too_short",
   BLOCKLIST: "blocklist",
+  // X-only hard-filter reasons.
+  X_IS_REPLY_OR_REPOST: "x_is_reply_or_repost",
+  X_BELOW_ENGAGEMENT_FLOOR: "x_below_engagement_floor",
+  X_NO_SOURCE_SHORT: "x_no_source_short",
 } as const;
 
 export function hardFilter(input: HardFilterInput): HardFilterResult {
@@ -81,14 +85,46 @@ export function hardFilter(input: HardFilterInput): HardFilterResult {
       continue;
     }
 
-    // 5. Empty / too-short summary.
     const summary = (item.summary ?? "").trim();
+
+    // 5. X-specific hard filters. X items SKIP the RSS summary-length rule
+    //    (SUMMARY_TOO_SHORT) and use the X knobs instead. too_old above already
+    //    applied to them — it stays the single source of truth for the 24h drop.
+    if (item.isX === true) {
+      if (item.isReply === true || item.isRepost === true) {
+        drop(item, DROP_REASONS.X_IS_REPLY_OR_REPOST, item.isReply ? "reply" : "repost");
+        continue;
+      }
+      const eng = item.engagementRaw;
+      const engagementTotal = eng ? eng.likes + eng.reposts + eng.replies : 0;
+      if (engagementTotal < config.x.minEngagementFloor) {
+        drop(item, DROP_REASONS.X_BELOW_ENGAGEMENT_FLOOR, `${engagementTotal} < ${config.x.minEngagementFloor}`);
+        continue;
+      }
+      const hasOutbound = (item.outboundUrls?.length ?? 0) > 0;
+      const textLen = Math.max(summary.length, (item.title ?? "").trim().length);
+      if (!hasOutbound && textLen < config.x.minTextLength) {
+        drop(item, DROP_REASONS.X_NO_SOURCE_SHORT, `no outbound & ${textLen} < ${config.x.minTextLength}`);
+        continue;
+      }
+      // X blocklist check still applies (title + summary).
+      const xHay = `${item.title} ${summary}`.toLowerCase();
+      const xHit = config.blocklist.find((term) => xHay.includes(term.toLowerCase()));
+      if (xHit) {
+        drop(item, DROP_REASONS.BLOCKLIST, xHit);
+        continue;
+      }
+      kept.push(item);
+      continue;
+    }
+
+    // 6. (RSS) Empty / too-short summary.
     if (summary.length < config.minSummaryLength) {
       drop(item, DROP_REASONS.SUMMARY_TOO_SHORT, `${summary.length} < ${config.minSummaryLength}`);
       continue;
     }
 
-    // 6. Blocklist (title or summary).
+    // 7. (RSS) Blocklist (title or summary).
     const hay = `${item.title} ${summary}`.toLowerCase();
     const hit = config.blocklist.find((term) => hay.includes(term.toLowerCase()));
     if (hit) {

@@ -7,7 +7,7 @@ import type { LlmScore, RankInputItem } from "../../src/mastra/schemas/ranking";
 function item(id: string): RankInputItem {
   return { id, clusterId: `c-${id}`, title: `T ${id}`, summary: "x".repeat(60), url: `https://ex.com/${id}`, source: "X", region: "US", publishedAt: new Date().toISOString(), rawCategories: [], clusterSourceCount: 1 };
 }
-const judged = (id: string): LlmScore => ({ id, topic: "ai", topicFit: 7, significance: 6, audienceInterest: 6, visualPotential: 5, isOpinionOrRumor: false, isClickbait: false, isDuplicateAngle: false, reason: "ok" });
+const judged = (id: string): LlmScore => ({ id, topic: "ai", topicFit: 7, significance: 6, audienceInterest: 6, visualPotential: 5, isOpinionOrRumor: false, isClickbait: false, isDuplicateAngle: false, isNewInformation: true, isPrimarySource: false, specificity: 6, hookPotential: 5, claimRisk: "low", flags: { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false }, derivedHeadline: `T ${id}`, headlineDerived: true, reason: "ok" });
 
 // Generator that answers whatever ids are in the prompt, tracking concurrency.
 function trackedGenerate() {

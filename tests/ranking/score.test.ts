@@ -37,6 +37,14 @@ function llm(overrides: Partial<LlmScore> = {}): LlmScore {
     isOpinionOrRumor: overrides.isOpinionOrRumor ?? false,
     isClickbait: overrides.isClickbait ?? false,
     isDuplicateAngle: overrides.isDuplicateAngle ?? false,
+    isNewInformation: overrides.isNewInformation ?? true,
+    isPrimarySource: overrides.isPrimarySource ?? true,
+    specificity: overrides.specificity ?? 10,
+    hookPotential: overrides.hookPotential ?? 10,
+    claimRisk: overrides.claimRisk ?? "low",
+    flags: overrides.flags ?? { engagementBait: false, selfPromotion: false, giveaway: false, hotTakeThread: false },
+    derivedHeadline: overrides.derivedHeadline ?? "A story",
+    headlineDerived: true,
     reason: overrides.reason ?? "strong, concrete, relevant",
   };
 }
@@ -65,12 +73,53 @@ test("regionBalanceAdjustment: boosts the minority region only", () => {
   assert.equal(regionBalanceAdjustment("IN", ["US", "IN"], b), 0); // balanced -> no nudge
 });
 
-test("a perfect item with no recent posts scores near the top", () => {
-  const r = computeRankedStory(item({ clusterSourceCount: 5, source: "wsj" }), llm(), { now: NOW });
-  // All weighted components max out (sum of weights = 10 -> 100 scale).
-  assert.ok(r.finalScore > 90, `expected >90, got ${r.finalScore}`);
+test("a maxed, cross-corroborated X item scores >= 90", () => {
+  // engagement: interactions (120) vs account median (40) -> ratio clamps to
+  // the cap (3) -> engagement component maxes at 10.
+  // corroboration: outbound matches an RSS url in the context AND >=2 promoted
+  // accounts carry the claim -> 0.6*10 + 0.4*10 = 10.
+  const xItem = item({
+    clusterSourceCount: 5,
+    source: "wsj",
+    url: "https://x.com/acme/status/1",
+  }) as RankInputItem;
+  xItem.isX = true;
+  xItem.authorHandle = "@acme";
+  xItem.accountStatus = "promoted";
+  xItem.accountMedianLikes = 40;
+  xItem.engagementRaw = { likes: 100, reposts: 15, replies: 5, views: 10_000 };
+  xItem.outboundUrls = ["https://acme.example/post"];
+
+  const corroboration = {
+    rssUrlSet: new Set<string>(["https://acme.example/post"]),
+    credibleAccountsByGroup: new Map<string, number>([["host:acme.example", 2]]),
+  };
+
+  // A fully-maxed item needs every 0-10 component at 10, including source
+  // credibility (the live registry caps at 9), so pin it to 10 for this case.
+  const cfg: RankingConfig = {
+    ...rankingConfig,
+    sourceCredibility: { ...rankingConfig.sourceCredibility, wsj: 10 },
+  };
+  const r = computeRankedStory(xItem, llm(), { now: NOW, corroboration, config: cfg });
+  // All nine weighted components max out (sum of weights = 10 -> 100 scale);
+  // recency multiplier is 1.0 at age 0, so finalScore maxes too.
+  assert.equal(r.qualityScore, 100, `expected qualityScore 100, got ${r.qualityScore}`);
+  assert.ok(r.finalScore >= 90, `expected >=90, got ${r.finalScore}`);
   assert.equal(r.appliedPenalties.length, 0);
   assert.equal(r.unscored, false);
+  assert.equal(r.verified, true);
+});
+
+// FIX #5 (INTENTIONAL): a maxed UNCORROBORATED RSS item earns 0 on the X-only
+// engagement and corroboration components, so its qualityScore caps at ~85 by
+// design. It still clears the default minScore (55) comfortably.
+test("a maxed uncorroborated RSS item caps at ~85 by design", () => {
+  const r = computeRankedStory(item({ clusterSourceCount: 5, source: "wsj" }), llm(), { now: NOW });
+  assert.ok(r.qualityScore >= 84 && r.qualityScore <= 86, `expected ~85, got ${r.qualityScore}`);
+  assert.ok(r.qualityScore > rankingConfig.minScore);
+  assert.equal(r.components.engagementComponent, 0);
+  assert.equal(r.components.corroborationComponent, 0);
 });
 
 test("weighted contributions reflect the configured weights", () => {
