@@ -1,0 +1,117 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": 1,
+      "severity": "HIGH",
+      "title": "Corroboration-by-cluster-match is infeasible; canonicalKey never collides across X and RSS",
+      "location": "Part C.4 step 3, FR-C5; verified against src/mastra/lib/safety/ledger-key.ts and autoNewsToRas.ts rawToRankItem",
+      "problem": "canonicalKey is keyed on the item's own normalized URL + content hash of its own title+summary, so an X post and an RSS article about the same story get different clusterIds. The clusterId-equality branch of corroboration (and 'multiple distinct credible accounts share the cluster') can essentially never be true.",
+      "fix": "Drop the clusterId-equality branch. Define corroboration over signals that actually collide: X outboundUrl host/normalized-URL vs RSS primaryUrl/url, and group X posts by overlapping outboundUrls/text for the multi-account signal. Specify the match function and where the RSS URL set is assembled."
+    },
+    {
+      "id": 2,
+      "severity": "HIGH",
+      "title": "A1 merge-conflict assumption is false; signalOnly->limited is an unrequested behavior change",
+      "location": "Assumption A1, Part D.3; verified against src/mastra/lib/workflow/autoNewsToRas.ts and collect-x-posts.ts",
+      "problem": "autoNewsToRas.ts has no conflict markers and compiles; limited currently does NOT include signalOnly. Adding || raw.signalOnly forces every X item (all signalOnly:true) into factPackLimited mode, which can gut FR-D2's facts[] requirement. The change is derived from a non-existent conflict.",
+      "fix": "Remove the merge-conflict framing. State the actual change plainly and reconcile it with FR-D2 (facts[] still built from X text/outbound URLs). Confirm the tradeoff is intended."
+    },
+    {
+      "id": 3,
+      "severity": "HIGH",
+      "title": "Corroboration/engagement cross-item context has no defined assembly point in rankStories",
+      "location": "Part C.4, C.2, A4; verified against src/mastra/lib/ranking/rankStories.ts and score.ts",
+      "problem": "computeRankedStory is called per-item with a ScoreContext of only config/now/recentRegions. No stage builds the RSS-URL set, per-cluster credible-account counts, or stamps accountMedianLikes onto rank items. The accounts gateway is not reachable from rawToRankItem's layer.",
+      "fix": "Specify the pre-scoring stage that builds a CorroborationContext and injects it into ScoreContext, and name where accountMedianLikes is stamped (e.g. onto RawContent.metadata at save time in runDiscovery). Pick one concrete data path."
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "title": "browser.py does not set UA/viewport on the CDP session; FR-B10 'consistent fingerprint' claim is wrong",
+      "location": "Part B.8; verified against tweetytweets/scripts/browser.py",
+      "problem": "The UA constant is used only by plain()/og_image() HTTP calls. The CDP page session applies no Network.setUserAgentOverride or Emulation.setDeviceMetricsOverride. Consistency is incidental (persistent profile + fixed Chrome), not code-enforced.",
+      "fix": "Correct the claim: state consistency comes from the persistent profile, OR add explicit CDP UA/viewport overrides if FR-B10 is to be enforced in code."
+    },
+    {
+      "id": 5,
+      "severity": "MEDIUM",
+      "title": "collectXPosts signature change drops params and conflates X_WATCH_ENABLED with X_DISCOVERY_ENABLED; migration unspecified",
+      "location": "Part B.9, FR-E7; verified against collect-x-posts.ts and config/xAccounts.ts",
+      "problem": "New signature removes config/scrape/checkSession. Feed-only mode selection is unclear: FR-E7 names X_WATCH_ENABLED=false but the new reader is gated on X_DISCOVERY_ENABLED/empty store. CollectXResult.sessionNotReady fate and existing injectors not addressed.",
+      "fix": "Specify the new CollectXResult shape, the single feed-only switch, and which callers/tests of the old signature change. Reconcile X_WATCH_ENABLED vs X_DISCOVERY_ENABLED."
+    },
+    {
+      "id": 6,
+      "severity": "MEDIUM",
+      "title": "thread_texts detection is not implementable against current harvest output",
+      "location": "Part A.1 thread_texts; verified against scrape.py scrape_user/HARVEST_JS",
+      "problem": "HARVEST_JS harvests into a URL-keyed dict across scroll passes and never extracts DOM order or the thread-connector element, so 'consecutive same-author articles joined by the connector' cannot be detected as written.",
+      "fix": "Either emit per-article dom_index + thread_connector boolean and define thread_texts over that, or scope capture to a pure post-pass over an ordered posts[] array (group consecutive same-author, cap 5). Specify the field additions."
+    },
+    {
+      "id": 7,
+      "severity": "MEDIUM",
+      "title": "savedPostMaxAgeHours vs publishedAt/collectedAt freshness semantics ambiguous (recency double-counting)",
+      "location": "Assumption A5, Part B.1/B.5; verified against hardFilter.ts/score.ts (ageInHours on publishedAt)",
+      "problem": "recentWithin(maxAgeHours) never states whether it filters on collectedAt or publishedAt, while the ranker's too_old/recency all use publishedAt. The store window and the 24h drop may be the same check applied twice with different timestamps.",
+      "fix": "State recentWithin uses publishedAt (fallback collectedAt), and that the ranker's too_old filter remains the single source of truth for the 24h drop."
+    },
+    {
+      "id": 8,
+      "severity": "MEDIUM",
+      "title": "Weight redistribution + added engagement/corroboration breaks the documented 0-100 scale invariant",
+      "location": "Part C.1/C.4; verified against ranking.config.ts header + weights summing to 10",
+      "problem": "Weights still sum to 10 (max 100 from weighted sum), but engagementComponent (weight 1.0 -> +10) and corroborationBonus (+8) are added on top, so pre-clamp qualityScore maxes ~118. Contradicts the config invariant and the 'perfect item > 90' test is asserted, not shown.",
+      "fix": "Fold engagement into the 10-weight budget for X items OR document the intentional over-provisioning and update the config header. Show worked max for a maxed X and RSS item."
+    },
+    {
+      "id": 9,
+      "severity": "MEDIUM",
+      "title": "FR-E7 feed-only verification uses X_WATCH_ENABLED=false but the reader gate is X_DISCOVERY_ENABLED",
+      "location": "Part E.3 vs B.1/B.9",
+      "problem": "Two different env vars control two different subsystems. After B.9 removes the live-watch path, X_WATCH_ENABLED=false may no longer make the main workflow feed-only, so the FR-E7 command could still read saved X posts.",
+      "fix": "Pick one feed-only switch (empty/stubbed SavedXPostsGateway or X_DISCOVERY_ENABLED=false), make E.3 use it, and update the acceptance step accordingly."
+    },
+    {
+      "id": 10,
+      "severity": "NIT",
+      "title": "scrape.py CLI choices=['user'] and required --handle must change for the search subcommand",
+      "location": "Part B.3; verified against scrape.py argparse",
+      "problem": "cmd choices is hardcoded to ['user'] and --handle is required=True; a literal implementation of the search subcommand would error.",
+      "fix": "Widen choices to ['user','search'] and make --handle conditionally required (search uses --query)."
+    },
+    {
+      "id": 11,
+      "severity": "NIT",
+      "title": "normalizeScrapedPost should be clarified to run once at the x-publisher boundary",
+      "location": "Part A.2/B.4",
+      "problem": "Design says scrapeXPosts passes posts untouched; it should clarify both scrapeXPosts and searchXPosts normalize, and the saved-posts read path is already RawContent (normalizer not re-run there).",
+      "fix": "Add one sentence: normalizer runs at the x-publisher boundary (both scrape and search) before postToRaw."
+    },
+    {
+      "id": 12,
+      "severity": "NIT",
+      "title": "views-based engagement 'small bounded bump' is unspecified",
+      "location": "Part C.4 step 2, C.1 x config block",
+      "problem": "No magnitude or config field for the views bump; latent ambiguity.",
+      "fix": "Add a config number (e.g. viewsBonusMax) or state views only break ties and contribute 0 points by default."
+    },
+    {
+      "id": 13,
+      "severity": "NIT",
+      "title": "officialMinCredibility referenced by isOfficialAccount but missing from config shape",
+      "location": "Part B.6 vs B.1/C.1 config blocks",
+      "problem": "isOfficialAccount uses officialMinCredibility but no config block lists it.",
+      "fix": "Add officialMinCredibility to the owning config with a conservative default."
+    },
+    {
+      "id": 14,
+      "severity": "NIT",
+      "title": "LlmScoreSchema new required fields break the 6 existing few-shot examples until updated together",
+      "location": "Part C.2/C.6; verified against fewshot.ts (6 examples, old fields only)",
+      "problem": "Making 8 new fields required means all existing few-shot objects stop compiling until updated.",
+      "fix": "List updating all 6 few-shot objects in the same edit, or make the new fields defaulted/optional to decouple."
+    }
+  ]
+}

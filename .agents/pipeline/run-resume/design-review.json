@@ -1,0 +1,70 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": 1,
+      "severity": "HIGH",
+      "title": "dom_index is per-harvest-pass but threads are assembled over cross-pass accumulation; ordering is undefined",
+      "location": "Part A.1 (HARVEST_JS, ordered posts[], attach_thread_texts); verified against scrape.py scrape_user (collected dict, setdefault across max_scrolls passes)",
+      "problem": "dom_index is defined as 0-based within a single harvest pass, but scrape_user accumulates posts across many scroll passes and X virtualizes the timeline. attach_thread_texts sorts the accumulated list by dom_index, which is neither unique nor globally monotonic, so consecutive-same-author detection runs over a mis-ordered list and can miss real threads or fabricate false ones. This re-introduces, one layer up, the exact failure mode finding #6 was meant to fix.",
+      "fix": "Stamp dom_index once at first-sighting across the whole scrape (monotonic counter set only when a URL is first inserted into collected, not inside HARVEST_JS), so attach_thread_texts sorts on a unique, monotonic first-sighting order; OR state attach_thread_texts runs per harvest pass on that pass's rows before dedup and that cross-pass threads are intentionally not detected."
+    },
+    {
+      "id": 2,
+      "severity": "MEDIUM",
+      "title": "verified/isOfficialAccount in score.ts needs credibilityScore and pinnedHandles, but only accountStatus/accountMedianLikes are stamped onto rank items",
+      "location": "Part C.4 step 5 (verified), Part B.6 (isOfficialAccount over full DiscoveredAccount), Part C.2 (RankInputItem X fields)",
+      "problem": "isOfficialAccount requires credibilityScore and a pinnedHandles lookup, but the scoring layer has no gateway access and C.2 only stamps accountStatus and the two medians onto RankInputItem. The accountLike derived from accountStatus/accountMedianLikes cannot satisfy the credibilityScore>=officialMinCredibility branch nor the pinnedHandles branch, so the verified computation and FR-C8 high-risk gate are underspecified.",
+      "fix": "Compute isOfficialAccount once in runDiscovery (which has credibilityScore and pinnedHandles) and stamp a boolean isOfficialAccount plus accountCredibilityScore onto RawContent.metadata at save time; thread them through rawToRankItem into RankInputItem; C.4 step 5 then reads item.isOfficialAccount directly. Name these fields in C.2 and the stamp in B.7 step 7."
+    },
+    {
+      "id": 3,
+      "severity": "MEDIUM",
+      "title": "Multi-account corroboration depends on accountStatus being present on every saved item and on an ambiguous text-key tokenizer",
+      "location": "Part C.4 (credibleAccountsByGroup, group key), Part B.7 (save path), Part C.2 (accountStatus optional)",
+      "problem": "The multi-account signal counts distinct promoted authorHandles per group key, but (a) C.2 lists accountStatus as optional, so an item missing status silently fails the credible test and under-counts; (b) the near-duplicate-text group key ('first 12 tokens after lowercasing/stripping') has no exact tokenizer definition, so the context builder and the per-item key derivation could bucket differently.",
+      "fix": "Make accountStatus a required stamped field for every saved X item (default 'candidate' when unknown) and show it non-optional for X in C.2; define the text key exactly as a single shared pure function (e.g. lowercase+NFKC+strip non-letter/number+split whitespace+first 12 tokens joined) used by BOTH the context builder and per-item derivation."
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "title": "rssUrlSet uses raw normalizeUrl output (host not lowercased) while the host-match path lowercases; the direct .has() match can silently miss",
+      "location": "Part C.4 (rssUrlSet assembly and matchOutboundToRss); verified against normalizeUrl in src/mastra/lib/normalize.ts",
+      "problem": "normalizeUrl does not lowercase the hostname (returns u.toString() with original host casing). rssUrlSet is built from raw normalizeUrl(url), so a mixed-case host RSS URL and a lowercased X outbound never match on the exact .has() branch, and path-case differences never match at all. This is a latent correctness gap in the primary (weight 0.6) RSS-URL-match corroboration signal.",
+      "fix": "Define one canonical urlKey(u) (normalizeUrl with host lowercased) and use it on both sides: build rssUrlSet from urlKey(i.url) and test rssUrlSet.has(urlKey(u)); or declare matching host-only via hostOf and drop the full-URL branch. Assert the mixed-case case in corroboration.test.ts."
+    },
+    {
+      "id": 5,
+      "severity": "MEDIUM",
+      "title": "'perfect item >90' fixture/assertion rewrite caps uncorroborated maxed RSS items at 85 — a requirement-touching behavior change resolved unilaterally",
+      "location": "Part C.1 (folded budget, perfect-item fixture change to cross-corroborated, assert >=90)",
+      "problem": "Under the folded budget a maxed single-source RSS item caps at 85 (engagement 0) and only reaches 90 if cross-corroborated. The design keeps the test green by rewriting the fixture to a cross-corroborated item and relaxing >90 to >=90, which structurally caps an excellent single-source RSS story below 90. The requirements do not ask RSS stories to be penalized for lacking X corroboration.",
+      "fix": "State explicitly that a maxed uncorroborated RSS item caps at 85 by design and confirm it is acceptable (note it still clears the default minScore 55, so selection is unaffected); or reweight coverage/sourceCredibility so an uncorroborated maxed RSS item can reach ~90. Update the test comment to explain why >=90 requires corroboration."
+    },
+    {
+      "id": 6,
+      "severity": "NIT",
+      "title": "postToRaw export + new opts param back-compat not spelled out",
+      "location": "Part A.4 (postToRaw(handle, post, opts?) exported); verified private postToRaw(handle, post) in collect-x-posts.ts",
+      "problem": "The design should confirm the previously module-private postToRaw has no external callers, so adding an opts third parameter and exporting it is safe; after the rewrite its only caller is runDiscovery.",
+      "fix": "Add one sentence noting postToRaw had no callers outside collect-x-posts.ts (verified) and the added opts? is backward-compatible."
+    },
+    {
+      "id": 7,
+      "severity": "NIT",
+      "title": "views tiebreak in select.ts needs views reachable from RankedStory; field path unnamed",
+      "location": "Part C.1 and C.5 (views-only epsilon tiebreak in select.ts)",
+      "problem": "selectTop only sees RankedStory; the view count is on RankInputItem.engagementRaw, and the design does not name where select.ts reads it.",
+      "fix": "State the path: select.ts reads r.item.engagementRaw?.views ?? 0 for the epsilon tiebreak; RSS items sort as 0 views (stable no-op)."
+    },
+    {
+      "id": 8,
+      "severity": "NIT",
+      "title": "X facts[] 'concrete claim sentences' extraction unspecified",
+      "location": "Part D.2 (X facts[] from derived headline + concrete claim sentences + outbound URLs)",
+      "problem": "'Concrete claim sentences' has multiple valid interpretations; FR-D2 only needs a non-empty authoritative claim set, which derivedHeadline + outbound URLs already satisfy.",
+      "fix": "Pin facts[] for X to [{claim: derivedHeadline, sourceUrl, sourceType}] plus one entry per resolved outbound URL (sourceType 'primary' if primary else 'x'); drop the vague 'claim sentences' clause unless a concrete splitter is specified."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\sanav\\OneDrive\\Documents\\GitHub\\contentCreationAgent\\.agents\\pipeline\\run-resume\\03-design-review-corrected.md"
+}
