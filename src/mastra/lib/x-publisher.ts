@@ -256,6 +256,13 @@ export async function publishToX(options: XPublishOptions): Promise<XPublishResu
   }
 }
 
+export interface QuotedXPost {
+  text: string;
+  author_handle: string | null;
+  url: string;
+  at: string;
+}
+
 export interface ScrapedXPost {
   text: string;
   url: string;
@@ -267,6 +274,42 @@ export interface ScrapedXPost {
   reposts: number | null;
   likes: number | null;
   views: number | null;
+  /** Monotonic first-sighting index from the scraper (scroll order). */
+  dom_index?: number;
+  /** Non-x.com links in the post text/card (resolved best-effort). */
+  outbound_urls: string[];
+  /** True when a "Show more" control survived the expand pass. */
+  text_truncated: boolean;
+  /** Nested quoted tweet, if any. */
+  quoted: QuotedXPost | null;
+  /** Full self-thread texts, set on the FIRST post of a run (else []). */
+  thread_texts: string[];
+}
+
+/**
+ * Apply defaults to a raw scrape.py post so downstream code can rely on the
+ * enriched fields always being present. Runs ONCE at the scraper boundary for
+ * both scrapeXPosts and searchXPosts; it is NOT applied on the saved-posts read
+ * path (those are already normalized when written).
+ */
+export function normalizeScrapedPost(raw: any, index: number): ScrapedXPost {
+  return {
+    text: raw?.text ?? "",
+    url: raw?.url ?? "",
+    author_handle: raw?.author_handle ?? null,
+    at: raw?.at ?? "",
+    is_reply: !!raw?.is_reply,
+    is_repost: !!raw?.is_repost,
+    replies: raw?.replies ?? null,
+    reposts: raw?.reposts ?? null,
+    likes: raw?.likes ?? null,
+    views: raw?.views ?? null,
+    dom_index: raw?.dom_index ?? index,
+    outbound_urls: Array.isArray(raw?.outbound_urls) ? raw.outbound_urls : [],
+    text_truncated: raw?.text_truncated ?? false,
+    quoted: raw?.quoted ?? null,
+    thread_texts: Array.isArray(raw?.thread_texts) ? raw.thread_texts : [],
+  };
 }
 
 export interface XScrapeOptions {
@@ -342,7 +385,8 @@ export async function scrapeXPosts(options: XScrapeOptions): Promise<XScrapeResu
       };
     }
 
-    const posts: ScrapedXPost[] = Array.isArray(parsed.posts) ? parsed.posts : [];
+    const rawPosts: any[] = Array.isArray(parsed.posts) ? parsed.posts : [];
+    const posts: ScrapedXPost[] = rawPosts.map((p, i) => normalizeScrapedPost(p, i));
     return {
       success: true,
       handle: parsed.handle || cleanHandle,
@@ -369,6 +413,124 @@ export async function scrapeXPosts(options: XScrapeOptions): Promise<XScrapeResu
       error: errMsg,
       fix,
       message: `Failed to scrape @${cleanHandle}: ${errMsg}`,
+    };
+  }
+}
+
+export type XStopReason =
+  | "login_wall"
+  | "captcha"
+  | "unusual_activity"
+  | "http_429"
+  | "empty";
+
+export interface XSearchOptions {
+  query: string;
+  tab?: "top" | "latest";
+  maxScrolls?: number;
+  limit?: number;
+}
+
+export interface XSearchResult {
+  success: boolean;
+  query: string;
+  tab: "top" | "latest";
+  count: number;
+  posts: ScrapedXPost[];
+  stopReason?: XStopReason;
+  error?: string;
+}
+
+/**
+ * Searches X for a query through the logged-in CDP browser (no API). Mirrors
+ * scrapeXPosts' execFile + JSON-parse + fail-soft pattern. A hard stop from the
+ * scraper (login wall / captcha / unusual activity / 429) is surfaced as
+ * `stopReason` so the caller can start a cooldown and fall back to RSS; an
+ * empty result maps to stopReason 'empty'. Never throws.
+ */
+export async function searchXPosts(options: XSearchOptions): Promise<XSearchResult> {
+  const { query, tab = "top", maxScrolls = 2, limit = 40 } = options;
+  const cleanQuery = (query || "").trim();
+  if (!cleanQuery) {
+    return {
+      success: false,
+      query: "",
+      tab,
+      count: 0,
+      posts: [],
+      error: "empty query",
+    };
+  }
+
+  const scriptPath = path.join(SCRIPTS_DIR, 'scrape.py');
+  const args = [
+    scriptPath,
+    'search',
+    '--query',
+    cleanQuery,
+    '--tab',
+    tab,
+    '--max-scrolls',
+    String(maxScrolls),
+    '--limit',
+    String(limit),
+    '--json-only',
+  ];
+
+  try {
+    const { stdout } = await execFileAsync(PYTHON_BIN, args, {
+      cwd: TWEETYTWEETS_DIR,
+      timeout: 180000,
+      maxBuffer: 32 * 1024 * 1024,
+    });
+
+    const parsed = JSON.parse(stdout.trim());
+
+    if (parsed.error) {
+      const stopReason =
+        parsed.error === "blocked"
+          ? (parsed.stop_reason as XStopReason | undefined)
+          : undefined;
+      return {
+        success: false,
+        query: cleanQuery,
+        tab,
+        count: 0,
+        posts: [],
+        ...(stopReason ? { stopReason } : {}),
+        error: parsed.error,
+      };
+    }
+
+    const rawPosts: any[] = Array.isArray(parsed.posts) ? parsed.posts : [];
+    const posts: ScrapedXPost[] = rawPosts.map((p, i) => normalizeScrapedPost(p, i));
+    const resolvedTab: "top" | "latest" = parsed.tab === "latest" ? "latest" : "top";
+    return {
+      success: true,
+      query: parsed.query || cleanQuery,
+      tab: resolvedTab,
+      count: parsed.count ?? posts.length,
+      posts,
+      ...(posts.length === 0 ? { stopReason: "empty" as const } : {}),
+    };
+  } catch (err: any) {
+    const raw = err.stdout || err.stderr || err.message;
+    let errMsg = raw;
+    let stopReason: XStopReason | undefined;
+    try {
+      const jsonErr = JSON.parse(String(raw).trim());
+      errMsg = jsonErr.error || jsonErr.fix || raw;
+      if (jsonErr.error === "blocked") stopReason = jsonErr.stop_reason as XStopReason;
+    } catch {}
+
+    return {
+      success: false,
+      query: cleanQuery,
+      tab,
+      count: 0,
+      posts: [],
+      ...(stopReason ? { stopReason } : {}),
+      error: errMsg,
     };
   }
 }

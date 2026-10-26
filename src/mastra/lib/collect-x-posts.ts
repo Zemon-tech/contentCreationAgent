@@ -3,6 +3,7 @@ import { hashString } from "../collectors/types";
 import { scrapeXPosts, type ScrapedXPost } from "./x-publisher";
 import { checkXSession } from "./x-publisher";
 import { getXWatchConfig, type XWatchConfig } from "../config/xAccounts";
+import { normalizeUrl } from "./normalize";
 
 /**
  * Collect posts from the watched X accounts and normalize them into
@@ -29,7 +30,68 @@ export interface CollectXResult {
 
 const MIN_TEXT_LEN = 15; // drop one-word / link-only posts that make poor stories
 
-function postToRaw(handle: string, post: ScrapedXPost): RawContent | null {
+/** Optional account-level signals a caller can thread onto the RawContent. */
+export interface PostToRawOpts {
+  accountMedianLikes?: number;
+  accountMedianReposts?: number;
+  accountStatus?: string;
+  isOfficialAccount?: boolean;
+  accountCredibilityScore?: number;
+}
+
+/**
+ * Drop x.com/twitter.com/t.co hosts, canonicalize, lowercase host, strip
+ * tracking (normalizeUrl already does), and dedupe a list of outbound URLs.
+ *
+ * `opts.expand` lets a test simulate a t.co -> destination hop with NO network;
+ * the real collector passes no expander (t.co links are kept as-is unless they
+ * resolve to a dropped host).
+ */
+export function resolveOutboundUrls(
+  urls: string[],
+  opts?: { expand?: (tco: string) => string | null },
+): string[] {
+  const DROP_HOSTS = new Set(["x.com", "twitter.com", "mobile.twitter.com", "t.co"]);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of urls || []) {
+    if (!raw) continue;
+    let candidate = raw;
+    // Optionally expand a t.co short link to its destination (test-injected).
+    if (opts?.expand) {
+      try {
+        const host = new URL(candidate).hostname.toLowerCase().replace(/^www\./, "");
+        if (host === "t.co") {
+          const dest = opts.expand(candidate);
+          if (dest) candidate = dest;
+        }
+      } catch {
+        /* non-URL; normalizeUrl below returns it verbatim */
+      }
+    }
+    const normalized = normalizeUrl(candidate);
+    let key = normalized;
+    try {
+      const u = new URL(normalized);
+      const host = u.hostname.toLowerCase().replace(/^www\./, "");
+      if (DROP_HOSTS.has(host)) continue;
+      u.hostname = host;
+      key = u.toString();
+    } catch {
+      /* keep normalized string as the dedupe key */
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+export function postToRaw(
+  handle: string,
+  post: ScrapedXPost,
+  opts?: PostToRawOpts,
+): RawContent | null {
   const text = (post.text || "").replace(/\s+/g, " ").trim();
   if (!text || text.length < MIN_TEXT_LEN) return null;
   if (!post.url) return null;
@@ -44,6 +106,9 @@ function postToRaw(handle: string, post: ScrapedXPost): RawContent | null {
           ...(post.views != null ? { views: post.views } : {}),
         }
       : undefined;
+
+  const outboundUrls = resolveOutboundUrls(post.outbound_urls ?? []);
+  const authorHandle = (post.author_handle || handle).toLowerCase();
 
   return {
     id: `${sourceId}:${hashString(post.url)}`,
@@ -62,7 +127,27 @@ function postToRaw(handle: string, post: ScrapedXPost): RawContent | null {
     ...(post.at ? { publishedAt: post.at } : {}),
     collectedAt: new Date().toISOString(),
     ...(engagement ? { engagement } : {}),
-    metadata: { collector: "x", isRepost: post.is_repost, isReply: post.is_reply },
+    metadata: {
+      collector: "x",
+      isRepost: post.is_repost,
+      isReply: post.is_reply,
+      outboundUrls,
+      quoted: post.quoted ?? null,
+      threadTexts: post.thread_texts ?? [],
+      textTruncated: post.text_truncated ?? false,
+      authorHandle,
+      engagementRaw: {
+        likes: post.likes,
+        reposts: post.reposts,
+        replies: post.replies,
+        views: post.views,
+      },
+      accountMedianLikes: opts?.accountMedianLikes ?? 0,
+      accountMedianReposts: opts?.accountMedianReposts ?? 0,
+      isOfficialAccount: opts?.isOfficialAccount ?? false,
+      accountCredibilityScore: opts?.accountCredibilityScore ?? 0,
+      accountStatus: opts?.accountStatus ?? "candidate",
+    },
     // Social posts inform ranking but are never a citable primary source.
     signalOnly: true,
   };
