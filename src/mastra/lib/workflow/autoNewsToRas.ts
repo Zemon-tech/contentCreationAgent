@@ -5,6 +5,7 @@ import type { RasPayload } from "../../schemas/handoff";
 import { NEWS_FEED_SOURCES } from "../../config/newsFeeds";
 import { ingestFeeds } from "../ingest-feeds";
 import { collectXPosts } from "../collect-x-posts";
+import type { SavedXPostsGateway } from "../x-discovery/stores/savedXPosts";
 import { rankStories, urlKey, matchOutboundToRss } from "../ranking/rankStories";
 import { createScoreCache, cacheEnabled } from "../ranking/scoreCache";
 import type { RankGenerate } from "../ranking/llmScore";
@@ -134,6 +135,12 @@ export async function collectRankSelect(opts: {
    * only for offline/heuristic previews that shouldn't touch the DB.
    */
   persistRankLog?: boolean;
+  /**
+   * Injectable saved-X-posts store for the OFFLINE mock-X path (auto:dry demo).
+   * Threaded straight into collectXPosts; the live workflow omits it and reads
+   * the real libSQL store. Still gated by the single X_DISCOVERY_ENABLED switch.
+   */
+  savedPosts?: SavedXPostsGateway;
   log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<CollectRankSelect> {
   const { items: feedRaws } = await ingestFeeds({ sources: NEWS_FEED_SOURCES, dryRun: !(opts.persist ?? false), now: opts.now });
@@ -145,7 +152,11 @@ export async function collectRankSelect(opts: {
   // unchanged.
   let xRaws: RawContent[] = [];
   try {
-    const xResult = await collectXPosts({ log: opts.log, now: opts.now });
+    const xResult = await collectXPosts({
+      log: opts.log,
+      now: opts.now,
+      ...(opts.savedPosts ? { savedPosts: opts.savedPosts } : {}),
+    });
     xRaws = xResult.items;
     opts.log?.("x.collected", {
       items: xRaws.length,

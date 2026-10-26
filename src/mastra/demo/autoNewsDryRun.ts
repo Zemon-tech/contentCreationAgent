@@ -5,9 +5,15 @@
  * image chosen and why, and the exact payload that would go to RAS.
  *
  *   npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts
+ *   npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts --mock-x   # inject synthetic saved X posts (offline)
  *
  * Stage B uses a keyword HEURISTIC stand-in (no model) so this runs offline;
  * restore LOCAL_MODEL_* and the workflow uses the real Sarvam ranker.
+ *
+ * The X signal is still governed by the SINGLE switch X_DISCOVERY_ENABLED:
+ *   - X_DISCOVERY_ENABLED=false  -> feed-only (collectXPosts reads nothing);
+ *   - --mock-x (and enabled)     -> reads a stub SavedXPostsGateway seeded here,
+ *                                   so the mock-X path runs fully offline.
  */
 
 if (typeof process.loadEnvFile === "function") {
@@ -23,6 +29,44 @@ import { runHandoff } from "../lib/ras/handoff";
 import { canonicalKeyForItem } from "../lib/safety/ledger-key";
 import type { RankGenerate } from "../lib/ranking/llmScore";
 import { offlineCopyStub, offlineCopyConfig } from "./offlineCopyStub";
+import { createSavedXPostsStubGateway, type SavedXPostsGateway } from "../lib/x-discovery/stores/savedXPosts";
+import { postToRaw } from "../lib/collect-x-posts";
+import type { ScrapedXPost } from "../lib/x-publisher";
+
+const MOCK_X = process.argv.includes("--mock-x");
+
+/**
+ * Seed a stub SavedXPostsGateway with synthetic, clearly-fictional X posts so
+ * the mock-X path exercises the X-signal merge fully offline. Returns undefined
+ * unless --mock-x is passed (feed-only otherwise).
+ */
+function buildMockSavedPosts(): SavedXPostsGateway | undefined {
+  if (!MOCK_X) return undefined;
+  const now = new Date();
+  const mk = (handle: string, n: number, likes: number): ScrapedXPost => ({
+    text: `Synthetic X post #${n} from @${handle}: fictional "Nimbus Robotics" ships a demo widget. Offline mock content only. https://nimbus-robotics.example/${handle}/${n}`,
+    url: `https://x.com/${handle}/status/${2000 + n}`,
+    author_handle: handle,
+    at: now.toISOString(),
+    is_reply: false,
+    is_repost: false,
+    replies: 4,
+    reposts: Math.round(likes / 10),
+    likes,
+    views: likes * 25,
+    dom_index: n,
+    outbound_urls: [`https://nimbus-robotics.example/${handle}/${n}`],
+    text_truncated: false,
+    quoted: null,
+    thread_texts: [],
+  });
+  const raws = [
+    postToRaw("nimbus_labs", mk("nimbus_labs", 1, 420), { accountMedianLikes: 200, accountStatus: "promoted", accountCredibilityScore: 8, isOfficialAccount: true }),
+    postToRaw("orbit_founder", mk("orbit_founder", 2, 260), { accountMedianLikes: 150, accountStatus: "candidate" }),
+  ].filter((r): r is NonNullable<typeof r> => r !== null);
+  for (const r of raws) r.collectedAt = now.toISOString();
+  return createSavedXPostsStubGateway(raws);
+}
 
 const heuristic: RankGenerate = async (prompt) => {
   const arr = JSON.parse(prompt.slice(prompt.indexOf("[")));
@@ -36,15 +80,35 @@ const heuristic: RankGenerate = async (prompt) => {
       id: it.id, topic: deeptech ? "deeptech" : /startup|funding|raises?/.test(t) ? "startups" : "ai",
       topicFit: /\bai\b|model|llm|openai|anthropic|nvidia|google/.test(t) || deeptech ? 8 : 5,
       significance: strong ? 7 : 4, audienceInterest: strong ? 7 : 4, visualPotential: deeptech ? 7 : 5,
-      isOpinionOrRumor: rumor, isClickbait: clickbait, isDuplicateAngle: false, reason: "heuristic preview",
+      isOpinionOrRumor: rumor, isClickbait: clickbait, isDuplicateAngle: false,
+      // The 8 quality-first LlmScore fields (FEAT-003 schema) so items validate.
+      isNewInformation: !rumor,
+      isPrimarySource: strong,
+      specificity: strong ? 7 : 4,
+      hookPotential: strong ? 7 : 4,
+      claimRisk: rumor ? "medium" : "low",
+      flags: { engagementBait: clickbait, selfPromotion: false, giveaway: false, hotTakeThread: rumor },
+      derivedHeadline: (it.title || "").slice(0, 200),
+      headlineDerived: true,
+      reason: "heuristic preview",
     };
   });
   return { text: JSON.stringify({ scores }), usage: { totalTokens: 0 } };
 };
 
 async function main(): Promise<void> {
-  console.log("\n=== AUTO NEWS -> RAS : DRY RUN (nothing persisted or published) ===\n");
-  const { rankResult, selected, feedCandidateUrls, selectedRaw, itemsConsidered } = await collectRankSelect({ rankGenerate: heuristic, persist: false, persistRankLog: false });
+  console.log(`\n=== AUTO NEWS -> RAS : DRY RUN (nothing persisted or published)${MOCK_X ? " [mock-X]" : ""} ===\n`);
+  const mockSavedPosts = buildMockSavedPosts();
+  const { rankResult, selected, feedCandidateUrls, selectedRaw, itemsConsidered } = await collectRankSelect({
+    rankGenerate: heuristic,
+    persist: false,
+    persistRankLog: false,
+    ...(mockSavedPosts ? { savedPosts: mockSavedPosts } : {}),
+  });
+  if (MOCK_X) {
+    const xCount = rankResult.ranked.filter((r) => r.item.isX).length;
+    console.log(`Mock-X path: ${xCount} X item(s) merged into the ranking (offline, from the stub store).`);
+  }
 
   console.log(`Items ingested & ranked: ${itemsConsidered} · dropped ${JSON.stringify(rankResult.droppedByReason)} · scored ${rankResult.scoredCount} · unscored ${rankResult.unscoredCount}`);
   console.log(`\n-- Top 5 ranked --`);

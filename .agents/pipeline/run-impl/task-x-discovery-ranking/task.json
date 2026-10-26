@@ -1,0 +1,7 @@
+{
+  "task_id": "task-x-discovery-ranking",
+  "task_description": "Implement X topic-driven discovery (separate 6h cron), scraper enrichment, quality-first global ranking, and RAS payload extensions against the existing Mastra (TypeScript) + Python CDP pipeline, incorporating the 8 final design-review fixes. Post nothing; DRY_RUN/REQUIRE_APPROVAL stay true; the RSS pipeline must keep working if X is unavailable; every number lives in config; fail soft everywhere X touches the main pipeline.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}
