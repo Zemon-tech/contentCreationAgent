@@ -1,8 +1,10 @@
 import type { RasPayload } from "../../schemas/handoff";
 import type { FactPack } from "../../schemas/factpack";
-import type { RankInputItem } from "../../schemas/ranking";
+import type { RankInputItem, RankedStory } from "../../schemas/ranking";
 import type { EditorialCopy } from "./copywriter";
 import { ACCENT_COLORS } from "../../templates/theme";
+
+type Fact = RasPayload["facts"][number];
 
 /**
  * Build the RAS payload from the ranked item + fact pack + sourced image. Since
@@ -62,6 +64,64 @@ function accentFor(topics: string[], text: string): Accent {
   return "#2F7C74";
 }
 
+/**
+ * Build the authoritative claim set with per-claim provenance.
+ *
+ * RSS / fact-pack items: each grounded key fact becomes a fact pinned to the
+ * best available source — the primary source URL with sourceType 'primary'
+ * when one exists, else the first citable source URL with sourceType 'rss'.
+ *
+ * FIX #8 (X items): pin facts[] to the derived headline against the post URL
+ * (or first outbound when no post URL), PLUS one entry per resolved outbound
+ * URL. An outbound entry is 'primary' when the story is verified (official /
+ * primary / corroborated) else 'x'. The vague "claim sentences" extraction is
+ * dropped for X — only the derived headline and real outbound URLs are facts.
+ */
+function buildFacts(args: {
+  isX: boolean;
+  factPack: FactPack;
+  item: RankInputItem;
+  derivedHeadline?: string;
+  outboundUrls: string[];
+  verified: boolean;
+}): Fact[] {
+  const { isX, factPack, item, derivedHeadline, outboundUrls, verified } = args;
+
+  if (isX) {
+    const headlineClaim = (derivedHeadline || factPack.headline || item.title || "").trim();
+    const postUrl = item.url;
+    const anchorUrl = postUrl || outboundUrls[0] || "";
+    const facts: Fact[] = [];
+    if (headlineClaim && anchorUrl) {
+      // The headline claim is 'primary' only when the anchor is a resolved
+      // outbound source and the story is verified; otherwise it is an X claim.
+      const anchorIsOutbound = !postUrl && !!outboundUrls[0];
+      facts.push({
+        claim: headlineClaim,
+        sourceUrl: anchorUrl,
+        sourceType: anchorIsOutbound && verified ? "primary" : "x",
+      });
+    }
+    for (const url of outboundUrls) {
+      if (!url) continue;
+      facts.push({ claim: headlineClaim || url, sourceUrl: url, sourceType: verified ? "primary" : "x" });
+    }
+    // Dedupe by sourceUrl (keep the first, most authoritative occurrence).
+    const seen = new Set<string>();
+    return facts.filter((f) => (seen.has(f.sourceUrl) ? false : (seen.add(f.sourceUrl), true)));
+  }
+
+  // RSS / fact-pack path: ground each key fact to the best available source.
+  const hasPrimary = !!factPack.primarySource;
+  const sourceUrl = factPack.primarySource ?? factPack.sourceUrls[0] ?? item.url;
+  const sourceType: Fact["sourceType"] = hasPrimary ? "primary" : "rss";
+  if (!sourceUrl) return [];
+  return factPack.keyFacts
+    .map((f) => f.trim())
+    .filter(Boolean)
+    .map((claim) => ({ claim, sourceUrl, sourceType }));
+}
+
 export function buildRasPayload(args: {
   item: RankInputItem;
   factPack: FactPack;
@@ -71,9 +131,30 @@ export function buildRasPayload(args: {
   llmCopy?: EditorialCopy | null;
   /** Extra citable source URLs (e.g. Exa enrichment) merged into sourceUrls. */
   extraSourceUrls?: string[];
+  /** The selected ranked story (carries X-signal/quality fields). */
+  story?: RankedStory | null;
+  /** The author handle for an X-sourced story (lowercased). */
+  authorHandle?: string | null;
+  /** True when this story is X-only (no corroborating RSS) — drives attribution. */
+  isXOnly?: boolean;
 }): RasPayload {
-  const { item, factPack, image, llmCopy } = args;
+  const { item, factPack, image, llmCopy, story } = args;
+  const isX = item.isX === true || story?.item?.isX === true;
   const topics = item.rawCategories ?? [];
+
+  const derivedHeadline = story?.derivedHeadline ?? item.derivedHeadline;
+  const hookPotential = story?.hookPotential ?? item.hookPotential;
+  const claimRisk = story?.claimRisk ?? item.claimRisk ?? "low";
+  const verified = story?.verified ?? false;
+  const outboundUrls = story?.outboundUrls ?? item.outboundUrls ?? [];
+  const quoted = story?.quoted ?? item.quoted ?? null;
+
+  const authorHandle = (args.authorHandle ?? story?.item?.authorHandle ?? item.authorHandle ?? "").replace(/^@/, "");
+  // Attribution only when the X story stands alone (no corroborating RSS).
+  const attributionLine = isX && args.isXOnly && authorHandle ? `per @${authorHandle} on X` : null;
+
+  const facts = buildFacts({ isX, factPack, item, derivedHeadline, outboundUrls, verified });
+
   const accentColor = accentFor(topics, `${item.title} ${factPack.keyFacts.join(" ")}`);
 
   const categoryTag = (topics.length ? topics : ["AI"]).slice(0, 3).map((t) => safeLatin(t).toUpperCase()).join(" · ");
@@ -83,7 +164,9 @@ export function buildRasPayload(args: {
 
   // Copy: LLM editorial when available, deterministic template otherwise. Both
   // paths pass through safeLatin + hard clipping below as the final backstop.
-  const serifHeadline = clip(llmCopy?.serifHeadline || factPack.headline, 120);
+  // Prefer the derived headline over the raw first line for X items.
+  const baseHeadline = isX ? derivedHeadline || factPack.headline : factPack.headline;
+  const serifHeadline = clip(llmCopy?.serifHeadline || baseHeadline, 120);
   const deckLead = clipWords(llmCopy?.deckLead || factPack.keyFacts[0] || item.summary, 60);
   const deckHighlight = clipWords(llmCopy?.deckHighlight || factPack.figures[0] || factPack.names[0] || "Why it matters", 40);
   const deckTail = clipWords(llmCopy?.deckTail || factPack.keyFacts[1] || "", 60);
@@ -99,7 +182,7 @@ export function buildRasPayload(args: {
   const hashtags = buildHashtags(topics, item.region);
 
   return {
-    headline: factPack.headline,
+    headline: isX ? derivedHeadline || factPack.headline : factPack.headline,
     factPack,
     sourceUrls,
     primaryUrl: item.url,
@@ -120,6 +203,15 @@ export function buildRasPayload(args: {
     caption,
     hashtags,
     factPackLimited: factPack.factPackLimited,
+    // X-signal / quality extensions (empty/default for RSS).
+    ...(derivedHeadline ? { derivedHeadline } : {}),
+    ...(hookPotential != null ? { hookPotential } : {}),
+    facts,
+    verified,
+    claimRisk,
+    outboundUrls,
+    quoted,
+    attributionLine,
   };
 }
 

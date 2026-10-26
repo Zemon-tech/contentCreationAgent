@@ -39,6 +39,41 @@ export const RasPayloadSchema = z.object({
   hashtags: z.array(z.string()),
 
   factPackLimited: z.boolean(),
+
+  // ---- X-signal / quality extensions (all optional or defaulted so existing
+  // RSS payloads validate unchanged). N/A for RSS items -> empty/default. ----
+  /** Model-derived factual headline (esp. for raw X posts). */
+  derivedHeadline: z.string().optional(),
+  /** Scroll-stopping hook strength (0-10). */
+  hookPotential: z.number().min(0).max(10).optional(),
+  /** The authoritative claim set with per-claim provenance. */
+  facts: z
+    .array(
+      z.object({
+        claim: z.string(),
+        sourceUrl: z.string(),
+        sourceType: z.enum(["rss", "x", "primary"]),
+      }),
+    )
+    .default([]),
+  /** True when the item/source is verified (official, primary, or corroborated). */
+  verified: z.boolean().default(false),
+  /** Risk of the central claim if unverified. */
+  claimRisk: z.enum(["low", "medium", "high"]).default("low"),
+  /** Non-X outbound URLs cited by the post (normalized). */
+  outboundUrls: z.array(z.string()).default([]),
+  /** The quoted post, if any (carried for attribution). */
+  quoted: z
+    .object({
+      text: z.string(),
+      author_handle: z.string().nullable(),
+      url: z.string(),
+      at: z.string(),
+    })
+    .nullable()
+    .default(null),
+  /** 'per @handle on X' when X-only (no corroborating RSS); null otherwise. */
+  attributionLine: z.string().nullable().default(null),
 });
 
 export type RasPayload = z.infer<typeof RasPayloadSchema>;

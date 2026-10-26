@@ -1,11 +1,11 @@
 import type { RawContent } from "../../schemas/rawContent";
-import type { RankInputItem, RankResult, Region } from "../../schemas/ranking";
+import type { RankInputItem, RankResult, RankedStory, Region } from "../../schemas/ranking";
 import type { Story } from "../../schemas/story";
 import type { RasPayload } from "../../schemas/handoff";
 import { NEWS_FEED_SOURCES } from "../../config/newsFeeds";
 import { ingestFeeds } from "../ingest-feeds";
 import { collectXPosts } from "../collect-x-posts";
-import { rankStories } from "../ranking/rankStories";
+import { rankStories, urlKey, matchOutboundToRss } from "../ranking/rankStories";
 import { createScoreCache, cacheEnabled } from "../ranking/scoreCache";
 import type { RankGenerate } from "../ranking/llmScore";
 import { canonicalKey } from "../safety/ledger-key";
@@ -44,19 +44,80 @@ export function feedCandidatesFor(raw: RawContent | null | undefined): string[] 
   return (raw?.imageCandidates ?? []).map((c) => c.url);
 }
 
+/**
+ * True when an X-sourced ranked story stands alone — no RSS item in the same
+ * run corroborates it (its outbound links don't match any RSS source URL).
+ * Drives the 'per @handle on X' attribution line: shown ONLY when X-only.
+ * Non-X stories are never X-only.
+ */
+function isXOnlyStory(r: RankedStory, rawById: Map<string, RawContent>): boolean {
+  if (r.item.isX !== true) return false;
+  const rssUrlSet = new Set<string>();
+  for (const raw of rawById.values()) {
+    if (raw.sourceType === "x") continue;
+    rssUrlSet.add(urlKey(raw.url));
+  }
+  // Corroborated (not X-only) when an outbound link matches an RSS source.
+  return !matchOutboundToRss(r.item.outboundUrls, rssUrlSet);
+}
+
 function rawToRankItem(raw: RawContent): RankInputItem {
   const summary = (raw.content || raw.title || "").replace(/\s+/g, " ").trim().slice(0, 800);
-  return {
+  const md = raw.metadata ?? {};
+  const base: RankInputItem = {
     id: raw.id,
     clusterId: canonicalKey(raw.url, raw.title || "", summary),
     title: (raw.title || "").trim(),
     summary,
     url: raw.url,
     source: raw.sourceName,
-    region: ((raw.metadata?.["region"] as Region) ?? "GLOBAL"),
+    region: ((md["region"] as Region) ?? "GLOBAL"),
     publishedAt: raw.publishedAt ?? raw.collectedAt,
     rawCategories: [],
     clusterSourceCount: 1,
+  };
+
+  // RSS items carry no X signal — leave the X fields empty/default.
+  if (raw.sourceType !== "x") return base;
+
+  // X items: map the fields postToRaw stamped onto metadata (FEAT-002) onto the
+  // RankInputItem X-signal fields. The ranker reads these; code owns every
+  // number, so we only carry values, never invent them.
+  const quoted = (md["quoted"] as RankInputItem["quoted"]) ?? null;
+  const engagementRaw = md["engagementRaw"] as
+    | { likes?: number; reposts?: number; replies?: number; views?: number }
+    | undefined;
+  return {
+    ...base,
+    isX: true,
+    isReply: !!md["isReply"],
+    isRepost: !!md["isRepost"],
+    outboundUrls: Array.isArray(md["outboundUrls"]) ? (md["outboundUrls"] as string[]) : [],
+    quoted,
+    authorHandle: typeof md["authorHandle"] === "string" ? (md["authorHandle"] as string) : undefined,
+    ...(engagementRaw
+      ? {
+          engagementRaw: {
+            likes: engagementRaw.likes ?? 0,
+            reposts: engagementRaw.reposts ?? 0,
+            replies: engagementRaw.replies ?? 0,
+            views: engagementRaw.views ?? 0,
+          },
+        }
+      : {}),
+    accountMedianLikes: typeof md["accountMedianLikes"] === "number" ? (md["accountMedianLikes"] as number) : 0,
+    accountMedianReposts: typeof md["accountMedianReposts"] === "number" ? (md["accountMedianReposts"] as number) : 0,
+    accountStatus: typeof md["accountStatus"] === "string" ? (md["accountStatus"] as string) : "candidate",
+    isOfficialAccount: !!md["isOfficialAccount"],
+    accountCredibilityScore:
+      typeof md["accountCredibilityScore"] === "number" ? (md["accountCredibilityScore"] as number) : 0,
+    // Carried LLM meaning fields where a prior X-discovery judgement stamped them.
+    ...(typeof md["isPrimarySource"] === "boolean" ? { isPrimarySource: md["isPrimarySource"] as boolean } : {}),
+    ...(md["claimRisk"] === "low" || md["claimRisk"] === "medium" || md["claimRisk"] === "high"
+      ? { claimRisk: md["claimRisk"] as "low" | "medium" | "high" }
+      : {}),
+    ...(typeof md["derivedHeadline"] === "string" ? { derivedHeadline: md["derivedHeadline"] as string } : {}),
+    ...(typeof md["hookPotential"] === "number" ? { hookPotential: md["hookPotential"] as number } : {}),
   };
 }
 
@@ -186,6 +247,8 @@ export async function pickPostableCandidate(args: {
       raw,
       feedCandidateUrls: feedCandidatesFor(raw),
       now: args.now,
+      rankedStory: r,
+      isXOnly: isXOnlyStory(r, args.rawById),
     });
     if (prepared.payload.imageLocalPath) {
       return { candidate: { item: r.item, finalScore: r.finalScore, reason: r.reason, prepared }, tried, skippedNoImage };
@@ -201,6 +264,14 @@ export async function prepareForHandoff(args: {
   raw: RawContent | null;
   feedCandidateUrls: string[];
   now?: Date;
+  /**
+   * The selected ranked story. Carries the X-signal/quality fields
+   * (derivedHeadline, verified, claimRisk, outboundUrls, quoted, hookPotential)
+   * that flow into the payload. Optional so existing callers/tests still work.
+   */
+  rankedStory?: RankedStory | null;
+  /** True when the story is X-only (no corroborating RSS) — drives attribution. */
+  isXOnly?: boolean;
   /** Inject the copywriter's model (demos stub this offline). Omit = real Sarvam. */
   copyGenerate?: CopyGenerate;
   /** Override the copy config (demos disable Exa to stay fully offline). */
@@ -208,6 +279,9 @@ export async function prepareForHandoff(args: {
   log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<PreparedPost> {
   const log = args.log ?? ((ev, data) => console.log(JSON.stringify({ step: "copy", ev, ...data })));
+  // FIX #2: trust is carried by verified/claimRisk, NOT by collapsing X into
+  // factPackLimited. Keep `limited` exactly the RSS thinness signal — do NOT
+  // add `|| raw.signalOnly` here.
   const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback);
   const story = itemToMinimalStory(args.item, args.finalScore);
   const factPack = buildFactPack(story, { limited, sourceUrls: [args.item.url] });
@@ -229,6 +303,9 @@ export async function prepareForHandoff(args: {
     suggestedCaptionAngle: "Why it matters",
     llmCopy: copy,
     extraSourceUrls: enrichedSourceUrls,
+    story: args.rankedStory ?? null,
+    authorHandle: args.rankedStory?.item?.authorHandle ?? args.item.authorHandle ?? null,
+    isXOnly: args.isXOnly,
   });
   const caps = await canPostNow({ now: args.now });
   const scoreOk = meetsScoreThreshold(args.finalScore);
