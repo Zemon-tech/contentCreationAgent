@@ -14,6 +14,7 @@ import { imageGenAgent } from './agents/imageGenAgent';
 import { icpJudgeAgent } from './agents/icpJudgeAgent';
 import { rasDesignAgent } from './agents/rasDesignAgent';
 import { rankScoringAgent } from './agents/rankScoringAgent';
+import { xQueryAgent } from './agents/xQueryAgent';
 
 import { fluxOutputRoute } from './lib/flux-output-route';
 import { postAssetRoute } from './routes/post-assets';
@@ -87,7 +88,7 @@ export const mastra = new Mastra({
     // Both let images display inline in Studio chat.
     apiRoutes: [postAssetRoute, fluxOutputRoute, rasAssetRoute, rasPublishRoute],
   },
-  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent, rankScoringAgent },
+  agents: { aggregatorAgent, imageGenAgent, icpJudgeAgent, rasDesignAgent, rankScoringAgent, xQueryAgent },
   workflows: {
     industryAggregationWorkflow,
     autoNewsToRasWorkflow,

@@ -1,31 +1,36 @@
 import type { RawContent } from "../schemas/rawContent";
 import { hashString } from "../collectors/types";
-import { scrapeXPosts, type ScrapedXPost } from "./x-publisher";
-import { checkXSession } from "./x-publisher";
-import { getXWatchConfig, type XWatchConfig } from "../config/xAccounts";
+import type { ScrapedXPost } from "./x-publisher";
+import { getXDiscoveryConfig, type XDiscoveryConfig } from "../config/xDiscovery";
+import type { SavedXPostsGateway } from "./x-discovery/stores/savedXPosts";
+import { libSqlSavedXPostsGateway } from "./x-discovery/stores/savedXPosts";
 import { normalizeUrl } from "./normalize";
 
 /**
- * Collect posts from the watched X accounts and normalize them into
- * RawContent items the auto-news-to-RAS pipeline can rank like any feed item.
+ * Read the X/Twitter signal INTO the auto-news-to-RAS pipeline.
+ *
+ * FIX #5 / FIX #9 — feed-only guarantee: this module NO LONGER scrapes. The X
+ * discovery subsystem (lib/x-discovery/runDiscovery.ts, on its own 6h cron)
+ * does the scraping and SAVES normalized posts to the saved_x_posts store. The
+ * main news workflow only READS those saved posts here. No scraper reference
+ * remains in the main workflow's import graph, so a single switch
+ *   X_DISCOVERY_ENABLED=false
+ * turns the whole X signal off structurally.
  *
  * Design notes:
- * - SIGNAL-ONLY: every item is flagged signalOnly so an X post can inform
- *   ranking but is never cited as a story's primary source without
+ * - SIGNAL-ONLY: each saved item was flagged signalOnly at write time, so an X
+ *   post can inform ranking but is never cited as a primary source without
  *   corroboration (same policy as Hacker News / Reddit in newsFeeds.ts).
- * - FAIL-SOFT: a scrape failure (session not logged in, markup change, a bad
- *   handle) must never block the news run. Failures are logged and skipped;
- *   the function always resolves, returning whatever it managed to collect.
- * - NO-OP WHEN DISABLED: returns [] immediately when the watch config is off,
- *   so the default feed-only behavior is unchanged unless X watching is on.
+ * - FAIL-SOFT: any gateway error returns an empty result and never throws into
+ *   the news run.
+ * - NO-OP WHEN DISABLED: returns an empty result WITHOUT touching the store
+ *   when the discovery config is off.
  */
 
 export interface CollectXResult {
   items: RawContent[];
-  /** Per-account outcome for observability (count or skip reason). */
+  /** Per-account outcome for observability (count by author handle). */
   perAccount: Array<{ handle: string; count: number; error?: string }>;
-  /** True if the X session wasn't ready, so nothing was scraped. */
-  sessionNotReady?: boolean;
 }
 
 const MIN_TEXT_LEN = 15; // drop one-word / link-only posts that make poor stories
@@ -154,69 +159,44 @@ export function postToRaw(
 }
 
 export async function collectXPosts(opts?: {
-  config?: XWatchConfig;
-  /** Injectable for tests. Defaults to the real scraper. */
-  scrape?: typeof scrapeXPosts;
-  /** Injectable for tests. Defaults to the real session check. */
-  checkSession?: typeof checkXSession;
+  /** Injectable for tests/demo. Defaults to the real libSQL saved-posts store. */
+  savedPosts?: SavedXPostsGateway;
+  now?: Date;
+  /** Overrides config.savedPostMaxAgeHours for the store-window read. */
+  maxAgeHours?: number;
+  config?: XDiscoveryConfig;
   log?: (ev: string, data: Record<string, unknown>) => void;
 }): Promise<CollectXResult> {
-  const config = opts?.config ?? getXWatchConfig();
-  const scrape = opts?.scrape ?? scrapeXPosts;
-  const check = opts?.checkSession ?? checkXSession;
+  const config = opts?.config ?? getXDiscoveryConfig();
   const log = opts?.log ?? (() => {});
 
-  if (!config.enabled || config.handles.length === 0) {
+  // Structural feed-only switch: when disabled we never touch the store.
+  if (!config.enabled) {
+    log("x.disabled", {});
     return { items: [], perAccount: [] };
   }
 
-  // One session check up front: if the automation browser isn't logged in,
-  // skip the whole X signal cleanly rather than failing every account.
+  const now = opts?.now ?? new Date();
+  const maxAgeHours = opts?.maxAgeHours ?? config.savedPostMaxAgeHours;
+  const savedPosts = opts?.savedPosts ?? libSqlSavedXPostsGateway();
+
   try {
-    const session = await check();
-    if (!session.loggedIn) {
-      log("x.session.not_ready", { message: session.message });
-      return { items: [], perAccount: [], sessionNotReady: true };
+    const items = await savedPosts.recentWithin(maxAgeHours, now);
+    // Per-author counts for observability (authorHandle stamped by postToRaw).
+    const counts = new Map<string, number>();
+    for (const it of items) {
+      const handle =
+        (typeof it.metadata?.["authorHandle"] === "string" && (it.metadata["authorHandle"] as string)) ||
+        it.author?.handle ||
+        "unknown";
+      counts.set(handle, (counts.get(handle) ?? 0) + 1);
     }
+    const perAccount = [...counts.entries()].map(([handle, count]) => ({ handle, count }));
+    log("x.read.saved", { items: items.length, accounts: perAccount.length });
+    return { items, perAccount };
   } catch (err) {
-    log("x.session.check_failed", { error: err instanceof Error ? err.message : String(err) });
-    return { items: [], perAccount: [], sessionNotReady: true };
+    // Fail-soft: a store error must never break the news run.
+    log("x.read.error", { error: err instanceof Error ? err.message : String(err) });
+    return { items: [], perAccount: [] };
   }
-
-  const items: RawContent[] = [];
-  const perAccount: CollectXResult["perAccount"] = [];
-
-  // Sequential on purpose: all accounts share ONE automation browser, so
-  // concurrent scrapes would fight over the same tab.
-  for (const handle of config.handles) {
-    try {
-      const res = await scrape({
-        handle,
-        limit: config.perAccountLimit,
-        includeReplies: false,
-        maxScrolls: config.maxScrolls,
-      });
-      if (!res.success) {
-        perAccount.push({ handle, count: 0, error: res.error || res.message });
-        log("x.account.failed", { handle, error: res.error || res.message });
-        continue;
-      }
-      let kept = 0;
-      for (const post of res.posts) {
-        const raw = postToRaw(handle, post);
-        if (raw) {
-          items.push(raw);
-          kept++;
-        }
-      }
-      perAccount.push({ handle, count: kept });
-      log("x.account.collected", { handle, posts: res.posts.length, kept });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      perAccount.push({ handle, count: 0, error: msg });
-      log("x.account.error", { handle, error: msg });
-    }
-  }
-
-  return { items, perAccount };
 }

@@ -77,17 +77,17 @@ export async function collectRankSelect(opts: {
 }): Promise<CollectRankSelect> {
   const { items: feedRaws } = await ingestFeeds({ sources: NEWS_FEED_SOURCES, dryRun: !(opts.persist ?? false), now: opts.now });
 
-  // Merge in the X/Twitter signal: scrape the watched accounts (free, via the
-  // logged-in automation browser) and treat each post as a signal-only
-  // candidate story. Fails soft — if X isn't configured or the session isn't
-  // logged in, this contributes nothing and the feed-only run is unchanged.
+  // Merge in the X/Twitter signal: READ the posts the X discovery subsystem
+  // saved on its own schedule (collect-x-posts no longer scrapes). Each post is
+  // a signal-only candidate story. Fails soft — if X discovery is disabled or
+  // the store read fails, this contributes nothing and the feed-only run is
+  // unchanged.
   let xRaws: RawContent[] = [];
   try {
-    const xResult = await collectXPosts({ log: opts.log });
+    const xResult = await collectXPosts({ log: opts.log, now: opts.now });
     xRaws = xResult.items;
     opts.log?.("x.collected", {
       items: xRaws.length,
-      sessionNotReady: xResult.sessionNotReady ?? false,
       perAccount: xResult.perAccount,
     });
   } catch (err) {
