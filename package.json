@@ -29,6 +29,7 @@
     "auto:dry": "npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts",
     "auto:dry:mockx": "npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts --mock-x",
     "ras:render:test": "npx -y tsx --env-file=.env src/mastra/demo/rasRenderTest.ts",
+    "ras:poster:test": "npx -y tsx --env-file=.env src/mastra/demo/rasPosterRenderTest.ts",
     "auto:radar": "npx -y tsx --env-file=.env src/mastra/cron/runAutoNewsRadar.ts",
     "auto:radar:once": "npx -y tsx --env-file=.env src/mastra/cron/runAutoNewsRadar.ts --once",
     "x:discover": "npx -y tsx --env-file=.env src/mastra/cron/runXDiscovery.ts",

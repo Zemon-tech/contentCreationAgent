@@ -69,7 +69,7 @@ import {
   saveContentOpportunityTool,
   saveStoriesTool,
 } from './tools/industry-tools';
-import { renderRasStoryTool, renderRasCarouselTool } from './tools/ras-render-tools';
+import { renderRasStoryTool, renderRasCarouselTool, renderRasPosterStoryTool } from './tools/ras-render-tools';
 import { publishRasToInstagramTool } from './tools/ras-instagram-tool';
 
 import { industryAggregationWorkflow } from './workflows/industryAggregationWorkflow';
@@ -135,6 +135,7 @@ export const mastra = new Mastra({
     generateFluxImageTool,
     renderRasStoryTool,
     renderRasCarouselTool,
+    renderRasPosterStoryTool,
     publishRasToInstagramTool,
   },
   storage: new MastraCompositeStore({

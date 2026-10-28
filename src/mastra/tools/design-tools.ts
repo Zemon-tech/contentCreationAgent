@@ -6,6 +6,11 @@ import { formatStoryForTemplate } from "../lib/content-formatter";
 import { routeStoryToTemplate } from "../lib/template-router";
 import { storyRepository, opportunityRepository, updateStoryEditorialStatus } from "../repositories/store";
 
+// NOTE: This union lists the EXTERNAL Design Agent (Python REST service)
+// template ids only. The 'ras-poster-story' template is an IN-PROCESS Satori
+// template rendered locally via renderRasPosterStoryTool (see
+// tools/ras-render-tools.ts); it is intentionally NOT part of this union and
+// must never be added here.
 const TemplateIdSchema = z
   .enum(["tech-announcement", "keilhq-editorial", "keilhq-text", "entrepreneur-post", "360labs-news", "news-brief"])
   .optional()
