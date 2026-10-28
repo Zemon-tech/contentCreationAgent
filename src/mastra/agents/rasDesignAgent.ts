@@ -15,7 +15,7 @@ import { askUserTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { resolveChatModel } from "../config/model.js";
 import { exaSearchTool, exaScrapeTool } from "../tools/exa-tools.js";
-import { renderRasStoryTool, renderRasCarouselTool } from "../tools/ras-render-tools.js";
+import { renderRasStoryTool, renderRasCarouselTool, renderRasPosterStoryTool } from "../tools/ras-render-tools.js";
 import { publishRasToInstagramTool } from "../tools/ras-instagram-tool.js";
 import { checkInstagramConnectionTool } from "../tools/instagram-tools.js";
 import {
@@ -80,8 +80,14 @@ only after the user approves.
      slides 2..N each carry ONE fact; then a "what this means for you" slide;
      then a final slide with a SPECIFIC save/share prompt (never a generic
      "follow for more").
-   - If the user explicitly asked for single or carousel, honor that. Otherwise
-     pick the one that fits the material and briefly say why.
+   - POSTER story post: a bold, poster-style single frame built around a
+     THREE-LINE condensed headline (line 1 accent, line 2 ink, line 3 on an
+     accent pill) over a transparent hero cutout. Use it when the user asks for
+     a "poster" post, or when one punchy statement carries the whole story.
+     It needs the headline split into exactly three short lines
+     (headlineTop / headlineMid / headlineHighlight), not one sentence.
+   - If the user explicitly asked for single, carousel, or poster, honor that.
+     Otherwise pick the one that fits the material and briefly say why.
 
 3. WRITE THE COPY (RAS editorial voice)
 
@@ -164,6 +170,10 @@ only after the user approves.
 
 5. RENDER
    - Single: call render-ras-story with a slug + the structured copy + heroImage.
+   - Poster: call render-ras-poster-story with a slug, heroImage, and the three
+     headline lines (headlineTop, headlineMid, headlineHighlight), plus optional
+     categoryTag/accentColor. It returns ready + problems; if ready is false,
+     shorten the headline lines (or pick another image) and render again.
    - Carousel: call render-ras-carousel with a deckSlug, a cover, and 3-4 slides
      (each 'body' with its own image, or 'text' only). Slide 1 is the cover.
    - Both return assets with view_url/download_url and absolute paths.
@@ -200,7 +210,7 @@ only after the user approves.
 - checkXSession / launchXBrowser: verify (and if needed start) the logged-in X
   automation browser before the first scrapeXPosts call.
 - ask_user: ask which hero image to use (and any genuine clarification).
-- render-ras-story / render-ras-carousel: produce the PNG(s).
+- render-ras-story / render-ras-poster-story / render-ras-carousel: produce the PNG(s).
 - checkInstagramConnection: verify the IG account before publishing.
 - publish-ras-to-instagram: approval-gated publish (single or carousel).
 
@@ -235,6 +245,7 @@ choice + publish approval from the user.`,
     ask_user: askUserTool,
     renderRasStory: renderRasStoryTool,
     renderRasCarousel: renderRasCarouselTool,
+    renderRasPoster: renderRasPosterStoryTool,
     checkInstagramConnection: checkInstagramConnectionTool,
     publishRasToInstagram: publishRasToInstagramTool,
   },
