@@ -11,9 +11,106 @@
  */
 
 import fs from "node:fs/promises";
+import path from "node:path";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { removeBackground } from "@imgly/background-removal-node";
 import { checkPosterCopy, type RasPosterStoryProps } from "../templates/RasPosterStoryTemplate.js";
+
+/**
+ * Background removal runs in a SEPARATE process (bgRemovalWorker.ts).
+ *
+ * Two problems forced this out of the main process:
+ *  1. @imgly/background-removal-node's default `publicPath` is resolved
+ *     relative to process.cwd(), which is wrong under Mastra dev/build (the
+ *     server runs from .mastra/output or Studio's src/mastra/public). The
+ *     worker fixes it by handing the model an absolute file:// publicPath
+ *     derived from the installed package location.
+ *  2. onnxruntime-node (the model's native backend) and sharp's libvips crash
+ *     with a native access violation when they run in the SAME process. Giving
+ *     the model its own process keeps onnx and libvips in separate address
+ *     spaces, which eliminates the crash.
+ *
+ * The worker speaks binary over stdio: input PNG on stdin, cutout PNG on
+ * stdout, exit 0 on success / 1 on failure. If the worker fails for any reason
+ * (crash, missing runtime, timeout), runBgRemovalWorker() returns null and
+ * makeHeroCutout() falls back to using the normalised image as-is.
+ */
+const WORKER_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), "bgRemovalWorker.ts");
+const WORKER_TIMEOUT_MS = 120_000;
+
+/**
+ * Runs the background-removal worker in a child process. Returns the cutout PNG
+ * buffer, or null if the worker failed (caller then falls back to the input).
+ */
+async function runBgRemovalWorker(
+  inputPng: Buffer,
+  model: "small" | "medium",
+): Promise<Buffer | null> {
+  return new Promise((resolve) => {
+    // Run the TS worker the same way every entrypoint in this repo runs:
+    // via `npx -y tsx`. This keeps it working under tsx dev and the bundled
+    // build without assuming a local tsx binary is on PATH. `shell: true` is
+    // required on Windows so the npx shim (npx.cmd) can be launched (Node
+    // refuses to spawn .cmd files directly since the EINVAL hardening change).
+    let child;
+    try {
+      // Pass the full command as one string (not args + shell:true) to avoid
+      // the DEP0190 warning. All parts are code-controlled (worker path + a
+      // fixed "small"/"medium" model), never user input, so concatenation is
+      // safe; the path is quoted in case it contains spaces.
+      const command = `npx -y tsx ${JSON.stringify(WORKER_PATH)} ${model}`;
+      child = spawn(command, {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+        shell: true,
+      });
+    } catch {
+      resolve(null);
+      return;
+    }
+
+    const out: Buffer[] = [];
+    const err: Buffer[] = [];
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        child.kill("SIGKILL");
+        resolve(null);
+      }
+    }, WORKER_TIMEOUT_MS);
+
+    child.stdout.on("data", (c: Buffer) => out.push(c));
+    child.stderr.on("data", (c: Buffer) => err.push(c));
+
+    child.on("error", () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(null);
+    });
+
+    child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      const png = Buffer.concat(out);
+      if (code === 0 && png.length > 0) {
+        resolve(png);
+      } else {
+        resolve(null);
+      }
+    });
+
+    child.stdin.on("error", () => {
+      /* broken pipe if the child died early — handled via close/error */
+    });
+    child.stdin.write(inputPng);
+    child.stdin.end();
+  });
+}
 
 // ==========================================================================
 // 1. Hero cutout tool
@@ -121,14 +218,19 @@ export async function makeHeroCutout(
     .toBuffer();
 
   // 2. Background removal (skipped when the input is already a cutout).
+  //    Runs in a separate process (see runBgRemovalWorker). If it fails, fall
+  //    back to the normalised image as-is so the poster still renders.
   const alreadyCutout = await hasRealTransparency(base);
   let cut: Buffer = base;
   if (!alreadyCutout) {
-    const blob = await removeBackground(new Blob([new Uint8Array(base)], { type: "image/png" }), {
-      model: o.model,
-      output: { format: "image/png" },
-    });
-    cut = Buffer.from(await blob.arrayBuffer());
+    const removed = await runBgRemovalWorker(base, o.model);
+    if (removed) {
+      cut = removed;
+    } else {
+      warnings.push(
+        "background removal unavailable — using the original image without a cutout",
+      );
+    }
   }
 
   // 3. Raw pixels -> clean alpha -> bounding box.
