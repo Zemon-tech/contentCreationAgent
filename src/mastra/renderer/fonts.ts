@@ -31,6 +31,7 @@ const FONT_SPECS: FontSpec[] = [
   { file: "Inter-ExtraBold.woff", name: "Inter", weight: 800 },
   { file: "InstrumentSerif-Regular.woff", name: "Instrument Serif", weight: 400 },
   { file: "IBMPlexMono-Regular.woff", name: "IBM Plex Mono", weight: 400 },
+  { file: "Anton-Regular.woff", name: "Anton", weight: 400 },
 ];
 
 /**

@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Foundation: make the repo typecheck clean and register the Anton font cwd-safely. Fix the pre-existing repo-wide sharp type gap (6 TS7016 errors because sharp 0.35.5's exports map points ESM types at a dist/index.d.mts that does NOT exist in the installed build; only dist/index.d.cts exists) via a local ambient re-export shim, and re-enable the Anton display font that RasPosterStoryTemplate requires, using the existing cwd-safe font loader. This FEAT unblocks FEAT-002 and must leave `npm run typecheck` at 0 errors.",
+  "status": "completed",
+  "steps": [
+    "Create src/mastra/types/sharp.d.ts with `declare module \"sharp\" { ... }` that re-exports node_modules/sharp/dist/index.d.cts under the bare 'sharp' specifier. It MUST expose the default export (for `import sharp from \"sharp\"`) AND named type members (for `import type { Metadata } from \"sharp\"` in lib/image/validate.ts) — specifically Sharp, Metadata, OutputInfo, SharpOptions, ResizeOptions. The exact validated form (tested during planning, 6->0 errors): `import * as sharpNs from \"sharp/dist/index.d.cts\"; const sharp: typeof sharpNs; export default sharp; export import Sharp = sharpNs.Sharp; export import Metadata = sharpNs.Metadata; export import OutputInfo = sharpNs.OutputInfo; export import SharpOptions = sharpNs.SharpOptions; export import ResizeOptions = sharpNs.ResizeOptions;`. Add a header comment explaining the missing-.d.mts root cause. The types dir is auto-included by tsconfig include ['src/**/*'].",
+    "Copy node_modules/@fontsource/anton/files/anton-latin-400-normal.woff to src/mastra/assets/fonts/Anton-Regular.woff (PowerShell: Copy-Item). This is a committed binary.",
+    "In src/mastra/renderer/fonts.ts, add `{ file: \"Anton-Regular.woff\", name: \"Anton\", weight: 400 }` to the FONT_SPECS array and remove the disabled-Anton explanatory comment block. Do NOT add any module-top-level cwd-relative font read; the loader already resolves via getFontsDir()+readFileSync which is cwd-safe. Family must be exactly 'Anton', weight 400, style 'normal' (style is applied uniformly by loadFonts).",
+    "Add the Anton row to src/mastra/assets/fonts/README.md (Filename Anton-Regular.woff, Family Anton, Weight 400, Used for 'Poster story display headline')."
+  ],
+  "acceptance_criteria": [
+    "`npm run typecheck` reports 0 errors (down from the 6 baseline TS7016 sharp errors).",
+    "src/mastra/assets/fonts/Anton-Regular.woff exists and is a non-empty woff binary.",
+    "renderer/fonts.ts FONT_SPECS includes an Anton weight-400 entry; the five existing fonts (Inter x3, Instrument Serif, IBM Plex Mono) are unchanged.",
+    "No font or asset is read via a bare cwd-relative path at module top level."
+  ],
+  "verification": [
+    "Run `npm run typecheck` and confirm it exits 0 with no errors.",
+    "Run a one-shot check: `npx -y tsx --env-file=.env -e \"import('./src/mastra/renderer/fonts.ts').then(m => { const f = m.loadFonts(); const a = f.find(x => x.name === 'Anton' && x.weight === 400); if (!a) throw new Error('Anton 400 missing'); console.log('Anton present, bytes', a.data.length); })\"` and confirm it prints a positive byte count and does not throw. (If inline tsx -e is awkward on Windows PowerShell quoting, fold this assertion into FEAT-002's demo instead and note it in findings.)"
+  ],
+  "blocked_reason": null,
+  "findings": "DONE. sharp.d.ts shim created at src/mastra/types/sharp.d.ts (exact validated form from the step); `npm run typecheck` went 6 TS7016 -> 0 errors. Anton-Regular.woff copied to src/mastra/assets/fonts/ (15632 bytes) and added to FONT_SPECS as {name:'Anton', weight:400, style:'normal'}; the disabled-Anton comment block was removed. No module-top-level cwd-relative font read was added — loadFonts() still resolves via getFontsDir()+readFileSync (cwd-safe). The five existing fonts (Inter x3, Instrument Serif, IBM Plex Mono) are unchanged. README Anton row added. FOR FEAT-002: the inline `npx tsx -e` Anton assertion WORKED on Windows PowerShell (printed 'Anton present, bytes 15632'), so it was NOT folded into the demo — FEAT-002 may still add its own loadFonts() Anton {name:'Anton', weight:400} assertion in rasPosterRenderTest.ts as planned. Anton family is exactly 'Anton', weight 400, style 'normal'."
+}
