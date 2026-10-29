@@ -7,7 +7,9 @@
  *
  * It runs the true handoff with dryRun=false + approved=true so the default
  * render runs, but injects a fake publish that only logs what it WOULD send.
- * The real Instagram Graph API is never called.
+ * The real Instagram Graph API is never called. X is a live side effect on the
+ * approved publish path, so this harness ALSO injects a not-ready xReady and a
+ * fake xPublish: neither Instagram NOR X ever posts from this render-only test.
  */
 
 if (typeof process.loadEnvFile === "function") {
@@ -39,7 +41,7 @@ const heuristic: RankGenerate = async (prompt) => {
 };
 
 async function main(): Promise<void> {
-  console.log("\n=== RAS RENDER TEST (real render, FAKE publish — nothing posted) ===\n");
+  console.log("\n=== RAS RENDER TEST (real render, FAKE IG publish, X disabled — nothing posted) ===\n");
   const { rankResult, rawById } = await collectRankSelect({ rankGenerate: heuristic, persist: false, persistRankLog: false });
 
   // Find the first ranked story that yields a usable image, so render runs.
@@ -73,6 +75,7 @@ async function main(): Promise<void> {
   }
 
   let publishCalled = false;
+  let xPublishCalled = false;
   let capturedViewUrl = "";
   const res = await runHandoff({
     ledgerKey: canonicalKeyForItem(pick.item),
@@ -96,10 +99,16 @@ async function main(): Promise<void> {
           },
       getRow: async () => undefined,
       record: async () => {}, // don't pollute the real ledger
+      // X is a live side effect on the approved publish path. This render-only
+      // harness must NEVER create a real tweet, so disable X two ways: report
+      // X as not-ready (so the handoff skips it) AND inject a fake xPublish that
+      // never posts, in case the readiness gate is ever bypassed.
+      xReady: async () => ({ ok: false, reason: "render test" }),
+      xPublish: async () => { xPublishCalled = true; return { success: false, verified: false, text: "", message: "render test: X disabled" }; },
     },
   });
 
-  console.log(`\nHandoff status: ${res.status} · fake publish called: ${publishCalled}`);
+  console.log(`\nHandoff status: ${res.status} · fake IG publish called: ${publishCalled} · real X publish called: ${xPublishCalled}`);
 
   // Verify the EXACT PNG this render produced (from the captured publish/view URL).
   // Render hands back a publish path (/ras-publish/<slug>/01.jpg) or a view URL
@@ -116,7 +125,7 @@ async function main(): Promise<void> {
   } else {
     console.log(`\n⚠️ Could not locate rendered file at ${pngPath}`);
   }
-  console.log(`\nNo Instagram post was created. To exercise a REAL publish, see the steps in chat.\n`);
+  console.log(`\nNeither Instagram NOR X posted anything (IG publish is faked; X is disabled in this harness). To exercise a REAL publish, see the steps in chat.\n`);
 }
 
 main().catch((err) => {

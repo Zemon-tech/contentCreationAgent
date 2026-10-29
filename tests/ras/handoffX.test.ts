@@ -125,3 +125,25 @@ test("empty xCaption: X skipped with 'no X caption', IG still posted", async () 
   assert.equal(res.x?.attempted, false);
   assert.equal(res.x?.error, "no X caption");
 });
+
+/**
+ * Regression for the ras:render:test harness: it runs live+approved with a FAKE
+ * IG publish that reports published:true. Without a safe X dep, the handoff
+ * would run the REAL xPublish on the `posted` branch and could create a real
+ * tweet. The harness injects an xReady that returns not-ready AND a fake
+ * xPublish; this asserts the (fake) X publisher is NOT called because X is
+ * skipped on not-ready, so no real tweet is ever possible from the harness.
+ */
+test("render-test harness shape: xReady not-ready means xPublish is NEVER called", async () => {
+  const { deps, calls } = fakeDeps();
+  // Mirror the harness: fake IG publish reports success, X is disabled by
+  // reporting not-ready (and a fake xPublish stands in for the real one).
+  deps.publish = async () => { calls.publish++; return { published: true, mediaId: "FAKE_MEDIA_ID", permalink: "https://instagram.com/p/FAKE" }; };
+  deps.xReady = async () => { calls.xReady++; return { ok: false, reason: "render test" }; };
+  const res = await runHandoff({ ledgerKey: "k", payload: payload(), storyId: "s", dryRun: false, approved: true, deps });
+  assert.equal(res.status, "posted");
+  assert.equal(calls.xReady, 1);
+  assert.equal(calls.xPublish, 0);
+  assert.equal(res.x?.attempted, false);
+  assert.equal(res.x?.error, "render test");
+});
