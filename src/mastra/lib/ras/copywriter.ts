@@ -71,10 +71,14 @@ export const EditorialCopySchema = z.object({
   deckHighlight: z.string().min(1).max(40),
   deckTail: z.string().max(60),
   caption: z.string().min(1).max(2000),
-  // Standalone <=280 tweet. OPTIONAL so a missing or over-length value never
-  // fails validation and loses the otherwise-good IG copy (buildRasPayload
-  // clips/falls back deterministically). NOT a truncated IG caption.
-  xCaption: z.string().max(280).optional(),
+  // Standalone tweet. OPTIONAL and length-UNCONSTRAINED here on purpose: a
+  // missing OR an over-length value must NEVER fail the whole EditorialCopySchema
+  // parse, which would discard the otherwise-good Instagram copy (serifHeadline,
+  // deck fields, caption) and force everything onto the deterministic template.
+  // buildRasPayload normalizes this field independently — enforcing the 0-2
+  // hashtag cap and clipping to <=280 word-safe — so the 280 guarantee holds
+  // downstream regardless. NOT a truncated IG caption.
+  xCaption: z.string().optional(),
 });
 
 export type EditorialCopy = z.infer<typeof EditorialCopySchema>;

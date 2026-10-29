@@ -141,3 +141,53 @@ test("over-length LLM xCaption is clipped word-safe to <= 280", () => {
   assert.ok(payload.xCaption.length <= 280);
   assert.ok(!payload.xCaption.includes("..."), "no ellipsis — word-boundary clip");
 });
+
+test("LLM xCaption with >2 hashtags is capped to the first two", () => {
+  const item = rssItem();
+  const tweet = "Acme raised $20M Series A to scale its AI stack #ai #startups #funding #india #tech";
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: tweet },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  const tags = payload.xCaption.match(/#[A-Za-z0-9_]+/g) ?? [];
+  assert.equal(tags.length, 2, "at most two hashtags survive");
+  assert.deepEqual(tags, ["#ai", "#startups"], "the first two are kept in order");
+});
+
+test("deterministic fallback drops the source URL rather than publishing it half-cut", () => {
+  const item = rssItem();
+  // A headline long enough that the full URL cannot fit under 280.
+  const longHeadline = "Acme ".repeat(50).trim() + " closes record round"; // ~270 chars
+  const longUrl = "https://ex.com/" + "a".repeat(60);
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ headline: longHeadline, primarySource: longUrl }),
+    image,
+    story: rankedStory(item),
+    isXOnly: false,
+  });
+  assert.ok(payload.xCaption.length <= 280);
+  // The URL must be present WHOLE or absent — never a partial fragment.
+  const hasFullUrl = payload.xCaption.includes(longUrl);
+  const hasPartialUrl = /https?:\/\//.test(payload.xCaption) && !hasFullUrl;
+  assert.ok(!hasPartialUrl, "no partial/truncated URL in the tweet");
+});
+
+test("deterministic fallback keeps the source URL whole when it fits", () => {
+  const item = rssItem();
+  const url = "https://ex.com/story";
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ headline: "Acme raises $20M Series A", primarySource: url }),
+    image,
+    story: rankedStory(item),
+    isXOnly: false,
+  });
+  assert.ok(payload.xCaption.length <= 280);
+  assert.ok(payload.xCaption.includes(url), "a fitting source URL is appended whole");
+});

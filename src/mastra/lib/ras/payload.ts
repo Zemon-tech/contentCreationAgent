@@ -57,11 +57,64 @@ function clip(text: string, max: number): string {
 }
 
 /**
- * Fit a standalone tweet to X's limit by cutting at a WORD boundary with no
- * ellipsis (reuses clipWords). Returns a string ALWAYS <= `max` (default 280).
+ * Word-safe clip for the tweet BODY. Cuts at a word boundary with no ellipsis
+ * and never emits a partial URL: if the final retained token looks like the
+ * start of a URL (contains "://" or starts with "www"/"http") but was itself
+ * truncated by the slice, that fragment is dropped. A single unbroken token
+ * longer than `max` (no spaces at all) is the only case that is hard-cut, since
+ * there is no word boundary to cut on. Always returns <= `max`.
+ */
+function clipTweetBody(text: string, max: number): string {
+  const t = safeLatin(text);
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(" ");
+  if (sp <= 0) {
+    // No whitespace in the retained window: a single overlong token. Hard-cut
+    // (nothing to word-break on), but never publish a partial URL.
+    return /:\/\/|^www\.|^https?:/i.test(cut) ? "" : cut.replace(/[\s,;:-]+$/, "").trim();
+  }
+  return cut.slice(0, sp).replace(/[\s,;:-]+$/, "").trim();
+}
+
+/**
+ * Enforce the 0-2 hashtag cap on a model-written tweet WITHOUT discarding the
+ * rest of the copy: keep the first two hashtags in place and strip any extras.
+ * Collapses the whitespace left by removed tags.
+ */
+function capHashtags(text: string, maxTags = 2): string {
+  let seen = 0;
+  const out = text.replace(/(^|\s)#[A-Za-z0-9_]+/g, (match) => {
+    seen += 1;
+    return seen <= maxTags ? match : "";
+  });
+  return out.replace(/[ \t]{2,}/g, " ").replace(/ +([.!?,;:])/g, "$1").trim();
+}
+
+/**
+ * Build the deterministic tweet: the headline is the required body, the
+ * attribution/source is an ATOMIC suffix that is appended only when the whole
+ * string still fits under `max` — a suffix that does not fit is DROPPED, never
+ * published half-cut. The headline body is clipped word-safe as a last resort.
+ * Always returns <= `max`.
+ */
+function buildTweetWithSuffix(headline: string, suffix: string, max: number): string {
+  const head = safeLatin(headline);
+  const suf = safeLatin(suffix);
+  if (suf) {
+    const combined = `${head} ${suf}`.trim();
+    if (combined.length <= max) return combined;
+  }
+  // Suffix does not fit (or is empty): publish the word-safe headline alone.
+  return clipTweetBody(head, max);
+}
+
+/**
+ * Normalize a MODEL-written tweet: cap hashtags at 2, then clip word-safe to
+ * `max`. Always returns <= `max`.
  */
 function clipTweet(text: string, max = 280): string {
-  return clipWords(text, max);
+  return clipTweetBody(capHashtags(text), max);
 }
 
 function accentFor(topics: string[], text: string): Accent {
@@ -187,12 +240,15 @@ export function buildRasPayload(args: {
   // Merge any enrichment URLs into the citable source list (deduped).
   const sourceUrls = [...new Set([...factPack.sourceUrls, ...(args.extraSourceUrls ?? [])].map((u) => u.trim()).filter(Boolean))];
 
-  // X caption: prefer the LLM's standalone tweet; else build deterministically
-  // from the derived/base headline + attribution (X-only) or the primary
-  // source. Either way clipped word-safe to <= 280. NEVER a truncated IG caption.
-  const attributionOrSource = attributionLine ?? factPack.primarySource ?? sourceUrls[0] ?? item.url;
-  const deterministicTweet = [baseHeadline, attributionOrSource].filter(Boolean).join(" ");
-  const xCaption = clipTweet(llmCopy?.xCaption || deterministicTweet, 280);
+  // X caption: prefer the LLM's standalone tweet (normalized — hashtags capped
+  // at 2, then clipped word-safe to <= 280); else build deterministically from
+  // the derived/base headline + an ATOMIC attribution (X-only) or primary-source
+  // suffix that is dropped whole when it does not fit. Either way always <= 280
+  // and never a partial URL. NEVER a truncated IG caption.
+  const attributionOrSource = attributionLine ?? factPack.primarySource ?? sourceUrls[0] ?? item.url ?? "";
+  const xCaption = llmCopy?.xCaption
+    ? clipTweet(llmCopy.xCaption, 280)
+    : buildTweetWithSuffix(baseHeadline ?? "", attributionOrSource, 280);
 
   const hashtags = buildHashtags(topics, item.region);
 

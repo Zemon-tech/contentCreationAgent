@@ -140,9 +140,12 @@ export async function runHandoff(args: {
     // "posted" — a fake "posted" row would block this story forever.
     if (!res.published) {
       await deps.record({ ...base, status: "dry_run", at: new Date().toISOString() });
-      // X runs on the live+approved publish path even when IG is in env dry-run
-      // (it posts nothing itself because we pass the handoff dryRun through).
-      const x = await attemptX(deps, payload.xCaption, renderedFilePath, args.dryRun);
+      // X runs on the live+approved publish path even when IG is in env dry-run,
+      // but it must NOT post live while Instagram published nothing. The handoff
+      // `args.dryRun` is always false on this branch (a true handoff dryRun
+      // returns earlier), so force X into its OWN dry-run here: X honors the
+      // single safety switch and posts nothing while IG is env-suppressed.
+      const x = await attemptX(deps, payload.xCaption, renderedFilePath, true);
       return { status: "dry_run", ledgerKey, reason: "Instagram client did not publish (INSTAGRAM_DRY_RUN=true in env)", ...(x ? { x } : {}) };
     }
     await deps.record({

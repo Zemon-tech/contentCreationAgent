@@ -67,6 +67,20 @@ test("rejects over-length fields (serifHeadline > 120)", async () => {
   assert.equal(calls, 2); // tried twice, both over-length
 });
 
+test("an over-length xCaption does NOT discard the good Instagram copy", async () => {
+  // xCaption is X-only; a >280 value must never fail the whole EditorialCopySchema
+  // parse and drag the valid IG fields (serifHeadline/deck/caption) to fallback.
+  const bad = { ...validCopy, xCaption: "Word ".repeat(100).trim() }; // ~500 chars
+  let calls = 0;
+  const generate: CopyGenerate = async () => { calls++; return { text: JSON.stringify(bad) }; };
+  const out = await writeEditorialCopy({ item: item(), factPack: factPack(), config: cfg(), generate });
+  assert.equal(calls, 1); // accepted on the FIRST try — no retry, no fallback
+  assert.equal(out.path, "llm");
+  assert.ok(out.copy);
+  assert.equal(out.copy!.serifHeadline, validCopy.serifHeadline);
+  assert.equal(out.copy!.caption, validCopy.caption);
+});
+
 test("llmEnabled=false short-circuits to fallback without calling the model", async () => {
   let calls = 0;
   const generate: CopyGenerate = async () => { calls++; return { text: JSON.stringify(validCopy) }; };

@@ -103,13 +103,15 @@ test("xReady not ok: x.attempted false, X not called, IG still posted", async ()
   assert.equal(res.x?.error, "X session not logged in");
 });
 
-test("IG env dry-run (published:false): X still attempted in dry-run mode", async () => {
+test("IG env dry-run (published:false): X is attempted but CANNOT post live", async () => {
   const { deps, calls, xArgs } = fakeDeps();
   deps.publish = async () => ({ published: false, dryRun: true });
   const res = await runHandoff({ ledgerKey: "k", payload: payload(), storyId: "s", dryRun: false, approved: true, deps });
   assert.equal(res.status, "dry_run");
   assert.equal(calls.xPublish, 1);
-  assert.equal(xArgs.dryRun, false); // handoff dryRun is false here; IG declined via its own env switch
+  // IG published nothing (its env dry-run), so X must NOT post live either:
+  // the single safety switch forces X into its own dry-run on this branch.
+  assert.equal(xArgs.dryRun, true);
   assert.equal(res.x?.attempted, true);
 });
 
