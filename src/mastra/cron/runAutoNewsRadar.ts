@@ -42,10 +42,13 @@ async function cycle(): Promise<void> {
     const run = await autoNewsToRasWorkflow.createRun();
     const dryRun = !/^(0|false|no|off)$/i.test(process.env.INSTAGRAM_DRY_RUN?.trim() || "true");
     const requireApproval = !/^(0|false|no|off)$/i.test(process.env.REQUIRE_APPROVAL?.trim() || "true");
-    const result = await run.start({ inputData: { dryRun, requireApproval } });
+    const mp = parseInt(process.env.MAX_POSTS_PER_RUN?.trim() || "1", 10);
+    const maxPosts = Number.isFinite(mp) && mp >= 1 ? mp : 1;
+    const result = await run.start({ inputData: { dryRun, requireApproval, maxPosts } });
     if (result.status === "success") {
       const out = result.result;
-      console.log(`[AutoNewsRadar] status=${out.status}${out.headline ? ` · "${out.headline}" (${out.score})` : ""}${out.reason ? ` · ${out.reason}` : ""}`);
+      const batch = out.status === "batch" && out.posts ? ` · ${out.posts.filter((p) => p.status === "posted").length}/${out.posts.length} posted` : "";
+      console.log(`[AutoNewsRadar] status=${out.status}${out.headline ? ` · "${out.headline}" (${out.score})` : ""}${batch}${out.reason ? ` · ${out.reason}` : ""}`);
     } else if (result.status === "suspended") {
       console.log(`[AutoNewsRadar] SUSPENDED for approval — approve/reject in Mastra Studio to continue.`);
     } else {

@@ -269,6 +269,64 @@ export async function pickPostableCandidate(args: {
   return { candidate: null, tried, skippedNoImage };
 }
 
+/**
+ * Like pickPostableCandidate but collects UP TO `count` postable stories — the
+ * top-ranked ones (score >= threshold, one per cluster, best first) that each
+ * have a validated image. Used to post the top N stories (rank 1, 2, 3, …) as
+ * SEPARATE posts in a single run. Returns fewer than `count` (possibly zero)
+ * when not enough stories qualify — a valid outcome, not an error.
+ *
+ * NOTE: this does NOT evaluate the per-post rate caps (minGapHours); a batch of
+ * N is meant to go out together, so the caller treats the whole batch as one
+ * unit against the DAILY cap. `prepared.caps` on each item still reflects the
+ * single-post gate for visibility, but the multi-post workflow path decides
+ * batch admission itself (see the workflow step).
+ */
+export async function pickPostableCandidates(args: {
+  rankResult: RankResult;
+  rawById: Map<string, RawContent>;
+  minScore: number;
+  count: number;
+  /** How many ranked stories to inspect looking for `count` with images. */
+  maxTries?: number;
+  now?: Date;
+  prepare?: typeof prepareForHandoff;
+}): Promise<{ candidates: PostableCandidate[]; tried: number; skippedNoImage: string[] }> {
+  const prepare = args.prepare ?? prepareForHandoff;
+  const want = Math.max(1, args.count);
+  const maxTries = args.maxTries ?? Math.max(5, want * 3);
+  const seenClusters = new Set<string>();
+  const skippedNoImage: string[] = [];
+  const candidates: PostableCandidate[] = [];
+  let tried = 0;
+
+  for (const r of args.rankResult.ranked) {
+    if (candidates.length >= want) break;
+    if (tried >= maxTries) break;
+    if (r.finalScore < args.minScore) break; // ranked is sorted desc
+    if (seenClusters.has(r.item.clusterId)) continue;
+    seenClusters.add(r.item.clusterId);
+    tried++;
+
+    const raw = args.rawById.get(r.item.id) ?? null;
+    const prepared = await prepare({
+      item: r.item,
+      finalScore: r.finalScore,
+      raw,
+      feedCandidateUrls: feedCandidatesFor(raw),
+      now: args.now,
+      rankedStory: r,
+      isXOnly: isXOnlyStory(r, args.rawById),
+    });
+    if (prepared.payload.imageLocalPath) {
+      candidates.push({ item: r.item, finalScore: r.finalScore, reason: r.reason, prepared });
+    } else {
+      skippedNoImage.push(r.item.title.slice(0, 80));
+    }
+  }
+  return { candidates, tried, skippedNoImage };
+}
+
 export async function prepareForHandoff(args: {
   item: RankInputItem;
   finalScore: number;
