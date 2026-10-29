@@ -159,6 +159,91 @@ test("LLM xCaption with >2 hashtags is capped to the first two", () => {
   assert.deepEqual(tags, ["#ai", "#startups"], "the first two are kept in order");
 });
 
+test("punctuation-adjacent hashtags are still capped to two", () => {
+  const item = rssItem();
+  // Tags follow '(' and ')' punctuation, not whitespace — the old
+  // `(^|\s)#...` regex missed these, letting >2 tags through.
+  const tweet = "Acme raised $20M (#ai) #ml #tech #india";
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: tweet },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  const tags = payload.xCaption.match(/#[A-Za-z0-9_]+/g) ?? [];
+  assert.equal(tags.length, 2, "at most two hashtags survive punctuation-adjacent tags");
+});
+
+test("slash-separated hashtags are still capped to two", () => {
+  const item = rssItem();
+  const tweet = "Acme raised $20M #ai/#ml/#tech/#india";
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: tweet },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  const tags = payload.xCaption.match(/#[A-Za-z0-9_]+/g) ?? [];
+  assert.equal(tags.length, 2, "slash-separated tags are counted and capped");
+});
+
+test("a '#fragment' inside a URL is not counted as a hashtag", () => {
+  const item = rssItem();
+  // The URL fragment #section must be shielded; only the two real tags count.
+  const tweet = "Acme raised $20M https://ex.com/p#section #ai #ml";
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: tweet },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  // Both real hashtags survive (<=2) and the URL is left intact.
+  assert.ok(payload.xCaption.includes("https://ex.com/p#section"), "URL (with fragment) kept whole");
+  assert.ok(payload.xCaption.includes("#ai"));
+  assert.ok(payload.xCaption.includes("#ml"));
+});
+
+test("LLM single overlength token is dropped, not hard-cut mid-word", () => {
+  const item = rssItem();
+  // One unbroken 300-char token: there is no word boundary to clip on, so it
+  // must be dropped entirely rather than published as a 280-char fragment.
+  const monster = "A".repeat(300);
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: monster },
+    isXOnly: false,
+  });
+  assert.ok(payload.xCaption.length <= 280);
+  // No mid-word fragment of the monster token may survive.
+  assert.ok(!payload.xCaption.includes("AAAAAAAAAA"), "overlength single token is not hard-cut into the tweet");
+});
+
+test("deterministic single overlength headline token is dropped, not hard-cut", () => {
+  const item = rssItem();
+  const monster = "B".repeat(320); // one token, no spaces, no usable source
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ headline: monster, sourceUrls: [] }),
+    image,
+    story: rankedStory(item),
+    isXOnly: false,
+  });
+  assert.ok(payload.xCaption.length <= 280);
+  assert.ok(!payload.xCaption.includes("BBBBBBBBBB"), "overlength single headline token is not hard-cut");
+});
+
 test("deterministic fallback drops the source URL rather than publishing it half-cut", () => {
   const item = rssItem();
   // A headline long enough that the full URL cannot fit under 280.

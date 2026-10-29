@@ -58,11 +58,12 @@ function clip(text: string, max: number): string {
 
 /**
  * Word-safe clip for the tweet BODY. Cuts at a word boundary with no ellipsis
- * and never emits a partial URL: if the final retained token looks like the
- * start of a URL (contains "://" or starts with "www"/"http") but was itself
- * truncated by the slice, that fragment is dropped. A single unbroken token
- * longer than `max` (no spaces at all) is the only case that is hard-cut, since
- * there is no word boundary to cut on. Always returns <= `max`.
+ * and NEVER emits a mid-word fragment or a partial URL. When the retained
+ * window up to `max` has no internal whitespace, the text is a single unbroken
+ * token longer than `max` (a URL or one giant word): there is no word boundary
+ * to cut on, so the whole fragment is DROPPED (empty string returned) rather
+ * than published hard-cut mid-word. Callers treat an empty result as "no usable
+ * body" and fall back accordingly. Always returns <= `max`.
  */
 function clipTweetBody(text: string, max: number): string {
   const t = safeLatin(text);
@@ -70,25 +71,47 @@ function clipTweetBody(text: string, max: number): string {
   const cut = t.slice(0, max);
   const sp = cut.lastIndexOf(" ");
   if (sp <= 0) {
-    // No whitespace in the retained window: a single overlong token. Hard-cut
-    // (nothing to word-break on), but never publish a partial URL.
-    return /:\/\/|^www\.|^https?:/i.test(cut) ? "" : cut.replace(/[\s,;:-]+$/, "").trim();
+    // No whitespace in the retained window: a single overlong token (URL or one
+    // giant word). There is no safe place to break, so drop it entirely instead
+    // of publishing a mid-word / partial-URL fragment.
+    return "";
   }
   return cut.slice(0, sp).replace(/[\s,;:-]+$/, "").trim();
 }
 
+/** Matches an http(s)/www URL token so it can be shielded from hashtag edits
+ *  (a '#' inside a URL is a fragment, never an X hashtag). */
+const URL_RE = /(?:https?:\/\/|www\.)\S+/gi;
+
 /**
  * Enforce the 0-2 hashtag cap on a model-written tweet WITHOUT discarding the
- * rest of the copy: keep the first two hashtags in place and strip any extras.
- * Collapses the whitespace left by removed tags.
+ * rest of the copy: keep the first two X-recognized hashtags in place and strip
+ * any extras, regardless of the punctuation in front of them. X treats '#tag'
+ * as a hashtag whenever the '#' is NOT preceded by another word character, so
+ * tags after '(' or '/' (e.g. "News (#ai) #ml", "News #ai/#ml/#tech") count
+ * just like whitespace-separated ones — the old `(^|\s)#...` form missed those.
+ * URL fragments ("example.com/p#section") are shielded first so they are never
+ * counted or stripped. Collapses the whitespace left by removed tags.
  */
 function capHashtags(text: string, maxTags = 2): string {
-  let seen = 0;
-  const out = text.replace(/(^|\s)#[A-Za-z0-9_]+/g, (match) => {
-    seen += 1;
-    return seen <= maxTags ? match : "";
+  // Shield URLs so a '#fragment' inside one is never treated as a hashtag.
+  const urls: string[] = [];
+  const shielded = text.replace(URL_RE, (u) => {
+    urls.push(u);
+    return `\u0000${urls.length - 1}\u0000`;
   });
-  return out.replace(/[ \t]{2,}/g, " ").replace(/ +([.!?,;:])/g, "$1").trim();
+
+  let seen = 0;
+  // A hashtag starts at '#' only when it is not preceded by a word character
+  // (so "foo#bar" is not a tag); the '#' itself may follow any punctuation or
+  // whitespace. `(^|[^\w#])` captures the single non-word char to preserve it.
+  const capped = shielded.replace(/(^|[^\w#])#[A-Za-z0-9_]+/g, (match, pre: string) => {
+    seen += 1;
+    return seen <= maxTags ? match : pre;
+  });
+
+  const restored = capped.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => urls[Number(i)] ?? "");
+  return restored.replace(/[ \t]{2,}/g, " ").replace(/ +([.!?,;:])/g, "$1").trim();
 }
 
 /**

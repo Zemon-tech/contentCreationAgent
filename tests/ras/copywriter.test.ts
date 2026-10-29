@@ -81,6 +81,34 @@ test("an over-length xCaption does NOT discard the good Instagram copy", async (
   assert.equal(out.copy!.caption, validCopy.caption);
 });
 
+test("a null xCaption does NOT discard the good Instagram copy", async () => {
+  // A non-string X-only value (null) must be recovered independently
+  // (field-level .catch) so the valid IG fields survive and the deterministic
+  // X fallback is used downstream — never dragging the whole parse to fallback.
+  const bad = { ...validCopy, xCaption: null };
+  let calls = 0;
+  const generate: CopyGenerate = async () => { calls++; return { text: JSON.stringify(bad) }; };
+  const out = await writeEditorialCopy({ item: item(), factPack: factPack(), config: cfg(), generate });
+  assert.equal(calls, 1); // accepted on the FIRST try — no retry, no fallback
+  assert.equal(out.path, "llm");
+  assert.ok(out.copy);
+  assert.equal(out.copy!.serifHeadline, validCopy.serifHeadline);
+  assert.equal(out.copy!.caption, validCopy.caption);
+  assert.equal(out.copy!.xCaption, undefined); // non-string coerced away
+});
+
+test("a numeric xCaption does NOT discard the good Instagram copy", async () => {
+  const bad = { ...validCopy, xCaption: 42 };
+  let calls = 0;
+  const generate: CopyGenerate = async () => { calls++; return { text: JSON.stringify(bad) }; };
+  const out = await writeEditorialCopy({ item: item(), factPack: factPack(), config: cfg(), generate });
+  assert.equal(calls, 1);
+  assert.equal(out.path, "llm");
+  assert.ok(out.copy);
+  assert.equal(out.copy!.serifHeadline, validCopy.serifHeadline);
+  assert.equal(out.copy!.xCaption, undefined); // non-string coerced away
+});
+
 test("llmEnabled=false short-circuits to fallback without calling the model", async () => {
   let calls = 0;
   const generate: CopyGenerate = async () => { calls++; return { text: JSON.stringify(validCopy) }; };
