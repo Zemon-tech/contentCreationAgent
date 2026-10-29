@@ -92,7 +92,10 @@ export type Topic = z.infer<typeof TopicSchema>;
  * on failure the item is retried once, then marked `unscored`.
  */
 export const LlmScoreSchema = z.object({
-  id: z.string().min(1),
+  // Default "" (not min(1)): the model sometimes omits the echoed id. With
+  // batchSize 1 the caller re-attaches the only valid id, so a missing id must
+  // NOT reject the whole batch (which would mark the item unscored + penalized).
+  id: z.string().default(""),
   topic: TopicSchema,
   topicFit: z.number().min(0).max(10),
   significance: z.number().min(0).max(10),
@@ -102,27 +105,37 @@ export const LlmScoreSchema = z.object({
   isClickbait: z.boolean(),
   isDuplicateAngle: z.boolean(),
   // ---- New meaning-only judgements (code still owns every number) ----
+  // The newer meaning fields below are DEFAULTED, not strictly required: the
+  // live model (Sarvam) does not always emit every one, and dropping an
+  // otherwise-good score over a missing flag marks the whole story `unscored`
+  // and penalizes it — which silently cripples ranking. Defaulting keeps the
+  // story scored while the LLM/code boundary is preserved (code still owns the
+  // numbers). The core judgement fields above stay required.
   /** Does this add genuinely new information (vs a recap/aggregation)? */
-  isNewInformation: z.boolean(),
+  isNewInformation: z.boolean().default(false),
   /** Is the item itself the primary source (first-party announcement/report)? */
-  isPrimarySource: z.boolean(),
+  isPrimarySource: z.boolean().default(false),
   /** How concrete/specific the claim is (0 vague … 10 precise). */
-  specificity: z.number().min(0).max(10),
+  specificity: z.number().min(0).max(10).default(5),
   /** How strong a scroll-stopping hook it has (0 none … 10 strong). */
-  hookPotential: z.number().min(0).max(10),
+  hookPotential: z.number().min(0).max(10).default(5),
   /** The model's read of how risky the central claim is if unverified. */
-  claimRisk: z.enum(["low", "medium", "high"]),
-  /** Meaning-only red flags. */
-  flags: z.object({
-    engagementBait: z.boolean(),
-    selfPromotion: z.boolean(),
-    giveaway: z.boolean(),
-    hotTakeThread: z.boolean(),
-  }),
+  claimRisk: z.enum(["low", "medium", "high"]).default("low"),
+  /** Meaning-only red flags. Each defaults false so a missing flag never
+   *  invalidates an otherwise-valid score. */
+  flags: z
+    .object({
+      engagementBait: z.boolean().default(false),
+      selfPromotion: z.boolean().default(false),
+      giveaway: z.boolean().default(false),
+      hotTakeThread: z.boolean().default(false),
+    })
+    .partial()
+    .default({}),
   /** A factual headline the model derived (especially for raw X posts). */
-  derivedHeadline: z.string().max(200),
-  /** Proof the headline was derived, not copied blindly. */
-  headlineDerived: z.literal(true),
+  derivedHeadline: z.string().max(200).default(""),
+  /** Proof the headline was derived, not copied blindly. Tolerant of omission. */
+  headlineDerived: z.literal(true).optional(),
   reason: z.string().max(400),
 });
 export type LlmScore = z.infer<typeof LlmScoreSchema>;

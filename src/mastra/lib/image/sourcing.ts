@@ -38,7 +38,7 @@ const TEXT_ONLY: Omit<ImageResult, "candidatesTried"> = {
 async function exaImageCandidates(headline: string, cfg: ImageConfig): Promise<string[]> {
   if (!process.env.EXA_API_KEY) return [];
   try {
-    const res = await searchExa({ query: headline, numResults: cfg.exaCandidates, includeText: false });
+    const res = await searchExa({ query: headline, numResults: cfg.exaCandidates, includeText: false, includeImages: true });
     return (res?.results ?? [])
       .map((r) => (r as { image?: string }).image)
       .filter((u): u is string => typeof u === "string" && /^https?:\/\//i.test(u));

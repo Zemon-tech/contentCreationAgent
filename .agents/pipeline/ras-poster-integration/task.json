@@ -1,0 +1,7 @@
+{
+  "task_id": "task-ras-poster-integration",
+  "task_description": "Finish and wire the RAS Poster Story template (RasPosterStoryTemplate) into the in-process Mastra + Satori render pipeline: fix the repo-wide sharp type gap so the already-present Postertools.ts typechecks, register the Anton font cwd-safely, add an in-process Mastra render tool (renderRasPosterStoryTool) that uses preparePosterStory + renderComponentToPng with graceful logo fallback, register it in src/mastra/index.ts, prove render via a one-shot demo, and document that template id 'ras-poster-story' is deliberately NOT added to the external Design Agent template_id enums.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

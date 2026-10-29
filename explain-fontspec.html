@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why `data` is not in `FontSpec`</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090d14;
+      --panel: #111925;
+      --panel-2: #151f2d;
+      --line: #293648;
+      --text: #e7edf5;
+      --muted: #a0aec0;
+      --green: #62d6a5;
+      --amber: #f4c66b;
+      --red: #ff8181;
+      --blue: #82b7ff;
+      --purple: #c6a4ff;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 70% -20%, #1b2b42 0, transparent 42%), var(--bg);
+      color: var(--text);
+      font: 15px/1.65 var(--sans);
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre { font-family: var(--mono); }
+    code { color: #c6ddff; }
+    .layout { display: grid; grid-template-columns: 220px minmax(0, 980px); gap: 34px; max-width: 1280px; margin: auto; padding: 28px 24px 80px; }
+    nav { position: sticky; top: 22px; align-self: start; padding: 16px 0; }
+    nav .brand { color: var(--muted); font: 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 18px 12px; }
+    nav a { display: block; color: var(--muted); padding: 8px 12px; border-left: 1px solid var(--line); font-size: 13px; }
+    nav a:hover { color: var(--text); border-left-color: var(--blue); text-decoration: none; }
+    main { min-width: 0; }
+    .eyebrow { color: var(--green); font: 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    h1 { font-size: clamp(34px, 6vw, 58px); line-height: 1.08; letter-spacing: -.045em; margin: 14px 0; }
+    h2 { font-size: 24px; letter-spacing: -.025em; margin: 0 0 14px; }
+    h3 { font-size: 16px; margin: 0 0 8px; }
+    p { color: var(--muted); }
+    .hero { padding: 44px 0 28px; }
+    .hero p { max-width: 780px; font-size: 17px; }
+    .pill { display: inline-flex; border: 1px solid #774044; color: var(--red); border-radius: 999px; padding: 4px 10px; font: 12px var(--mono); }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .meta span { background: #121b28; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font: 12px var(--mono); padding: 7px 10px; }
+    section { border-top: 1px solid var(--line); padding: 34px 0; scroll-margin-top: 20px; }
+    .card { background: linear-gradient(145deg, var(--panel), #0e151f); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+    .node { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 15px; min-height: 122px; }
+    .node strong { display: block; margin-bottom: 8px; }
+    .node small { color: var(--muted); }
+    .arrow { color: var(--purple); text-align: center; font: 12px var(--mono); padding-top: 34px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #080d14; border: 1px solid #223044; border-radius: 10px; padding: 15px; font-size: 12px; line-height: 1.7; color: #d6e3f3; margin: 10px 0; }
+    .label { color: var(--blue); font: 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+    .callout { border-left: 3px solid var(--amber); padding: 12px 15px; background: #211c12; border-radius: 0 9px 9px 0; color: #e9d9b4; }
+    .good { border-color: var(--green); background: #102019; color: #caefdc; }
+    .bad { border-color: var(--red); background: #241518; color: #f1c9cb; }
+    .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; margin: 16px 0; }
+    .num { width: 30px; height: 30px; border: 1px solid #445676; border-radius: 50%; display: grid; place-items: center; color: var(--purple); font: 13px var(--mono); }
+    .step p { margin: 4px 0 0; }
+    .controls { display: flex; flex-wrap: wrap; gap: 9px; margin: 14px 0; }
+    button { cursor: pointer; border: 1px solid #435672; border-radius: 8px; background: #172538; color: var(--text); padding: 9px 13px; font: 13px var(--mono); }
+    button:hover { border-color: var(--blue); background: #1d3048; }
+    .status { display: flex; align-items: center; gap: 9px; color: var(--muted); margin: 10px 0; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); }
+    .dot.error { background: var(--red); }
+    .dot.ok { background: var(--green); }
+    #log { min-height: 138px; max-height: 260px; overflow: auto; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 520px; }
+    th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font: 11px var(--mono); text-transform: uppercase; }
+    td { color: #c8d3e1; }
+    .tag { color: var(--amber); font: 12px var(--mono); }
+    .footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 820px) {
+      .layout { display: block; padding: 12px 18px 56px; }
+      nav { position: relative; top: 0; display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 0 10px; }
+      nav .brand { width: 100%; margin: 0 0 4px; }
+      nav a { border: 1px solid var(--line); border-radius: 999px; padding: 5px 9px; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .arrow { display: none; }
+    }
+    @media (max-width: 560px) { .grid, .flow { grid-template-columns: 1fr; } .hero { padding-top: 26px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="brand">TypeScript field guide</div>
+      <a href="#summary">Summary</a>
+      <a href="#flow">Data flow</a>
+      <a href="#why">Why the error happens</a>
+      <a href="#sandbox">Try the type check</a>
+      <a href="#contracts">Contracts & fix</a>
+      <a href="#audit">Runtime consequence</a>
+    </nav>
+    <main>
+      <header class="hero" id="summary">
+        <div class="eyebrow">A focused explanation · renderer/font loading</div>
+        <h1>Why <code>data</code> is not in <code>FontSpec</code></h1>
+        <span class="pill">TS2353 · excess property check</span>
+        <p>The Anton object is being placed in an array declared as <code>FontSpec[]</code>. But <code>FontSpec</code> describes a font file to locate, not a font already loaded into memory. TypeScript catches the shape mismatch at the object literal.</p>
+        <div class="meta">
+          <span>src/mastra/renderer/fonts.ts</span>
+          <span>TypeScript 6.0.3</span>
+          <span>Satori 0.44.3</span>
+          <span>typecheck reproduces TS2353</span>
+        </div>
+      </header>
+
+      <section id="flow">
+        <div class="label">01 · Architecture and data flow</div>
+        <h2>Two distinct shapes are being mixed</h2>
+        <p>The font loader has a metadata stage and a loaded-font stage. The error comes from putting a loaded-font-shaped object into the metadata stage.</p>
+        <div class="flow" aria-label="Font loading flow">
+          <div class="node"><strong><code>FONT_SPECS</code></strong><small>File descriptors: file name, family, weight</small></div>
+          <div class="arrow">→ loader →</div>
+          <div class="node"><strong><code>loadFonts()</code></strong><small>Joins each descriptor to the fonts directory and reads bytes</small></div>
+          <div class="node"><strong><code>FontConfig[]</code></strong><small>Loaded records: family, binary data, weight, style</small></div>
+        </div>
+        <p>Then <code>satori-renderer.ts</code> calls <code>loadFonts()</code> and passes its result into Satori's <code>fonts</code> option.</p>
+      </section>
+
+      <section id="why">
+        <div class="label">02 · Root cause</div>
+        <h2>The declaration and the object literal disagree</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>What the array promises</h3>
+            <pre>interface FontSpec {
+  file: string;
+  name: string;
+  weight: 400 | 700 | 800;
+}
+
+const FONT_SPECS: FontSpec[] = [ ... ];</pre>
+            <p>Each item must include <code>file</code>, <code>name</code>, and <code>weight</code>. No <code>data</code> or <code>style</code> property is declared.</p>
+          </div>
+          <div class="card">
+            <h3>What the Anton object supplies</h3>
+            <pre>{
+  name: "Anton",
+  data: new Uint8Array(
+    fs.readFileSync("node_modules/@fontsource/anton/files/anton-latin-400-normal.woff"),
+  ).buffer,
+  weight: 400,
+  style: "normal",
+}</pre>
+            <p>It has <code>data</code> and <code>style</code> but no <code>file</code>. It resembles a loaded font, not a file descriptor.</p>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:14px"><strong>In plain terms:</strong> TypeScript is reporting the first extra key it sees, <code>data</code>. Fixing only that one diagnostic by adding <code>data</code> to <code>FontSpec</code> would not make this object compatible with the loader's actual expectations.</div>
+      </section>
+
+      <section aria-labelledby="lifecycle-heading">
+        <div class="label">03 · Execution lifecycle</div>
+        <h2 id="lifecycle-heading">From declaration to where it fails</h2>
+        <div class="step"><span class="num">1</span><div><strong>TypeScript contextually types the array literal.</strong><p>Because <code>FONT_SPECS</code> is explicitly <code>FontSpec[]</code>, every element is checked against that interface.</p></div></div>
+        <div class="step"><span class="num">2</span><div><strong>Excess-property checking examines the Anton literal.</strong><p><code>data</code> is not a known key on <code>FontSpec</code>, so <code>tsc</code> emits TS2353 on that property.</p></div></div>
+        <div class="step"><span class="num">3</span><div><strong>The loader assumes every spec has a path.</strong><pre>const abs = join(fontsDir, spec.file);
+data = readFileSync(abs);
+fonts.push({ name: spec.name, data, weight: spec.weight, style: "normal" });</pre></div></div>
+        <div class="step"><span class="num">4</span><div><strong>Rendering never gets a well-defined Anton font.</strong><p>Even if the type error were suppressed, the loader does not consume <code>spec.data</code>; it tries to join <code>fontsDir</code> with <code>spec.file</code> instead.</p></div></div>
+      </section>
+
+      <section id="sandbox">
+        <div class="label">04 · Interactive sandbox</div>
+        <h2>Simulate the type and loader checks</h2>
+        <p>Try the currently written entry, a proper file-backed entry, or a loaded font. The simulation demonstrates why making the type permissive alone is not enough.</p>
+        <div class="card">
+          <div class="controls">
+            <button type="button" data-case="current">Current Anton entry</button>
+            <button type="button" data-case="file">File-backed spec</button>
+            <button type="button" data-case="loaded">Loaded font record</button>
+            <button type="button" data-case="clear">Clear log</button>
+          </div>
+          <div class="status"><span class="dot" id="dot"></span><span id="status">Choose a case to inspect.</span></div>
+          <pre id="log" aria-live="polite">Ready. The actual project typecheck reports TS2353 at fonts.ts:37.</pre>
+        </div>
+      </section>
+
+      <section id="contracts">
+        <div class="label">05 · Contracts and options</div>
+        <h2>Choose which representation the list is meant to contain</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Approach</th><th>Represented data</th><th>What must happen</th></tr></thead>
+            <tbody>
+              <tr><td><span class="tag">File-backed</span></td><td><code>{ file, name, weight }</code></td><td>Put Anton's WOFF at a known assets location, list its actual path/file name, and let the existing loader read it.</td></tr>
+              <tr><td><span class="tag">Inline bytes</span></td><td><code>{ data, name, weight, style }</code></td><td>Model separate file-backed and preloaded cases (for example a discriminated union), then branch in <code>loadFonts()</code> to use bytes directly or read the file.</td></tr>
+              <tr><td><span class="tag">Separate lists</span></td><td>File specs plus a preloaded font config</td><td>Keep the current file loader simple, load Anton separately, and combine the resulting <code>FontConfig[]</code> before passing it to Satori.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout good" style="margin-top:14px"><strong>Smallest conceptual correction:</strong> Treat the Anton object as a <em>loaded font</em>, not a <code>FontSpec</code>. Either put it in the final <code>FontConfig[]</code> path and skip file loading for it, or make the loader explicitly support both shapes.</div>
+      </section>
+
+      <section id="audit">
+        <div class="label">06 · Critique and validation</div>
+        <h2>Why the diagnostic matters beyond compilation</h2>
+        <div class="grid">
+          <div class="card"><h3>Compile-time bug</h3><p>Confirmed: <code>npm run typecheck -- --pretty false</code> reports <code>fonts.ts(37,3): error TS2353</code>.</p></div>
+          <div class="card"><h3>Potential runtime bug after a superficial fix</h3><p>If <code>data</code> were merely added to <code>FontSpec</code>, the loop would still call <code>join(fontsDir, spec.file)</code>. Since the Anton literal has no <code>file</code>, its loaded bytes remain unused and the runtime path is invalid.</p></div>
+        </div>
+        <div class="callout bad" style="margin-top:14px"><strong>Avoid:</strong> casting the literal to <code>FontSpec</code>, widening the interface without updating the loader, or silencing the error. Those only hide the mismatch; they do not wire Anton's binary into the returned <code>FontConfig[]</code>.</div>
+        <p>The source currently imports <code>fs</code> and synchronously reads Anton directly from <code>node_modules</code>, while the established loader resolves a dedicated assets directory. That means bundling/deployment path behavior should also be considered when choosing the eventual fix. No source files were changed for this explanation.</p>
+      </section>
+      <div class="footer">Sources inspected: <code>src/mastra/renderer/fonts.ts</code>, <code>src/mastra/renderer/satori-renderer.ts</code>, <code>src/mastra/renderer/assets.ts</code>, <code>src/mastra/assets/fonts/README.md</code>, and the installed package manifest. The interactive panel is a local illustration; it does not execute TypeScript.</div>
+    </main>
+  </div>
+  <script>
+    const log = document.querySelector("#log");
+    const status = document.querySelector("#status");
+    const dot = document.querySelector("#dot");
+    const cases = {
+      current: {
+        title: "Current Anton entry",
+        typeError: true,
+        runtimeError: true,
+        lines: [
+          "1. Contextual type: FontSpec",
+          "2. `data` is not declared by FontSpec → TS2353.",
+          "3. `file` is missing from this object.",
+          "4. Loader still evaluates join(fontsDir, spec.file).",
+          "Result: fails typecheck; widening the interface alone leaves a broken loader path."
+        ]
+      },
+      file: {
+        title: "File-backed spec",
+        typeError: false,
+        runtimeError: false,
+        lines: [
+          '1. Shape: { file: "Anton.woff", name: "Anton", weight: 400 }',
+          "2. All required FontSpec keys are present.",
+          "3. Loader joins fontsDir and spec.file, then reads the WOFF.",
+          "4. Loader constructs FontConfig with data and style.",
+          "Result: structurally matches the existing loader, if that file exists in fontsDir."
+        ]
+      },
+      loaded: {
+        title: "Loaded font record",
+        typeError: true,
+        runtimeError: true,
+        lines: [
+          "1. Shape: { name, data, weight, style }",
+          "2. This resembles FontConfig, not FontSpec.",
+          "3. Storing it in FontSpec[] triggers excess-property checking.",
+          "4. To use it, feed it through a path that returns FontConfig[] without looking up spec.file.",
+          "Result: valid loaded-font concept, wrong stage of the pipeline."
+        ]
+      }
+    };
+    function showCase(key) {
+      if (key === "clear") {
+        log.textContent = "Log cleared. Choose a case to run the simulation.";
+        status.textContent = "Choose a case to inspect.";
+        dot.className = "dot";
+        return;
+      }
+      const item = cases[key];
+      log.textContent = item.lines.join("\n");
+      status.textContent = item.title + (item.typeError ? " · type mismatch" : " · type shape matches");
+      dot.className = "dot " + (item.typeError || item.runtimeError ? "error" : "ok");
+    }
+    document.querySelectorAll("button[data-case]").forEach((button) => {
+      button.addEventListener("click", () => showCase(button.dataset.case));
+    });
+  </script>
+</body>
+</html>

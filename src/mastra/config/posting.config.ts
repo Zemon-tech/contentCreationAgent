@@ -26,7 +26,7 @@ export interface PostingConfig {
 
 export const postingConfig: PostingConfig = {
   maxPostsPerDay: envNum("POST_MAX_PER_DAY", 4),
-  minGapHours: envNum("POST_MIN_GAP_HOURS", 3),
+  minGapHours: envNum("POST_MIN_GAP_HOURS", 0),
   // Defaults to the ranker's MIN_SCORE; override independently if desired.
   minScore: envNum("POST_MIN_SCORE", rankingConfig.minScore),
   blockRejectedForHours: envNum("POST_BLOCK_REJECTED_HOURS", rankingConfig.rejectedWithinHours),

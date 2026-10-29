@@ -51,6 +51,9 @@ export const ExaResultSchema = z.object({
   author: z.string().nullable().optional(),
   score: z.number().nullable().optional(),
   text: z.string().nullable().optional(),
+  /** Representative image URL for the page, when Exa can extract one. Populated
+   *  only when `includeImages` is requested (image sourcing relies on this). */
+  image: z.string().nullable().optional(),
 });
 
 export type ExaResult = z.infer<typeof ExaResultSchema>;
@@ -64,6 +67,10 @@ export interface SearchExaParams {
   includeDomains?: string[];
   excludeDomains?: string[];
   includeText?: boolean;
+  /** Ask Exa to return a representative image URL per result (free for the
+   *  first 10 results). Required for image sourcing — without it `image` is
+   *  never populated. */
+  includeImages?: boolean;
 }
 
 export interface SearchExaOutput {
@@ -72,6 +79,13 @@ export interface SearchExaOutput {
 }
 
 export async function searchExa(params: SearchExaParams): Promise<SearchExaOutput> {
+  // Build the `contents` block once so text + image extraction coexist. Exa
+  // returns a representative `image` per result when `imageLinks` is requested
+  // (free for the first 10 results).
+  const contents: Record<string, unknown> = {};
+  if (params.includeText) contents.text = { maxCharacters: 2000 };
+  if (params.includeImages) contents.imageLinks = 1;
+
   const json = await exaPost<{
     results: z.infer<typeof ExaResultSchema>[];
     costDollars?: { total?: number };
@@ -83,19 +97,27 @@ export async function searchExa(params: SearchExaParams): Promise<SearchExaOutpu
     ...(params.startPublishedDate ? { startPublishedDate: params.startPublishedDate } : {}),
     ...(params.includeDomains ? { includeDomains: params.includeDomains } : {}),
     ...(params.excludeDomains ? { excludeDomains: params.excludeDomains } : {}),
-    ...(params.includeText ? { contents: { text: { maxCharacters: 2000 } } } : {}),
+    ...(Object.keys(contents).length > 0 ? { contents } : {}),
   });
 
   return {
-    results: (json.results ?? []).map((r) => ({
-      id: r.id ?? r.url,
-      title: r.title ?? null,
-      url: r.url,
-      publishedDate: r.publishedDate ?? null,
-      author: r.author ?? null,
-      score: r.score ?? null,
-      text: r.text ?? null,
-    })),
+    results: (json.results ?? []).map((r) => {
+      // Exa returns the representative image either as `image` or inside an
+      // `imageLinks` array depending on the response shape — accept both.
+      const rr = r as z.infer<typeof ExaResultSchema> & { imageLinks?: string[] };
+      const image =
+        rr.image ?? (Array.isArray(rr.imageLinks) ? rr.imageLinks.find((u) => !!u) ?? null : null);
+      return {
+        id: r.id ?? r.url,
+        title: r.title ?? null,
+        url: r.url,
+        publishedDate: r.publishedDate ?? null,
+        author: r.author ?? null,
+        score: r.score ?? null,
+        text: r.text ?? null,
+        image,
+      };
+    }),
     costDollars: json.costDollars?.total ?? null,
   };
 }
@@ -161,6 +183,10 @@ export const exaSearchTool = createTool({
       .boolean()
       .default(false)
       .describe("Also return page text snippets (costs more; prefer exaScrape for full text)"),
+    includeImages: z
+      .boolean()
+      .default(false)
+      .describe("Also return a representative image URL per result (free for the first 10 results)"),
   }),
   outputSchema: z.object({
     results: z.array(ExaResultSchema),
@@ -175,6 +201,7 @@ export const exaSearchTool = createTool({
     includeDomains,
     excludeDomains,
     includeText,
+    includeImages,
   }) => {
     return searchExa({
       query,
@@ -185,6 +212,7 @@ export const exaSearchTool = createTool({
       includeDomains,
       excludeDomains,
       includeText,
+      includeImages,
     });
   },
 });

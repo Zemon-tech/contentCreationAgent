@@ -137,8 +137,20 @@ export async function scoreItems(
       }
 
       for (const s of parsed.data.scores) {
+        // Normal case: the model echoed a valid id.
         if (validIds.has(s.id) && !scores.has(s.id)) {
           scores.set(s.id, { ...s, reason: trimWords(s.reason, 20) });
+          continue;
+        }
+        // Robustness: the model omitted/garbled the id but the batch has exactly
+        // ONE item — there's only one id it could belong to, so re-attach it
+        // rather than throwing away a valid judgement (common with Sarvam at
+        // batchSize 1). Never guess when the batch has more than one item.
+        if (batch.length === 1) {
+          const only = batch[0]!;
+          if (!scores.has(only.id)) {
+            scores.set(only.id, { ...s, id: only.id, reason: trimWords(s.reason, 20) });
+          }
         }
       }
       // Stop early once every id in this batch is covered.

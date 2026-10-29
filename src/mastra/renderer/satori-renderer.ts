@@ -32,6 +32,7 @@ export async function renderComponentToSvg(
   });
 }
 
+
 /** Renders a React element to a PNG buffer (Satori SVG -> resvg PNG). */
 export async function renderComponentToPng(
   component: ReactElement,
