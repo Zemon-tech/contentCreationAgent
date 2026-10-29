@@ -21,20 +21,40 @@ const MIME_BY_EXT: Record<string, string> = {
 };
 
 /**
- * Formats Satori can embed directly in an <img>. Anything else (WebP, AVIF,
- * TIFF, BMP, ...) must be transcoded to PNG first — Satori silently renders
- * nothing for formats it cannot decode, which shows up as a blank image.
+ * Re-encode a raster image buffer to a clean baseline PNG via sharp. sharp
+ * fully DECODES then re-encodes, which repairs progressive / non-standard /
+ * slightly-truncated JPEGs that Satori's own decoder rejects at render time
+ * with "Offset is outside the bounds of the DataView". `failOn: "none"` makes
+ * sharp tolerate recoverable corruption instead of throwing on the first
+ * warning. Throws only when the bytes are not a decodable image at all.
  */
-const SATORI_SAFE_MIME = new Set(["image/png", "image/jpeg", "image/svg+xml"]);
+async function sanitizeToPngDataUrl(buffer: Buffer): Promise<string> {
+  const png = await sharp(buffer, { failOn: "none" })
+    .flatten({ background: "#13110E" }) // drop any alpha onto the hero backdrop
+    .png()
+    .toBuffer();
+  return `data:image/png;base64,${png.toString("base64")}`;
+}
+
+/** Hero dimensions on the RAS story canvas (3/5 of 1080x1350). */
+const HERO_W = 1080;
+const HERO_H = 810;
 
 /**
- * Transcodes a raster image buffer to a PNG data URL via sharp. Used for any
- * format Satori cannot decode natively (notably WebP, which is what news
- * sites commonly serve for hero images).
+ * A neutral solid-color hero used when the real image cannot be decoded, so a
+ * bad/corrupt source image degrades to a plain branded panel instead of
+ * failing the whole post. Rendered once and cached.
  */
-async function transcodeToPngDataUrl(buffer: Buffer): Promise<string> {
-  const png = await sharp(buffer).png().toBuffer();
-  return `data:image/png;base64,${png.toString("base64")}`;
+let placeholderHeroCache: string | null = null;
+export async function placeholderHeroDataUrl(): Promise<string> {
+  if (placeholderHeroCache) return placeholderHeroCache;
+  const png = await sharp({
+    create: { width: HERO_W, height: HERO_H, channels: 3, background: "#13110E" },
+  })
+    .png()
+    .toBuffer();
+  placeholderHeroCache = `data:image/png;base64,${png.toString("base64")}`;
+  return placeholderHeroCache;
 }
 
 /** Converts a local image file into a base64 data URL. */
@@ -147,35 +167,53 @@ export async function fetchImageAsDataUrl(url: string): Promise<string> {
   }
   const buffer = Buffer.from(await res.arrayBuffer());
 
-  // Satori cannot decode WebP/AVIF/etc. — transcode anything that isn't a
-  // directly-embeddable format to PNG so the hero image actually renders.
-  if (!SATORI_SAFE_MIME.has(contentType)) {
-    return transcodeToPngDataUrl(buffer);
+  // SVG stays as-is (Satori rasterizes it via resvg). Every RASTER image —
+  // including JPEG/PNG — is re-encoded through sharp. This both transcodes
+  // formats Satori can't read (WebP/AVIF) AND repairs progressive/odd/truncated
+  // JPEGs that Satori's decoder rejects at render time. The previous code
+  // embedded "safe" JPEG/PNG bytes verbatim, which is exactly what let a bad
+  // yourstory.com JPEG blow up the render with a DataView offset error.
+  if (contentType === "image/svg+xml") {
+    return `data:${contentType};base64,${buffer.toString("base64")}`;
   }
-  return `data:${contentType};base64,${buffer.toString("base64")}`;
+  return sanitizeToPngDataUrl(buffer);
 }
 
 /**
  * Resolves a hero image reference (local path OR http(s) URL) into a base64
- * data URL that Satori can embed.
+ * data URL that Satori can embed. Every raster image is re-encoded through
+ * sharp so a progressive / non-standard / slightly-corrupt source cannot blow
+ * up the render. If the bytes are not a decodable image at all, it FALLS BACK
+ * to a neutral placeholder hero rather than throwing — a bad source image
+ * degrades the post, it does not kill it.
  */
 export async function resolveHeroImage(ref: string): Promise<string> {
-  if (/^https?:\/\//i.test(ref)) {
-    return fetchImageAsDataUrl(ref);
-  }
-  if (ref.startsWith("data:")) {
-    return ref;
-  }
+  try {
+    if (/^https?:\/\//i.test(ref)) {
+      return await fetchImageAsDataUrl(ref);
+    }
+    if (ref.startsWith("data:")) {
+      return ref;
+    }
 
-  // Local file: transcode to PNG if it isn't a format Satori can embed.
-  const abs = resolve(ref);
-  if (!existsSync(abs)) {
-    throw new Error(`Image not found: ${abs}`);
+    const abs = resolve(ref);
+    if (!existsSync(abs)) {
+      throw new Error(`Image not found: ${abs}`);
+    }
+    const ext = abs.slice(abs.lastIndexOf(".")).toLowerCase();
+    const mime = MIME_BY_EXT[ext] ?? "image/png";
+    // SVG embeds directly; every raster is sanitized through sharp (see
+    // fetchImageAsDataUrl for why JPEG/PNG are no longer embedded verbatim).
+    if (mime === "image/svg+xml") {
+      return getLocalImageDataUrl(ref);
+    }
+    return await sanitizeToPngDataUrl(readFileSync(abs));
+  } catch (err) {
+    console.warn(
+      `[resolveHeroImage] could not decode hero image (${ref}): ${
+        err instanceof Error ? err.message : String(err)
+      } — falling back to a placeholder hero.`,
+    );
+    return placeholderHeroDataUrl();
   }
-  const ext = abs.slice(abs.lastIndexOf(".")).toLowerCase();
-  const mime = MIME_BY_EXT[ext] ?? "image/png";
-  if (!SATORI_SAFE_MIME.has(mime)) {
-    return transcodeToPngDataUrl(readFileSync(abs));
-  }
-  return getLocalImageDataUrl(ref);
 }
