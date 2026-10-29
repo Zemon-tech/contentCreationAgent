@@ -154,6 +154,7 @@ async function main(): Promise<void> {
     imageAttribution: prepared.payload.imageAttribution,
     rightsStatus: prepared.payload.rightsStatus,
     caption: prepared.payload.caption,
+    xCaption: `${prepared.payload.xCaption} (${prepared.payload.xCaption.length}/280)`,
     hashtags: prepared.payload.hashtags,
     sourceUrls: prepared.payload.sourceUrls,
     factPack: prepared.payload.factPack,

@@ -56,6 +56,14 @@ function clip(text: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
 }
 
+/**
+ * Fit a standalone tweet to X's limit by cutting at a WORD boundary with no
+ * ellipsis (reuses clipWords). Returns a string ALWAYS <= `max` (default 280).
+ */
+function clipTweet(text: string, max = 280): string {
+  return clipWords(text, max);
+}
+
 function accentFor(topics: string[], text: string): Accent {
   const hay = `${topics.join(" ")} ${text}`.toLowerCase();
   if (/breaking|launch|unveil|releases?\b/.test(hay)) return "#F25C3D";
@@ -179,6 +187,13 @@ export function buildRasPayload(args: {
   // Merge any enrichment URLs into the citable source list (deduped).
   const sourceUrls = [...new Set([...factPack.sourceUrls, ...(args.extraSourceUrls ?? [])].map((u) => u.trim()).filter(Boolean))];
 
+  // X caption: prefer the LLM's standalone tweet; else build deterministically
+  // from the derived/base headline + attribution (X-only) or the primary
+  // source. Either way clipped word-safe to <= 280. NEVER a truncated IG caption.
+  const attributionOrSource = attributionLine ?? factPack.primarySource ?? sourceUrls[0] ?? item.url;
+  const deterministicTweet = [baseHeadline, attributionOrSource].filter(Boolean).join(" ");
+  const xCaption = clipTweet(llmCopy?.xCaption || deterministicTweet, 280);
+
   const hashtags = buildHashtags(topics, item.region);
 
   return {
@@ -201,6 +216,7 @@ export function buildRasPayload(args: {
     deckTail,
     accentColor,
     caption,
+    xCaption,
     hashtags,
     factPackLimited: factPack.factPackLimited,
     // X-signal / quality extensions (empty/default for RSS).

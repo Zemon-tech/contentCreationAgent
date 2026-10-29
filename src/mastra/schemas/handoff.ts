@@ -38,6 +38,11 @@ export const RasPayloadSchema = z.object({
   caption: z.string(),
   hashtags: z.array(z.string()),
 
+  // Standalone X (Twitter) caption, <=280 chars, generated to X criteria (NOT
+  // a truncated IG caption). Defaulted so every existing payload validates
+  // unchanged; buildRasPayload always sets a <=280 value.
+  xCaption: z.string().default(""),
+
   factPackLimited: z.boolean(),
 
   // ---- X-signal / quality extensions (all optional or defaulted so existing
@@ -78,6 +83,21 @@ export const RasPayloadSchema = z.object({
 
 export type RasPayload = z.infer<typeof RasPayloadSchema>;
 
+/**
+ * The X (Twitter) side-effect outcome, attached to a handoff result on the
+ * live+approved publish path. Fully independent of the Instagram status —
+ * Instagram stays ledger-authoritative and a X failure never flips an IG
+ * `posted` to `failed`.
+ */
+export const XOutcomeSchema = z.object({
+  attempted: z.boolean(),
+  success: z.boolean(),
+  tweetUrl: z.string().optional(),
+  dryRun: z.boolean().optional(),
+  error: z.string().optional(),
+});
+export type XOutcome = z.infer<typeof XOutcomeSchema>;
+
 export const HandoffResultSchema = z.object({
   status: z.enum(["posted", "dry_run", "failed", "skipped"]),
   ledgerKey: z.string(),
@@ -85,5 +105,7 @@ export const HandoffResultSchema = z.object({
   mediaId: z.string().optional(),
   error: z.string().optional(),
   reason: z.string().optional(),
+  /** X outcome (additional info; never changes `status`). */
+  x: XOutcomeSchema.optional(),
 });
 export type HandoffResult = z.infer<typeof HandoffResultSchema>;

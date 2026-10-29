@@ -38,6 +38,7 @@ const PreviewSchema = z.object({
   sources: z.array(z.string()),
   suggestedFormat: z.string(),
   caption: z.string(),
+  xCaption: z.string(),
   image: z.object({ localPath: z.string().nullable(), source: z.string().nullable(), attribution: z.string().nullable(), under1080: z.boolean(), chosenFrom: z.string() }),
   factPack: z.any(),
   renderedPost: z.object({ filePath: z.string(), viewUrl: z.string() }),
@@ -52,6 +53,16 @@ const OutputSchema = z.object({
   ledgerKey: z.string().optional(),
   renderedPost: z.object({ filePath: z.string(), viewUrl: z.string() }).optional(),
   permalink: z.string().optional(),
+  // X (Twitter) outcome — additional info; X never changes `status` (IG stays authoritative).
+  x: z
+    .object({
+      attempted: z.boolean(),
+      success: z.boolean(),
+      tweetUrl: z.string().optional(),
+      dryRun: z.boolean().optional(),
+      error: z.string().optional(),
+    })
+    .optional(),
   top5: z.array(z.object({ title: z.string(), score: z.number(), region: z.string() })).default([]),
 });
 
@@ -144,6 +155,7 @@ const autoStep = createStep({
             sources: prepared.payload.sourceUrls,
             suggestedFormat: prepared.payload.suggestedFormat,
             caption: prepared.payload.caption,
+            xCaption: `${prepared.payload.xCaption} (${prepared.payload.xCaption.length}/280)`,
             image: {
               localPath: prepared.image.imageLocalPath,
               source: prepared.image.imageSourceUrl,
@@ -178,6 +190,7 @@ const autoStep = createStep({
       ledgerKey: result.ledgerKey,
       renderedPost,
       ...(result.permalink ? { permalink: result.permalink } : {}),
+      ...(result.x ? { x: result.x } : {}),
       top5,
     };
   },

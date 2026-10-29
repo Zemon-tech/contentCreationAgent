@@ -61,6 +61,7 @@ RETURN STRICT JSON ONLY (no prose, no markdown fences) with exactly these keys:
 - "deckHighlight": the single most striking fact or figure, very short (this is the ACCENT line). Max 40 characters.
 - "deckTail": a short on-image deck line that teases what's next / why it matters. Max 60 characters.
 - "caption": the full-story Instagram caption. First line restates the hook in DIFFERENT words from the headline; then 3-5 short context lines (inverted pyramid, tight but complete); name the source; add ONE question that invites comments; end with the source attribution line exactly as instructed below. Max 2000 characters.
+- "xCaption": a SINGLE standalone tweet for X (Twitter), written fresh for X — NOT a truncation of the Instagram caption. Lead with the hook in the FIRST line so a scroller stops. Punchy, plain, one or two short sentences. 0-2 topical hashtags maximum (fewer is better). Include the source URL at the end ONLY if the whole tweet still fits. HARD LIMIT: the entire xCaption MUST be 280 characters or fewer (count URLs and hashtags). Obey EVERY grounding and fidelity rule above exactly as for the Instagram caption: no invented facts, numbers, names, dates or quotes; hedge/attribute when the brief is LIMITED or unconfirmed. If you cannot fit the source URL under 280, drop the URL rather than the accuracy.
 
 Write naturally and plainly. Return the JSON object and nothing else.`;
 
@@ -70,6 +71,10 @@ export const EditorialCopySchema = z.object({
   deckHighlight: z.string().min(1).max(40),
   deckTail: z.string().max(60),
   caption: z.string().min(1).max(2000),
+  // Standalone <=280 tweet. OPTIONAL so a missing or over-length value never
+  // fails validation and loses the otherwise-good IG copy (buildRasPayload
+  // clips/falls back deterministically). NOT a truncated IG caption.
+  xCaption: z.string().max(280).optional(),
 });
 
 export type EditorialCopy = z.infer<typeof EditorialCopySchema>;
@@ -179,8 +184,9 @@ function buildUserPrompt(args: {
 
   return (
     `FACT BRIEF:\n${brief}${coverage}\n\n` +
-    `Write the Instagram post copy as STRICT JSON (keys: serifHeadline, deckLead, deckHighlight, deckTail, caption).\n` +
+    `Write the post copy as STRICT JSON (keys: serifHeadline, deckLead, deckHighlight, deckTail, caption, xCaption).\n` +
     `Keep the caption to about ${args.captionMaxSentences} short sentences.\n` +
+    `The xCaption is a standalone tweet for X: hook first, punchy, <= 280 characters total (count the URL + hashtags), 0-2 hashtags, same grounding/fidelity rules — it is NOT a truncation of the caption.\n` +
     `The caption MUST end with this exact attribution line on its own line: "Source: ${srcLine}${limitNote}".`
   );
 }

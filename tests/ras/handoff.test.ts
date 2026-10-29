@@ -13,12 +13,15 @@ function payload(): RasPayload {
 }
 
 function fakeDeps() {
-  const calls = { render: 0, publish: 0, recorded: [] as string[] };
+  const calls = { render: 0, publish: 0, xPublish: 0, recorded: [] as string[] };
   const deps: Partial<HandoffDeps> = {
     render: async () => { calls.render++; return { viewUrls: ["https://host/ras-assets/s/01.png"] }; },
     publish: async () => { calls.publish++; return { published: true, mediaId: "m1", permalink: "https://ig/p/1" }; },
     getRow: async () => undefined,
     record: async (r) => { calls.recorded.push(r.status); },
+    // Inject X fakes so the suite never shells out to Python.
+    xPublish: async () => { calls.xPublish++; return { success: true, verified: true, text: "t", tweetUrl: "https://x.com/p/1", message: "ok" }; },
+    xReady: async () => ({ ok: true }),
   };
   return { deps, calls };
 }

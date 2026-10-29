@@ -20,3 +20,37 @@ export function publishPreflight(env: Record<string, string | undefined> = proce
   }
   return { ok: missing.length === 0, missing };
 }
+
+import { checkXSession, type XSessionInfo } from "../x-publisher";
+
+export interface XReadyResult {
+  ok: boolean;
+  reason?: string;
+  handle?: string | null;
+}
+
+/**
+ * X readiness check — separate from publishPreflight because it is async and
+ * shells out to the tweetytweets session check. A missing/not-logged-in X
+ * session must NOT fail the whole run: the caller simply skips X and still
+ * publishes to Instagram. `check` is injectable so tests never spawn Python.
+ *
+ * Gated by X_POST_ENABLED (default true): set X_POST_ENABLED=false to disable
+ * the X attempt entirely while leaving Instagram untouched.
+ */
+export async function xPublishReady(
+  check: () => Promise<XSessionInfo> = checkXSession,
+  env: Record<string, string | undefined> = process.env,
+): Promise<XReadyResult> {
+  const enabled = env["X_POST_ENABLED"]?.trim();
+  if (enabled !== undefined && /^(0|false|no|off)$/i.test(enabled)) {
+    return { ok: false, reason: "X_POST_ENABLED=false" };
+  }
+  try {
+    const session = await check();
+    if (session.loggedIn) return { ok: true, handle: session.handle };
+    return { ok: false, reason: session.message || "X session not logged in", handle: session.handle };
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+  }
+}

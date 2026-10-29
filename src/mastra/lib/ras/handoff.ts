@@ -12,6 +12,8 @@ import { resolveHeroImage, loadLocalLogo } from "../../renderer/images";
 import { logoPath } from "../../renderer/assets";
 import { ensureRasOutputDir, rasViewUrl, sanitizeSlug } from "../../renderer/output";
 import { pngToInstagramJpeg, IG_MAX_BYTES } from "./jpeg";
+import { publishToX, type XPublishResult } from "../x-publisher";
+import { xPublishReady, type XReadyResult } from "./preflight";
 
 /**
  * RAS handoff (Step 6). Builds nothing itself — it takes a finished payload and:
@@ -26,6 +28,20 @@ import { pngToInstagramJpeg, IG_MAX_BYTES } from "./jpeg";
  * the Instagram client already retries transient (5xx/429) errors internally,
  * and re-calling publish could double-post. This is the safe reading of the
  * "never retry in a way that could double-post" rule.
+ *
+ * X (Twitter) side effect - independence rule:
+ *   On the live+approved publish path (both the Instagram `posted` branch and
+ *   the `published:false` env-dry-run `dry_run` branch), the SAME rendered PNG
+ *   (rendered.filePath) is ALSO posted to X with the standalone <=280
+ *   `payload.xCaption`. X is attempted whenever that publish path executes and
+ *   X is ready (`xReady`); it is NOT attempted on the pre-publish dry-run early
+ *   return, the not-approved skip, the never-double-post skip, or a render
+ *   failure. X and Instagram are INDEPENDENT: X is never written to the posted
+ *   ledger (Instagram stays ledger-authoritative) and a X failure / missing
+ *   session NEVER flips a successful Instagram `posted` to `failed` - the X
+ *   result is attached as ADDITIONAL `result.x` info only. X obeys the SAME
+ *   `dryRun` safety switch as Instagram (posts nothing in dry-run), gated by
+ *   X_POST_ENABLED (default true) via `xPublishReady`.
  */
 
 export interface HandoffDeps {
@@ -38,6 +54,13 @@ export interface HandoffDeps {
   publish: (a: { viewUrls: string[]; caption: string; hashtags: string[] }) => Promise<{ published: boolean; dryRun?: boolean; mediaId?: string; permalink?: string }>;
   getRow: (key: string) => Promise<{ status: string } | undefined>;
   record: (row: Omit<PostedLedgerRow, "createdAt"> & { createdAt?: string }) => Promise<void>;
+  /**
+   * Post the SAME rendered PNG to X. Independent + fail-soft: never throws out,
+   * never touches the IG ledger. Injectable so tests don't shell out to Python.
+   */
+  xPublish: (a: { text: string; imagePath?: string; dryRun: boolean }) => Promise<XPublishResult>;
+  /** X readiness (session logged in + X_POST_ENABLED). Injectable for tests. */
+  xReady: () => Promise<XReadyResult>;
 }
 
 export const defaultHandoffDeps: HandoffDeps = {
@@ -45,6 +68,8 @@ export const defaultHandoffDeps: HandoffDeps = {
   publish: defaultPublish,
   getRow: (key) => getRow(key),
   record: (row) => recordAttempt(row),
+  xPublish: (a) => publishToX({ text: a.text, imagePath: a.imagePath, dryRun: a.dryRun }),
+  xReady: () => xPublishReady(),
 };
 
 export async function runHandoff(args: {
@@ -89,20 +114,23 @@ export async function runHandoff(args: {
   // Real, approved post. Pending BEFORE publish.
   await deps.record({ ...base, status: "pending", at: now });
 
-  // Render (retry once — idempotent).
-  let viewUrls: string[];
+  // Render (retry once — idempotent). Keep the FULL result so the X publisher
+  // gets the absolute local PNG (rendered.filePath); IG uses publishPaths.
+  let rendered: { viewUrls: string[]; filePath?: string; publishPaths?: string[] };
   const forPublish = (r: { viewUrls: string[]; publishPaths?: string[] }) => r.publishPaths ?? r.viewUrls;
   try {
-    viewUrls = forPublish(await deps.render(payload));
+    rendered = await deps.render(payload);
   } catch {
     try {
-      viewUrls = forPublish(await deps.render(payload));
+      rendered = await deps.render(payload);
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
       await deps.record({ ...base, status: "failed", at: new Date().toISOString(), error: `render: ${error}` });
       return { status: "failed", ledgerKey, error: `render: ${error}` };
     }
   }
+  const viewUrls = forPublish(rendered);
+  const renderedFilePath = rendered.filePath;
 
   // Publish ONCE (no re-invoke after a throw — see retry policy above).
   try {
@@ -112,7 +140,10 @@ export async function runHandoff(args: {
     // "posted" — a fake "posted" row would block this story forever.
     if (!res.published) {
       await deps.record({ ...base, status: "dry_run", at: new Date().toISOString() });
-      return { status: "dry_run", ledgerKey, reason: "Instagram client did not publish (INSTAGRAM_DRY_RUN=true in env)" };
+      // X runs on the live+approved publish path even when IG is in env dry-run
+      // (it posts nothing itself because we pass the handoff dryRun through).
+      const x = await attemptX(deps, payload.xCaption, renderedFilePath, args.dryRun);
+      return { status: "dry_run", ledgerKey, reason: "Instagram client did not publish (INSTAGRAM_DRY_RUN=true in env)", ...(x ? { x } : {}) };
     }
     await deps.record({
       ...base,
@@ -121,11 +152,56 @@ export async function runHandoff(args: {
       ...(res.mediaId ? { mediaId: res.mediaId } : {}),
       ...(res.permalink ? { permalink: res.permalink } : {}),
     });
-    return { status: "posted", ledgerKey, ...(res.mediaId ? { mediaId: res.mediaId } : {}), ...(res.permalink ? { permalink: res.permalink } : {}) };
+    // X is an ADDITIONAL, fail-soft side effect: its outcome never changes the
+    // IG `posted` status nor touches the ledger (see independence rule above).
+    const x = await attemptX(deps, payload.xCaption, renderedFilePath, args.dryRun);
+    return {
+      status: "posted",
+      ledgerKey,
+      ...(res.mediaId ? { mediaId: res.mediaId } : {}),
+      ...(res.permalink ? { permalink: res.permalink } : {}),
+      ...(x ? { x } : {}),
+    };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     await deps.record({ ...base, status: "failed", at: new Date().toISOString(), error: `publish: ${error}` });
     return { status: "failed", ledgerKey, error: `publish: ${error}` };
+  }
+}
+
+/**
+ * Attempt the independent X post. NEVER throws: any error (missing session,
+ * empty caption, publishToX failure or unexpected throw) is captured into the
+ * returned XOutcome and NEVER propagated, so a successful Instagram post is
+ * never flipped to failed. Returns the XOutcome to attach to the result.
+ */
+async function attemptX(
+  deps: HandoffDeps,
+  xCaption: string,
+  imagePath: string | undefined,
+  dryRun: boolean,
+): Promise<HandoffResult["x"]> {
+  try {
+    // publishToX throws on empty text — guard before attempting.
+    if (!xCaption || xCaption.trim().length === 0) {
+      return { attempted: false, success: false, error: "no X caption" };
+    }
+    const ready = await deps.xReady();
+    if (!ready.ok) {
+      return { attempted: false, success: false, error: ready.reason ?? "X not ready" };
+    }
+    const res = await deps.xPublish({ text: xCaption, imagePath, dryRun });
+    return {
+      attempted: true,
+      success: res.success,
+      ...(res.tweetUrl ? { tweetUrl: res.tweetUrl } : {}),
+      ...(res.dryRun != null ? { dryRun: res.dryRun } : {}),
+      ...(res.error ? { error: res.error } : {}),
+    };
+  } catch (err) {
+    // publishToX never throws for post failures, but swallow any unexpected
+    // throw so it can NEVER flip the Instagram status.
+    return { attempted: true, success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
