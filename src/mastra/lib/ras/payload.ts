@@ -209,27 +209,47 @@ function buildDeterministicDeck(
   const figures = factPack.figures.map((f) => safeLatin(f)).filter(Boolean);
   const names = factPack.names.map((n) => safeLatin(n)).filter(Boolean);
 
-  const lead = facts[0] || safeLatin(summaryFallback) || factPack.headline;
+  // The deck renders as ONE flowing sentence: lead + <highlight> + tail, with
+  // the highlight inline. So pick a single rich base sentence, find the most
+  // striking phrase INSIDE it, and split the sentence around that phrase so it
+  // reads continuously: "<text before> HIGHLIGHT <text after>".
+  const base = (facts[0] || safeLatin(summaryFallback) || factPack.headline).replace(/\s+/g, " ").trim();
 
-  // Highlight: the most attention-grabbing concrete element. Prefer a figure,
-  // then a named entity, then the shortest punchy clause from a fact that is
-  // NOT the lead; fall back to the headline (never an empty placeholder).
-  let highlight = figures[0] || "";
-  if (!highlight) highlight = names[0] || "";
-  if (!highlight) {
-    const clause = pickPunchyClause(facts.slice(1)) || pickPunchyClause([lead]);
-    highlight = clause || factPack.headline;
+  // The phrase to emphasize, searched for inside `base`: a figure first, else a
+  // named entity. Only usable if it actually occurs in the base sentence.
+  const candidatePhrases = [...figures, ...names].filter(Boolean);
+  let hit: { phrase: string; index: number } | null = null;
+  for (const p of candidatePhrases) {
+    const idx = base.toLowerCase().indexOf(p.toLowerCase());
+    if (idx >= 0) {
+      hit = { phrase: base.slice(idx, idx + p.length), index: idx };
+      break;
+    }
   }
 
-  // Tail: the next distinct fact that did not already feed the lead/highlight.
-  const usedLead = norm(lead);
+  if (hit) {
+    // Split the base sentence around the matched phrase so it flows inline.
+    const before = base.slice(0, hit.index).replace(/[\s,;:]+$/, "");
+    const after = base.slice(hit.index + hit.phrase.length).replace(/^[\s]+/, "");
+    return {
+      lead: before,
+      highlight: hit.phrase.replace(/[.,;:]+$/, ""),
+      tail: after,
+    };
+  }
+
+  // No figure/name occurs in the base sentence: emphasize the most striking
+  // standalone phrase (figure > name > punchy clause) and let the base sentence
+  // ride as the lead, with a second distinct fact as the continuation.
+  let highlight = figures[0] || names[0] || "";
+  if (!highlight) highlight = pickPunchyClause(facts.slice(1)) || pickPunchyClause([base]) || factPack.headline;
+  const usedLead = norm(base);
   const tail =
     facts.find((f) => {
       const n = norm(f);
       return n && n !== usedLead && !n.includes(norm(highlight)) && !norm(highlight).includes(n);
     }) || "";
-
-  return { lead, highlight, tail };
+  return { lead: base, highlight, tail };
 }
 
 /** Lowercased, punctuation-trimmed key for comparing two deck strings. */

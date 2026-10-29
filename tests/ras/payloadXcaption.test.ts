@@ -382,22 +382,20 @@ test("X-only story: xCaption keeps the @handle attribution but no URL", () => {
 });
 
 /**
- * Deterministic deck quality (used when the LLM copywriter returns no copy):
- * the highlight (the bold accent line) must be the single most striking element
- * — a figure when one exists, else a named entity — and the three deck lines
- * must be distinct from one another, not duplicated filler.
+ * Deterministic deck quality (used when the LLM copywriter returns no copy).
+ * The deck renders as ONE flowing sentence: deckLead + deckHighlight + deckTail,
+ * with the highlight inline. When a figure appears inside the lead fact, the
+ * builder splits that sentence AROUND the figure so the highlight IS the figure
+ * and the three parts join back into the original coherent sentence.
  */
-test("deterministic deck: highlight is the figure, lines are distinct, no 'Why it matters' filler", () => {
+test("deterministic deck: figure inside the fact becomes the inline highlight and the parts re-join into one sentence", () => {
   const item = rssItem();
+  const sentence = "Samsung posted its highest-ever quarterly operating profit of $80bn as AI memory demand surged";
   const payload = buildRasPayload({
     item,
     factPack: factPack({
       headline: "Samsung posts record quarterly profit on AI memory demand",
-      keyFacts: [
-        "Samsung posted its highest-ever quarterly profit.",
-        "AI memory chip demand drove the surge.",
-        "The company guided to further growth next quarter.",
-      ],
+      keyFacts: [sentence + "."],
       figures: ["$80bn"],
       names: ["Samsung"],
       sourceUrls: ["https://ex.com/story"],
@@ -408,15 +406,16 @@ test("deterministic deck: highlight is the figure, lines are distinct, no 'Why i
     isXOnly: false,
   });
   assert.ok(RasPayloadSchema.safeParse(payload).success);
-  // The highlight is the concrete figure — the thing the eye should land on.
-  assert.ok(payload.deckHighlight.includes("$80bn"), "figure is chosen as the highlight");
-  // No generic placeholder.
-  assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters");
-  // Lead and tail are non-empty and distinct from the highlight and each other.
-  assert.ok(payload.deckLead.length > 0 && payload.deckTail.length > 0, "lead and tail present");
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  assert.notEqual(norm(payload.deckLead), norm(payload.deckTail), "lead and tail are distinct");
-  assert.notEqual(norm(payload.deckLead), norm(payload.deckHighlight), "lead and highlight are distinct");
+  // The highlight is the concrete figure — the thing the eye should land on.
+  assert.equal(payload.deckHighlight, "$80bn", "the figure is the inline highlight");
+  assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters", "no generic placeholder");
+  // Lead sets up the figure (ends before it) and tail continues after it, so the
+  // three parts flow as one sentence with the figure inline and not duplicated.
+  assert.ok(payload.deckLead.length > 0 && payload.deckTail.length > 0, "lead and tail both present");
+  assert.ok(norm(payload.deckLead).startsWith("samsung posted its highest ever"), "lead is the setup before the figure");
+  assert.ok(norm(payload.deckTail).startsWith("as ai memory demand"), "tail continues after the figure");
+  assert.ok(!norm(payload.deckLead).includes("80bn") && !norm(payload.deckTail).includes("80bn"), "figure not duplicated in lead/tail");
 });
 
 test("deterministic deck: with no figures, highlight falls back to a named entity", () => {

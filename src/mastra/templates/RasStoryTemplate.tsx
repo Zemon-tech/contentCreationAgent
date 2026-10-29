@@ -206,11 +206,17 @@ export function RasStoryTemplate(props: RasStoryProps) {
           {props.serifHeadline}
         </div>
 
-        {/* Context deck: 3 stacked lines, middle line accented */}
+        {/* Context deck: ONE flowing paragraph that wraps naturally. The
+            highlight is an INLINE accented phrase, so the sentence continues on
+            the same line after it (no isolated, half-empty lines). Lead /
+            highlight / tail are each optional; only non-empty parts render, with
+            a single space between them. */}
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
+            flexWrap: "wrap",
+            columnGap: 8,
+            rowGap: 2,
             fontFamily: t.fonts.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -219,11 +225,11 @@ export function RasStoryTemplate(props: RasStoryProps) {
             marginTop: 16,
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", columnGap: 7 }}>{props.deckLead}</div>
-          <div style={{ display: "flex", flexWrap: "wrap", columnGap: 7 }}>
+          {props.deckLead ? <span>{props.deckLead}</span> : null}
+          {props.deckHighlight ? (
             <span style={{ fontWeight: 700, color: accent }}>{props.deckHighlight}</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", columnGap: 7 }}>{props.deckTail}</div>
+          ) : null}
+          {props.deckTail ? <span>{props.deckTail}</span> : null}
         </div>
 
         {/* Locked footer */}
