@@ -380,3 +380,80 @@ test("X-only story: xCaption keeps the @handle attribution but no URL", () => {
   assert.ok(payload.xCaption.includes("per @acme on X"), "human attribution kept");
   assert.ok(!/https?:\/\//.test(payload.xCaption), "no URL in the X-only tweet");
 });
+
+/**
+ * Deterministic deck quality (used when the LLM copywriter returns no copy):
+ * the highlight (the bold accent line) must be the single most striking element
+ * — a figure when one exists, else a named entity — and the three deck lines
+ * must be distinct from one another, not duplicated filler.
+ */
+test("deterministic deck: highlight is the figure, lines are distinct, no 'Why it matters' filler", () => {
+  const item = rssItem();
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({
+      headline: "Samsung posts record quarterly profit on AI memory demand",
+      keyFacts: [
+        "Samsung posted its highest-ever quarterly profit.",
+        "AI memory chip demand drove the surge.",
+        "The company guided to further growth next quarter.",
+      ],
+      figures: ["$80bn"],
+      names: ["Samsung"],
+      sourceUrls: ["https://ex.com/story"],
+    }),
+    image,
+    story: rankedStory(item),
+    // No llmCopy -> deterministic deck path.
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  // The highlight is the concrete figure — the thing the eye should land on.
+  assert.ok(payload.deckHighlight.includes("$80bn"), "figure is chosen as the highlight");
+  // No generic placeholder.
+  assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters");
+  // Lead and tail are non-empty and distinct from the highlight and each other.
+  assert.ok(payload.deckLead.length > 0 && payload.deckTail.length > 0, "lead and tail present");
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  assert.notEqual(norm(payload.deckLead), norm(payload.deckTail), "lead and tail are distinct");
+  assert.notEqual(norm(payload.deckLead), norm(payload.deckHighlight), "lead and highlight are distinct");
+});
+
+test("deterministic deck: with no figures, highlight falls back to a named entity", () => {
+  const item = rssItem();
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({
+      headline: "OpenAI partners with a national lab on safety research",
+      keyFacts: [
+        "OpenAI announced a research partnership.",
+        "The work focuses on model safety evaluation.",
+      ],
+      figures: [],
+      names: ["OpenAI"],
+      sourceUrls: ["https://ex.com/story"],
+    }),
+    image,
+    story: rankedStory(item),
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  assert.ok(payload.deckHighlight.length > 0, "highlight is non-empty");
+  assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters", "no filler placeholder");
+  assert.ok(payload.deckHighlight.includes("OpenAI"), "named entity chosen when no figure exists");
+});
+
+test("deterministic deck: llmCopy deck fields win over the deterministic fallback", () => {
+  const item = rssItem();
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ figures: ["$80bn"], names: ["Samsung"], sourceUrls: ["https://ex.com/story"] }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, deckLead: "Model lead", deckHighlight: "Model highlight", deckTail: "Model tail" },
+    isXOnly: false,
+  });
+  assert.equal(payload.deckLead, "Model lead");
+  assert.equal(payload.deckHighlight, "Model highlight");
+  assert.equal(payload.deckTail, "Model tail");
+});

@@ -187,6 +187,74 @@ export function stripUrls(text: string): string {
     .trim();
 }
 
+/**
+ * Deterministic 3-line deck builder — the fallback used when the LLM copywriter
+ * produces no copy. The three lines must read as ONE coherent thought and must
+ * not duplicate each other:
+ *   - lead      : the setup — the first grounded key fact (what happened).
+ *   - highlight : the single most striking element the eye should land on,
+ *                 chosen in priority order: a concrete figure (money / %, etc.)
+ *                 > a prominent named entity > the sharpest remaining key-fact
+ *                 clause. NEVER a generic "Why it matters" placeholder when any
+ *                 real signal exists.
+ *   - tail      : the consequence / forward look — the next distinct key fact,
+ *                 skipping whatever already fed the lead or the highlight.
+ * Every piece is drawn from the fact pack (grounded, never invented).
+ */
+function buildDeterministicDeck(
+  factPack: FactPack,
+  summaryFallback: string,
+): { lead: string; highlight: string; tail: string } {
+  const facts = factPack.keyFacts.map((f) => safeLatin(f)).filter(Boolean);
+  const figures = factPack.figures.map((f) => safeLatin(f)).filter(Boolean);
+  const names = factPack.names.map((n) => safeLatin(n)).filter(Boolean);
+
+  const lead = facts[0] || safeLatin(summaryFallback) || factPack.headline;
+
+  // Highlight: the most attention-grabbing concrete element. Prefer a figure,
+  // then a named entity, then the shortest punchy clause from a fact that is
+  // NOT the lead; fall back to the headline (never an empty placeholder).
+  let highlight = figures[0] || "";
+  if (!highlight) highlight = names[0] || "";
+  if (!highlight) {
+    const clause = pickPunchyClause(facts.slice(1)) || pickPunchyClause([lead]);
+    highlight = clause || factPack.headline;
+  }
+
+  // Tail: the next distinct fact that did not already feed the lead/highlight.
+  const usedLead = norm(lead);
+  const tail =
+    facts.find((f) => {
+      const n = norm(f);
+      return n && n !== usedLead && !n.includes(norm(highlight)) && !norm(highlight).includes(n);
+    }) || "";
+
+  return { lead, highlight, tail };
+}
+
+/** Lowercased, punctuation-trimmed key for comparing two deck strings. */
+function norm(s: string): string {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * From a set of fact strings, pull the single tightest attention-grabbing
+ * clause — the shortest sentence/segment that still carries a number or a
+ * capitalized entity, else the shortest non-trivial clause. Returns "" when
+ * nothing usable is found.
+ */
+function pickPunchyClause(facts: string[]): string {
+  const clauses = facts
+    .flatMap((f) => f.split(/(?<=[.!?])\s+|[;:]\s+/))
+    .map((c) => c.trim().replace(/[.,;:]+$/, ""))
+    .filter((c) => c.length >= 6 && c.length <= 40);
+  if (clauses.length === 0) return "";
+  const scored = clauses
+    .map((c) => ({ c, strong: /\d|\$|%|[A-Z][a-z]+/.test(c) }))
+    .sort((a, b) => Number(b.strong) - Number(a.strong) || a.c.length - b.c.length);
+  return scored[0]?.c ?? "";
+}
+
 function accentFor(topics: string[], text: string): Accent {
   const hay = `${topics.join(" ")} ${text}`.toLowerCase();
   if (/breaking|launch|unveil|releases?\b/.test(hay)) return "#F25C3D";
@@ -300,9 +368,14 @@ export function buildRasPayload(args: {
   // instructed not to, and stripUrls below is the defensive backstop).
   const baseHeadline = isX ? derivedHeadline || factPack.headline : factPack.headline;
   const serifHeadline = clip(llmCopy?.serifHeadline || baseHeadline, 120);
-  const deckLead = clipWords(llmCopy?.deckLead || factPack.keyFacts[0] || item.summary, 60);
-  const deckHighlight = clipWords(llmCopy?.deckHighlight || factPack.figures[0] || factPack.names[0] || "Why it matters", 40);
-  const deckTail = clipWords(llmCopy?.deckTail || factPack.keyFacts[1] || "", 60);
+  // Deterministic deck (used only when the LLM copy is absent): build three
+  // lines that read as ONE coherent thought — lead sets up, highlight is the
+  // single most striking element the eye should land on, tail is the
+  // consequence — drawn from DISTINCT facts so the lines never duplicate.
+  const deck = buildDeterministicDeck(factPack, item.summary);
+  const deckLead = clipWords(llmCopy?.deckLead || deck.lead, 60);
+  const deckHighlight = clipWords(llmCopy?.deckHighlight || deck.highlight, 40);
+  const deckTail = clipWords(llmCopy?.deckTail || deck.tail, 60);
   const caption = clip(
     stripUrls(
       llmCopy?.caption ||
