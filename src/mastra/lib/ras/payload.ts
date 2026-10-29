@@ -134,10 +134,30 @@ function buildTweetWithSuffix(headline: string, suffix: string, max: number): st
 
 /**
  * Normalize a MODEL-written tweet: cap hashtags at 2, then clip word-safe to
- * `max`. Always returns <= `max`.
+ * `max`. Returns an empty string when the input normalizes to nothing (all
+ * whitespace, or a single unbreakable overlong token with no word boundary) —
+ * callers treat empty as "no usable model caption" and fall back. Always
+ * returns <= `max`.
  */
 function clipTweet(text: string, max = 280): string {
   return clipTweetBody(capHashtags(text), max);
+}
+
+/**
+ * Build the FINAL X caption with a single hashtag-cap pass applied to BOTH the
+ * model and deterministic paths, so a deterministic fallback headline that
+ * happens to carry >2 hashtags is capped too (not just model captions). The
+ * model value is normalized FIRST; only when it collapses to empty (whitespace
+ * or an unbreakable overlong token) do we fall back to the deterministic
+ * headline+source tweet, so usable headline/source copy is never lost to an
+ * unusable model value. `capHashtags` shields URLs, so an atomic source URL in
+ * the deterministic suffix is never broken; capping only ever shrinks the
+ * string, so the <= `max` guarantee from the builders is preserved.
+ */
+function buildXCaption(modelCaption: string | undefined, headline: string, suffix: string, max = 280): string {
+  const fromModel = modelCaption ? clipTweet(modelCaption, max) : "";
+  const base = fromModel || buildTweetWithSuffix(headline, suffix, max);
+  return clipTweetBody(capHashtags(base), max);
 }
 
 function accentFor(topics: string[], text: string): Accent {
@@ -263,15 +283,17 @@ export function buildRasPayload(args: {
   // Merge any enrichment URLs into the citable source list (deduped).
   const sourceUrls = [...new Set([...factPack.sourceUrls, ...(args.extraSourceUrls ?? [])].map((u) => u.trim()).filter(Boolean))];
 
-  // X caption: prefer the LLM's standalone tweet (normalized — hashtags capped
-  // at 2, then clipped word-safe to <= 280); else build deterministically from
-  // the derived/base headline + an ATOMIC attribution (X-only) or primary-source
-  // suffix that is dropped whole when it does not fit. Either way always <= 280
-  // and never a partial URL. NEVER a truncated IG caption.
+  // X caption: prefer the LLM's standalone tweet (normalized FIRST — hashtags
+  // capped at 2, then clipped word-safe to <= 280). When that normalized model
+  // value is EMPTY (all whitespace, or a single unbreakable overlong token),
+  // fall back to the deterministic tweet built from the derived/base headline +
+  // an ATOMIC attribution (X-only) or primary-source suffix that is dropped
+  // whole when it does not fit — so usable headline/source copy is never lost to
+  // an unusable model value. A final capHashtags pass is applied to BOTH paths
+  // (deterministic headlines can carry >2 tags too). Either way always <= 280,
+  // hashtags <= 2, never a partial URL, and NEVER a truncated IG caption.
   const attributionOrSource = attributionLine ?? factPack.primarySource ?? sourceUrls[0] ?? item.url ?? "";
-  const xCaption = llmCopy?.xCaption
-    ? clipTweet(llmCopy.xCaption, 280)
-    : buildTweetWithSuffix(baseHeadline ?? "", attributionOrSource, 280);
+  const xCaption = buildXCaption(llmCopy?.xCaption, baseHeadline ?? "", attributionOrSource, 280);
 
   const hashtags = buildHashtags(topics, item.region);
 

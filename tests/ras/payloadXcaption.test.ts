@@ -263,6 +263,63 @@ test("deterministic fallback drops the source URL rather than publishing it half
   assert.ok(!hasPartialUrl, "no partial/truncated URL in the tweet");
 });
 
+test("deterministic fallback headline with >2 hashtags is capped to two", () => {
+  const item = rssItem();
+  // The hashtag cap must apply to the FINAL caption for the deterministic path
+  // too — not only to model captions. A fallback headline carrying three tags
+  // must be reduced to two.
+  const payload = buildRasPayload({
+    item,
+    // No llmCopy.xCaption -> deterministic path; headline carries 3 hashtags.
+    factPack: factPack({ headline: "Launch #ai #ml #tech", sourceUrls: [] }),
+    image,
+    story: rankedStory(item),
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  const tags = payload.xCaption.match(/#[A-Za-z0-9_]+/g) ?? [];
+  assert.equal(tags.length, 2, "deterministic fallback caps hashtags at two");
+  assert.deepEqual(tags, ["#ai", "#ml"], "the first two hashtags are kept in order");
+});
+
+test("whitespace-only model caption falls back to deterministic headline copy", () => {
+  const item = rssItem();
+  // A truthy-but-blank model value normalizes to empty; the deterministic
+  // headline+source fallback must still produce a usable tweet (NOT empty).
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ headline: "Acme raises $20M Series A", primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: "   \n  \t " },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  assert.ok(payload.xCaption.length > 0, "whitespace model caption falls back, not empty");
+  assert.ok(payload.xCaption.length <= 280);
+  assert.ok(payload.xCaption.includes("Acme raises $20M"), "fallback leads with the headline");
+});
+
+test("unbreakable-token model caption falls back to deterministic headline copy", () => {
+  const item = rssItem();
+  // A single 300-char unbroken token normalizes to empty (no word boundary to
+  // clip on); with usable headline/source data the deterministic fallback must
+  // still produce a non-empty tweet rather than skipping X.
+  const payload = buildRasPayload({
+    item,
+    factPack: factPack({ headline: "Acme raises $20M Series A", primarySource: "https://ex.com/story" }),
+    image,
+    story: rankedStory(item),
+    llmCopy: { ...baseCopy, xCaption: "A".repeat(300) },
+    isXOnly: false,
+  });
+  assert.ok(RasPayloadSchema.safeParse(payload).success);
+  assert.ok(payload.xCaption.length > 0, "unbreakable model caption falls back, not empty");
+  assert.ok(payload.xCaption.length <= 280);
+  assert.ok(!payload.xCaption.includes("AAAAAAAAAA"), "the bad token does not leak in");
+  assert.ok(payload.xCaption.includes("Acme raises $20M"), "fallback leads with the headline");
+});
+
 test("deterministic fallback keeps the source URL whole when it fits", () => {
   const item = rssItem();
   const url = "https://ex.com/story";

@@ -155,7 +155,9 @@ const autoStep = createStep({
             sources: prepared.payload.sourceUrls,
             suggestedFormat: prepared.payload.suggestedFormat,
             caption: prepared.payload.caption,
-            xCaption: `${prepared.payload.xCaption} (${prepared.payload.xCaption.length}/280)`,
+            xCaption: prepared.payload.xCaption
+              ? `${prepared.payload.xCaption} (${prepared.payload.xCaption.length}/280)`
+              : "(no X caption — X post will be skipped)",
             image: {
               localPath: prepared.image.imageLocalPath,
               source: prepared.image.imageSourceUrl,

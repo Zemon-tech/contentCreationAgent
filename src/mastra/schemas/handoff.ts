@@ -40,8 +40,10 @@ export const RasPayloadSchema = z.object({
 
   // Standalone X (Twitter) caption, <=280 chars, generated to X criteria (NOT
   // a truncated IG caption). Defaulted so every existing payload validates
-  // unchanged; buildRasPayload always sets a <=280 value.
-  xCaption: z.string().default(""),
+  // unchanged; buildRasPayload always sets a <=280 value. The `.max(280)` is
+  // defense in depth — the 280 guarantee is enforced in buildRasPayload, but
+  // the schema rejects any other caller that would construct a longer value.
+  xCaption: z.string().max(280).default(""),
 
   factPackLimited: z.boolean(),
 
