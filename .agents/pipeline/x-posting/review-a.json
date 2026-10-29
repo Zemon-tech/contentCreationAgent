@@ -1,0 +1,12 @@
+{
+  "approved": true,
+  "findings": [
+    {
+      "label": "Demo dump shows \"(0/280)\" for an empty caption",
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "detail": "src/mastra/demo/autoNewsDryRun.ts formats xCaption as `${xCaption} (${length}/280)` without the empty-caption guard the approval preview received, so an empty deterministic caption prints \"(0/280)\" in the offline debug dump. Debug output only, not user-facing. Mirror the preview's \"(no X caption — X post will be skipped)\" string if consistency is wanted."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\sanav\\OneDrive\\Documents\\GitHub\\contentCreationAgent\\.agents\\pipeline\\x-posting\\review-a.md"
+}

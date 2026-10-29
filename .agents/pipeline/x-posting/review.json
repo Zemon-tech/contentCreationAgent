@@ -1,0 +1,23 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "label": "No-publish render harness can post to X",
+      "severity": "blocking",
+      "confidence": "confirmed",
+      "source": "review-b",
+      "detail": "src/mastra/demo/rasRenderTest.ts (exposed as `npm run ras:render:test` in package.json) calls runHandoff with dryRun:false and approved:true and replaces only the Instagram `publish` dep with a fake that returns { published: true }. It does not inject safe X dependencies, so defaultHandoffDeps.xPublish (the real publishToX wrapper) runs with args.dryRun === false once the fake Instagram publisher reports success. With a logged-in browser session, this render-only harness can create a real X post while Instagram stays faked, breaking the command's no-publish contract and its printed promise that no real post was created. Fix: inject a safe X dependency into this harness (e.g. xReady: async () => ({ ok: false, reason: 'render test' }) or a dry-run/fake xPublish), state in the output that neither channel published, and add a regression asserting X is not called."
+    },
+    {
+      "label": "Demo dump shows \"(0/280)\" for an empty caption",
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "source": "review-a",
+      "detail": "src/mastra/demo/autoNewsDryRun.ts formats xCaption as `${xCaption} (${length}/280)` without the empty-caption guard the approval preview received, so an empty deterministic caption prints \"(0/280)\" in the offline debug dump. Debug output only, not user-facing. Mirror the preview's \"(no X caption — X post will be skipped)\" string if consistency is wanted."
+    }
+  ],
+  "reviewDoc": [
+    "c:\\Users\\sanav\\OneDrive\\Documents\\GitHub\\contentCreationAgent\\.agents\\pipeline\\x-posting\\review-a.md",
+    "c:\\Users\\sanav\\OneDrive\\Documents\\GitHub\\contentCreationAgent\\.agents\\pipeline\\x-posting\\review-b.md"
+  ]
+}
