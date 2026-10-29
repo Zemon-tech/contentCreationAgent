@@ -206,31 +206,29 @@ export function RasStoryTemplate(props: RasStoryProps) {
           {props.serifHeadline}
         </div>
 
-        {/* Context deck: three stacked BLOCK lines, each a full sentence that
-            wraps across multiple lines as needed (like the reference post):
-             1) lead sentence (ink),
-             2) highlighted sentence — a whole emphasized statement in the
-                accent color, bold, that can span ~2 lines (NOT just a figure),
-             3) tail sentence (ink).
-            Each part is optional; only non-empty parts render. */}
+        {/* Context deck: ONE flowing paragraph (~40 words) that wraps naturally.
+            lead + highlight + tail are inline spans in reading order, so the
+            text runs continuously and the HIGHLIGHT (bold, accent color) sits
+            IN THE MIDDLE of the paragraph — not on its own line. Each part is
+            optional; a trailing space after lead/highlight keeps word spacing
+            when they wrap. */}
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            rowGap: 10,
+            flexWrap: "wrap",
             fontFamily: t.fonts.sans,
-            fontSize: 25,
+            fontSize: 26,
             fontWeight: 400,
-            lineHeight: 1.34,
+            lineHeight: 1.4,
             color: t.colors.ink,
-            marginTop: 16,
+            marginTop: 18,
           }}
         >
-          {props.deckLead ? <div style={{ display: "flex" }}>{props.deckLead}</div> : null}
+          {props.deckLead ? <span>{props.deckLead + " "}</span> : null}
           {props.deckHighlight ? (
-            <div style={{ display: "flex", fontWeight: 700, color: accent }}>{props.deckHighlight}</div>
+            <span style={{ fontWeight: 700, color: accent }}>{props.deckHighlight + " "}</span>
           ) : null}
-          {props.deckTail ? <div style={{ display: "flex" }}>{props.deckTail}</div> : null}
+          {props.deckTail ? <span>{props.deckTail}</span> : null}
         </div>
 
         {/* Locked footer */}

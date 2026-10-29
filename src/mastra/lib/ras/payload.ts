@@ -188,24 +188,23 @@ export function stripUrls(text: string): string {
 }
 
 /**
- * Deterministic 3-line deck builder — the fallback used when the LLM copywriter
- * produces no copy. Produces three SUBSTANTIAL block lines (like the reference
- * post), each a full grounded sentence, distinct from one another:
- *   - lead      : the setup — the first grounded key fact (a full sentence).
- *   - highlight : the single most insightful / striking key fact, as a WHOLE
- *                 sentence (not just a figure) — the statement the eye lands on.
- *                 Prefers a fact carrying a number / % / money figure.
- *   - tail      : another distinct grounded fact — the consequence / context.
- * Every piece is drawn from the fact pack (grounded, never invented). When
- * there is only one fact, the lead carries it and highlight/tail stay empty
- * (the template simply renders fewer lines).
+ * Deterministic deck builder — the fallback used when the LLM copywriter
+ * produces no copy. Produces three parts that read as ONE flowing ~40-word
+ * paragraph (lead + inline highlight + tail), NOT three standalone lines:
+ *   - lead      : the first grounded fact, no trailing period (it runs into
+ *                 the highlight).
+ *   - highlight : the single most striking REMAINING fact (prefers one with a
+ *                 number / % / money figure), no trailing period — the inline
+ *                 emphasized clause the eye lands on mid-paragraph.
+ *   - tail      : another distinct grounded fact that completes the paragraph
+ *                 (keeps its terminal period).
+ * Every piece is grounded in the fact pack (never invented). With only one
+ * fact the lead carries it and highlight/tail stay empty.
  */
 function buildDeterministicDeck(
   factPack: FactPack,
   summaryFallback: string,
 ): { lead: string; highlight: string; tail: string } {
-  // Full grounded sentences (not fragments). Split any multi-sentence fact so
-  // each becomes its own candidate line, then de-duplicate.
   const sentences = dedupeByNorm(
     factPack.keyFacts
       .map((f) => safeLatin(f))
@@ -216,12 +215,9 @@ function buildDeterministicDeck(
 
   if (seed.length === 0) return { lead: factPack.headline, highlight: "", tail: "" };
 
-  // Lead = the first grounded sentence.
   const lead = seed[0];
   const rest = seed.slice(1);
 
-  // Highlight = the most striking REMAINING sentence (prefers one with a
-  // number / % / money figure). If only the lead exists, no highlight.
   let highlight = "";
   if (rest.length) {
     const scored = [...rest]
@@ -230,11 +226,13 @@ function buildDeterministicDeck(
     highlight = scored[0]?.s ?? "";
   }
 
-  // Tail = the next distinct sentence that is neither the lead nor the highlight.
   const used = new Set([norm(lead), norm(highlight)]);
   const tail = rest.find((s) => !used.has(norm(s))) ?? "";
 
-  return { lead, highlight, tail };
+  // Flowing paragraph: drop trailing punctuation on lead/highlight so they run
+  // into the next part; the tail keeps its sentence-ending period.
+  const dropEnd = (s: string) => s.replace(/[\s.,;:]+$/, "");
+  return { lead: dropEnd(lead), highlight: dropEnd(highlight), tail };
 }
 
 /** Split text into trimmed sentences (keeps terminal punctuation). */
@@ -377,14 +375,14 @@ export function buildRasPayload(args: {
   // instructed not to, and stripUrls below is the defensive backstop).
   const baseHeadline = isX ? derivedHeadline || factPack.headline : factPack.headline;
   const serifHeadline = clip(llmCopy?.serifHeadline || baseHeadline, 120);
-  // Deterministic deck (used only when the LLM copy is absent): three SUBSTANTIAL
-  // block lines — a full lead sentence, a highlighted sentence (a whole
-  // insightful statement, not just a figure), and a full tail sentence — so the
-  // body reads rich and multi-line like the reference post, not one terse line.
+  // Deterministic deck (used only when the LLM copy is absent). The three parts
+  // join into ONE flowing ~40-word paragraph (lead + inline highlight + tail),
+  // so each part is a phrase/short-clause, not a long standalone sentence. Char
+  // caps keep the whole paragraph around 40 words / ~230 chars total.
   const deck = buildDeterministicDeck(factPack, item.summary);
-  const deckLead = clipWords(llmCopy?.deckLead || deck.lead, 120);
-  const deckHighlight = clipWords(llmCopy?.deckHighlight || deck.highlight, 110);
-  const deckTail = clipWords(llmCopy?.deckTail || deck.tail, 120);
+  const deckLead = clipWords(llmCopy?.deckLead || deck.lead, 95);
+  const deckHighlight = clipWords(llmCopy?.deckHighlight || deck.highlight, 70);
+  const deckTail = clipWords(llmCopy?.deckTail || deck.tail, 95);
   const caption = clip(
     stripUrls(
       llmCopy?.caption ||
