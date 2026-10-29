@@ -155,9 +155,36 @@ function clipTweet(text: string, max = 280): string {
  * string, so the <= `max` guarantee from the builders is preserved.
  */
 function buildXCaption(modelCaption: string | undefined, headline: string, suffix: string, max = 280): string {
-  const fromModel = modelCaption ? clipTweet(modelCaption, max) : "";
-  const base = fromModel || buildTweetWithSuffix(headline, suffix, max);
-  return clipTweetBody(capHashtags(base), max);
+  // Strip any URL first: captions must carry NO raw scrape link. The model is
+  // instructed not to add one, but a stray http(s):// / www. / bare-domain link
+  // is removed defensively so it can never reach the tweet.
+  const fromModel = modelCaption ? clipTweet(stripUrls(modelCaption), max) : "";
+  const base = fromModel || buildTweetWithSuffix(headline, stripUrls(suffix), max);
+  return clipTweetBody(capHashtags(stripUrls(base)), max);
+}
+
+/**
+ * Remove URLs from caption text so no raw scrape link is ever published. Strips
+ * http(s):// links, protocol-relative and www. links, "Source:"/"via" lines
+ * that point at a link, and bare domains (e.g. "example.com/x"). Collapses the
+ * whitespace left behind. Used for BOTH the Instagram caption and the X tweet.
+ */
+export function stripUrls(text: string): string {
+  return (text || "")
+    // Drop a trailing/standalone "Source: <url>" or "via <url>" attribution line.
+    .replace(/\n*\s*(?:source|via|link|read more)\s*[:\-]?\s*\S*https?:\/\/\S+/gi, "")
+    // Full URLs (http/https and protocol-relative).
+    .replace(/\b(?:https?:)?\/\/\S+/gi, "")
+    // www. links without a scheme.
+    .replace(/\bwww\.\S+/gi, "")
+    // Bare domains with a path, e.g. "example.com/story" (avoid eating "e.g.").
+    .replace(/\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)+\/\S*/gi, "")
+    // Leftover empty "Source:" label with nothing after it.
+    .replace(/\n*\s*(?:source|via)\s*[:\-]\s*(?=\n|$)/gi, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]*\n/g, "\n")
+    .trim();
 }
 
 function accentFor(topics: string[], text: string): Accent {
@@ -263,20 +290,24 @@ export function buildRasPayload(args: {
 
   const categoryTag = (topics.length ? topics : ["AI"]).slice(0, 3).map((t) => safeLatin(t).toUpperCase()).join(" · ");
 
-  const srcLine = factPack.primarySource ?? factPack.sourceUrls[0] ?? item.url;
   const limitNote = factPack.factPackLimited ? " (headline-level; details limited)" : "";
 
   // Copy: LLM editorial when available, deterministic template otherwise. Both
   // paths pass through safeLatin + hard clipping below as the final backstop.
   // Prefer the derived headline over the raw first line for X items.
+  // NOTE: captions carry NO raw scrape URL — neither the LLM nor the
+  // deterministic fallback prints a "Source: <link>" line (the model is
+  // instructed not to, and stripUrls below is the defensive backstop).
   const baseHeadline = isX ? derivedHeadline || factPack.headline : factPack.headline;
   const serifHeadline = clip(llmCopy?.serifHeadline || baseHeadline, 120);
   const deckLead = clipWords(llmCopy?.deckLead || factPack.keyFacts[0] || item.summary, 60);
   const deckHighlight = clipWords(llmCopy?.deckHighlight || factPack.figures[0] || factPack.names[0] || "Why it matters", 40);
   const deckTail = clipWords(llmCopy?.deckTail || factPack.keyFacts[1] || "", 60);
   const caption = clip(
-    llmCopy?.caption ||
-      `${factPack.headline}. ${factPack.keyFacts.slice(0, 2).join(" ")}${limitNote}\n\nSource: ${srcLine}`,
+    stripUrls(
+      llmCopy?.caption ||
+        `${factPack.headline}. ${factPack.keyFacts.slice(0, 2).join(" ")}${limitNote}`,
+    ),
     2000,
   );
 
@@ -287,13 +318,14 @@ export function buildRasPayload(args: {
   // capped at 2, then clipped word-safe to <= 280). When that normalized model
   // value is EMPTY (all whitespace, or a single unbreakable overlong token),
   // fall back to the deterministic tweet built from the derived/base headline +
-  // an ATOMIC attribution (X-only) or primary-source suffix that is dropped
-  // whole when it does not fit — so usable headline/source copy is never lost to
-  // an unusable model value. A final capHashtags pass is applied to BOTH paths
-  // (deterministic headlines can carry >2 tags too). Either way always <= 280,
-  // hashtags <= 2, never a partial URL, and NEVER a truncated IG caption.
-  const attributionOrSource = attributionLine ?? factPack.primarySource ?? sourceUrls[0] ?? item.url ?? "";
-  const xCaption = buildXCaption(llmCopy?.xCaption, baseHeadline ?? "", attributionOrSource, 280);
+  // an ATOMIC attribution suffix that is dropped whole when it does not fit.
+  // The suffix is NEVER a URL: only the human "per @handle on X" attribution
+  // line for X-only stories; otherwise empty. buildXCaption also strips any
+  // stray URL the model may have left in, so no scrape link reaches the tweet.
+  // A final capHashtags pass is applied to BOTH paths. Always <= 280, hashtags
+  // <= 2, no link, and NEVER a truncated IG caption.
+  const xSuffix = attributionLine ?? "";
+  const xCaption = buildXCaption(llmCopy?.xCaption, baseHeadline ?? "", xSuffix, 280);
 
   const hashtags = buildHashtags(topics, item.region);
 

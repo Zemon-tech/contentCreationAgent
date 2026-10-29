@@ -60,8 +60,8 @@ RETURN STRICT JSON ONLY (no prose, no markdown fences) with exactly these keys:
 - "deckLead": a short punchy on-image deck line that hooks. Max 60 characters.
 - "deckHighlight": the single most striking fact or figure, very short (this is the ACCENT line). Max 40 characters.
 - "deckTail": a short on-image deck line that teases what's next / why it matters. Max 60 characters.
-- "caption": the full-story Instagram caption. First line restates the hook in DIFFERENT words from the headline; then 3-5 short context lines (inverted pyramid, tight but complete); name the source; add ONE question that invites comments; end with the source attribution line exactly as instructed below. Max 2000 characters.
-- "xCaption": a SINGLE standalone tweet for X (Twitter), written fresh for X — NOT a truncation of the Instagram caption. Lead with the hook in the FIRST line so a scroller stops. Punchy, plain, one or two short sentences. 0-2 topical hashtags maximum (fewer is better). Include the source URL at the end ONLY if the whole tweet still fits. HARD LIMIT: the entire xCaption MUST be 280 characters or fewer (count URLs and hashtags). Obey EVERY grounding and fidelity rule above exactly as for the Instagram caption: no invented facts, numbers, names, dates or quotes; hedge/attribute when the brief is LIMITED or unconfirmed. If you cannot fit the source URL under 280, drop the URL rather than the accuracy.
+- "caption": the full-story Instagram caption. First line restates the hook in DIFFERENT words from the headline; then 3-5 short context lines (inverted pyramid, tight but complete); you may name the source PUBLICATION by name if it reads naturally; add ONE question that invites comments. Do NOT put any raw URL or a "Source: <link>" line in the caption — no links at all. Max 2000 characters.
+- "xCaption": a SINGLE standalone tweet for X (Twitter), written fresh for X — NOT a truncation of the Instagram caption. Lead with the hook in the FIRST line so a scroller stops. Punchy, plain, one or two short sentences. 0-2 topical hashtags maximum (fewer is better). Do NOT include any URL or link in the tweet. HARD LIMIT: the entire xCaption MUST be 280 characters or fewer (count hashtags). Obey EVERY grounding and fidelity rule above exactly as for the Instagram caption: no invented facts, numbers, names, dates or quotes; hedge/attribute when the brief is LIMITED or unconfirmed.
 
 Write naturally and plainly. Return the JSON object and nothing else.`;
 
@@ -164,9 +164,7 @@ function buildUserPrompt(args: {
   sourceUrls: string[];
   captionMaxSentences: number;
 }): string {
-  const { factPack, snippets, sourceUrls } = args;
-  const srcLine = factPack.primarySource ?? factPack.sourceUrls[0] ?? sourceUrls[0] ?? "";
-  const limitNote = factPack.factPackLimited ? " (headline-level; details limited)" : "";
+  const { factPack, snippets } = args;
 
   const brief = [
     `HEADLINE: ${factPack.headline}`,
@@ -193,8 +191,8 @@ function buildUserPrompt(args: {
     `FACT BRIEF:\n${brief}${coverage}\n\n` +
     `Write the post copy as STRICT JSON (keys: serifHeadline, deckLead, deckHighlight, deckTail, caption, xCaption).\n` +
     `Keep the caption to about ${args.captionMaxSentences} short sentences.\n` +
-    `The xCaption is a standalone tweet for X: hook first, punchy, <= 280 characters total (count the URL + hashtags), 0-2 hashtags, same grounding/fidelity rules — it is NOT a truncation of the caption.\n` +
-    `The caption MUST end with this exact attribution line on its own line: "Source: ${srcLine}${limitNote}".`
+    `The xCaption is a standalone tweet for X: hook first, punchy, <= 280 characters total (count hashtags), 0-2 hashtags, same grounding/fidelity rules — it is NOT a truncation of the caption.\n` +
+    `Do NOT put any URL or "Source:" link line in either the caption or the xCaption — no links at all.`
   );
 }
 

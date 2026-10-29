@@ -230,7 +230,11 @@ FOCUS_JS = r"""
 
 COMPOSE_STATE_JS = r"""
 (() => {
-  const btn = document.querySelector('[data-testid="tweetButton"]');
+  // X renders the Post button as "tweetButtonInline" on the full-page
+  // /compose/post route and as "tweetButton" inside the modal composer. Accept
+  // EITHER so auto-posting works regardless of which composer X serves.
+  const btn = document.querySelector('[data-testid="tweetButtonInline"]')
+           || document.querySelector('[data-testid="tweetButton"]');
   const ed  = document.querySelector('[data-testid="tweetTextarea_0"]');
   const toast = document.querySelector('[data-testid="toast"]');
   const txt = document.body ? document.body.innerText : '';
@@ -280,13 +284,59 @@ async def _attach_image(page: Session, path: Path) -> str:
     return "attached-but-button-still-disabled"
 
 
+async def _keyboard_submit(page: Session) -> None:
+    """Submit the composer with the native keyboard shortcut (Ctrl/Cmd+Enter).
+
+    A DOM .click() can silently miss if X swapped the button's testid or the
+    node is detached mid-render; the keyboard shortcut submits the focused
+    composer directly and is selector-independent. Send it on BOTH modifiers so
+    it works on Windows/Linux (Ctrl) and macOS (Cmd)."""
+    await page.eval("document.querySelector('%s') && document.querySelector('%s').focus()"
+                    % (EDITOR, EDITOR))
+    for mod, mask in (("ctrl", 2), ("meta", 4)):
+        try:
+            await page.send("Input.dispatchKeyEvent", type="keyDown", windowsVirtualKeyCode=13,
+                            key="Enter", code="Enter", modifiers=mask)
+            await page.send("Input.dispatchKeyEvent", type="keyUp", windowsVirtualKeyCode=13,
+                            key="Enter", code="Enter", modifiers=mask)
+        except (CDPError, OSError):
+            continue
+
+
 async def _click_post(page: Session) -> str:
-    for _ in range(45):
+    """Auto-submit the composed post. Clicks the Post button as soon as it
+    enables (trying whichever testid X rendered via COMPOSE_STATE_JS), and if
+    the click does not take, falls back to the Ctrl/Cmd+Enter keyboard submit.
+    Never requires a human to click Post."""
+    # The button selector that matches whatever COMPOSE_STATE_JS resolved.
+    click_js = (
+        "(() => { const b = document.querySelector('[data-testid=\"tweetButtonInline\"]')"
+        " || document.querySelector('[data-testid=\"tweetButton\"]');"
+        " if (b) { b.click(); return true; } return false; })()"
+    )
+    for i in range(45):
         await asyncio.sleep(1.0)
         st = json.loads(await page.eval(COMPOSE_STATE_JS))
+        if st.get("sent"):
+            return "sent"
         if st.get("btn_disabled") is False:
-            await page.eval("document.querySelector('%s').click()" % POST_BTN)
-            return "clicked"
+            clicked = await page.eval(click_js)
+            # Give X a beat, then confirm it actually left the composer; if not,
+            # submit via keyboard as a fallback.
+            await asyncio.sleep(1.5)
+            cs = json.loads(await page.eval(COMPOSE_STATE_JS))
+            if cs.get("sent") or not cs.get("has_editor"):
+                return "clicked"
+            await _keyboard_submit(page)
+            return "clicked" if clicked else "keyboard-submit"
+        # Button enabled but never seen after several tries: try keyboard submit
+        # as a last resort once the editor clearly has text.
+        if i >= 8 and st.get("has_editor") and st.get("editor_text"):
+            await _keyboard_submit(page)
+            await asyncio.sleep(1.5)
+            cs = json.loads(await page.eval(COMPOSE_STATE_JS))
+            if cs.get("sent") or not cs.get("has_editor"):
+                return "keyboard-submit"
     return "button never enabled"
 
 
