@@ -24,6 +24,7 @@
     "feeds:verify": "npx -y tsx src/mastra/demo/verifyFeeds.ts",
     "sources:verify": "npx -y tsx src/mastra/demo/verifySources.ts",
     "publish:serve": "npx -y tsx --env-file=.env src/mastra/demo/publishProxy.ts",
+    "tunnel:keep": "npx -y tsx src/mastra/demo/tunnelKeeper.ts",
     "ig:check": "npx -y tsx --env-file=.env src/mastra/demo/igCheck.ts",
     "ingest:dry": "npx -y tsx src/mastra/demo/ingestDryRun.ts",
     "auto:dry": "npx -y tsx --env-file=.env src/mastra/demo/autoNewsDryRun.ts",
