@@ -57,14 +57,14 @@ NEWS-WRITING PRINCIPLES (apply them):
 
 RETURN STRICT JSON ONLY (no prose, no markdown fences) with exactly these keys:
 - "serifHeadline": the catchy, accurate headline for the image, built per HEADLINE CRAFT above. Max 120 characters.
-DECK CRAFT — deckLead + deckHighlight + deckTail are rendered as ONE continuous sentence that wraps naturally (NOT three stacked lines). They are joined with single spaces in that order, and deckHighlight is shown bold in the brand accent color INLINE within the sentence. So write them as three PARTS of a single flowing sentence, not three standalone sentences:
-  • deckLead is the start of the sentence (no ending period),
-  • deckHighlight is the key phrase in the MIDDLE that the eye lands on,
-  • deckTail continues and finishes the sentence after the highlight.
-Read as "deckLead deckHighlight deckTail" it must be ONE grammatical, natural sentence that expands the headline with the real substance of the story. Every word grounded in the FACT BRIEF / EXTRA COVERAGE — no filler, no "why it matters" placeholder, no restating the headline verbatim. Example shape: deckLead="Samsung booked its highest-ever quarterly profit of", deckHighlight="$80bn", deckTail="as AI memory demand surged." -> reads "Samsung booked its highest-ever quarterly profit of $80bn as AI memory demand surged."
-- "deckLead": the opening fragment of the sentence that leads INTO the highlight. Ends right where the highlight should begin (often with a word like "of", "to", "worth", "by"). No trailing period. Specific, concrete, no hype. Max 70 characters.
-- "deckHighlight": the single most striking, scroll-stopping element of the story, placed INLINE mid-sentence — the standout number/figure, the key named player, or the sharp stakes. Pick whatever is genuinely the most attention-grabbing phrase (a figure like "$80bn" / "10x faster" / "40M users" is usually strongest). It is a short PHRASE, not a whole sentence, NOT a restatement of deckLead, NOT a generic word. Max 24 characters.
-- "deckTail": the rest of the sentence AFTER the highlight — the consequence or context that completes the thought. Lowercase start (it continues the sentence) unless it begins with a proper noun. End with a period. Not a question, not a CTA. Max 70 characters.
+DECK CRAFT — the deck sits under the headline and is three STACKED BLOCK LINES, each a FULL sentence (they wrap across multiple visual lines as needed). deckHighlight is shown bold in the brand accent color as its OWN line. Together they form a tight 3-sentence mini-brief that expands the headline with real substance — like a sharp editor's standfirst. Make them SUBSTANTIAL, not terse: each a complete, information-rich sentence. Read top to bottom they tell the story: context -> the single most striking insight -> the consequence / forward look. Every claim grounded in the FACT BRIEF / EXTRA COVERAGE — no filler, no "why it matters" placeholder, no restating the headline verbatim, no invented numbers.
+Reference shape (this is the TARGET quality and length — match it):
+  deckLead = "Live2.ai, incubated by Xelpmoc, has raised Rs 130 crore to turn social chatter into autonomous commerce agents."
+  deckHighlight = "90% of revenue already comes from outside India. The question is when Indian brands catch up."
+  deckTail = "The same AI that spots a crisis on TikTok can also sell through your store, in real time, without a human in the loop."
+- "deckLead": a full sentence of context — who/what/the core number — that sets the story up. Specific and concrete, no hype. End with a period. Roughly 70-110 characters.
+- "deckHighlight": THE most striking, scroll-stopping insight of the whole story, written as a COMPLETE sentence (it may be two very short sentences). This is the bold accent block the eye lands on — a real insight or the standout figure framed as a statement (e.g. "90% of revenue already comes from outside India."), NOT a bare phrase, NOT a restatement of deckLead. Roughly 60-105 characters.
+- "deckTail": a full sentence giving the consequence, stakes, or "what this means" — the forward look that lands the point. Not a question, not a CTA. End with a period. Roughly 70-110 characters.
 - "caption": the full-story Instagram caption. First line restates the hook in DIFFERENT words from the headline; then 3-5 short context lines (inverted pyramid, tight but complete); you may name the source PUBLICATION by name if it reads naturally; add ONE question that invites comments. Do NOT put any raw URL or a "Source: <link>" line in the caption — no links at all. Max 2000 characters.
 - "xCaption": a SINGLE standalone tweet for X (Twitter), written fresh for X — NOT a truncation of the Instagram caption. Lead with the hook in the FIRST line so a scroller stops. Punchy, plain, one or two short sentences. 0-2 topical hashtags maximum (fewer is better). Do NOT include any URL or link in the tweet. HARD LIMIT: the entire xCaption MUST be 280 characters or fewer (count hashtags). Obey EVERY grounding and fidelity rule above exactly as for the Instagram caption: no invented facts, numbers, names, dates or quotes; hedge/attribute when the brief is LIMITED or unconfirmed.
 
@@ -72,9 +72,13 @@ Write naturally and plainly. Return the JSON object and nothing else.`;
 
 export const EditorialCopySchema = z.object({
   serifHeadline: z.string().min(1).max(120),
-  deckLead: z.string().min(1).max(60),
-  deckHighlight: z.string().min(1).max(40),
-  deckTail: z.string().max(60),
+  // Deck lines are SUBSTANTIAL full sentences (rendered as stacked block lines
+  // that wrap), so they are longer than the old terse-fragment limits. The
+  // deterministic clipper (clipWords in payload.ts) still hard-caps them, so
+  // these maxes only need headroom for a full sentence each.
+  deckLead: z.string().min(1).max(130),
+  deckHighlight: z.string().min(1).max(130),
+  deckTail: z.string().max(130),
   caption: z.string().min(1).max(2000),
   // Standalone tweet. OPTIONAL, length-UNCONSTRAINED, and FIELD-LEVEL CATCH on
   // purpose: a missing, over-length, null, or otherwise non-string value must

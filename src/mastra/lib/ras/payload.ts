@@ -189,90 +189,79 @@ export function stripUrls(text: string): string {
 
 /**
  * Deterministic 3-line deck builder — the fallback used when the LLM copywriter
- * produces no copy. The three lines must read as ONE coherent thought and must
- * not duplicate each other:
- *   - lead      : the setup — the first grounded key fact (what happened).
- *   - highlight : the single most striking element the eye should land on,
- *                 chosen in priority order: a concrete figure (money / %, etc.)
- *                 > a prominent named entity > the sharpest remaining key-fact
- *                 clause. NEVER a generic "Why it matters" placeholder when any
- *                 real signal exists.
- *   - tail      : the consequence / forward look — the next distinct key fact,
- *                 skipping whatever already fed the lead or the highlight.
- * Every piece is drawn from the fact pack (grounded, never invented).
+ * produces no copy. Produces three SUBSTANTIAL block lines (like the reference
+ * post), each a full grounded sentence, distinct from one another:
+ *   - lead      : the setup — the first grounded key fact (a full sentence).
+ *   - highlight : the single most insightful / striking key fact, as a WHOLE
+ *                 sentence (not just a figure) — the statement the eye lands on.
+ *                 Prefers a fact carrying a number / % / money figure.
+ *   - tail      : another distinct grounded fact — the consequence / context.
+ * Every piece is drawn from the fact pack (grounded, never invented). When
+ * there is only one fact, the lead carries it and highlight/tail stay empty
+ * (the template simply renders fewer lines).
  */
 function buildDeterministicDeck(
   factPack: FactPack,
   summaryFallback: string,
 ): { lead: string; highlight: string; tail: string } {
-  const facts = factPack.keyFacts.map((f) => safeLatin(f)).filter(Boolean);
-  const figures = factPack.figures.map((f) => safeLatin(f)).filter(Boolean);
-  const names = factPack.names.map((n) => safeLatin(n)).filter(Boolean);
+  // Full grounded sentences (not fragments). Split any multi-sentence fact so
+  // each becomes its own candidate line, then de-duplicate.
+  const sentences = dedupeByNorm(
+    factPack.keyFacts
+      .map((f) => safeLatin(f))
+      .filter(Boolean)
+      .flatMap((f) => splitSentences(f)),
+  );
+  const seed = sentences.length ? sentences : dedupeByNorm(splitSentences(safeLatin(summaryFallback) || factPack.headline));
 
-  // The deck renders as ONE flowing sentence: lead + <highlight> + tail, with
-  // the highlight inline. So pick a single rich base sentence, find the most
-  // striking phrase INSIDE it, and split the sentence around that phrase so it
-  // reads continuously: "<text before> HIGHLIGHT <text after>".
-  const base = (facts[0] || safeLatin(summaryFallback) || factPack.headline).replace(/\s+/g, " ").trim();
+  if (seed.length === 0) return { lead: factPack.headline, highlight: "", tail: "" };
 
-  // The phrase to emphasize, searched for inside `base`: a figure first, else a
-  // named entity. Only usable if it actually occurs in the base sentence.
-  const candidatePhrases = [...figures, ...names].filter(Boolean);
-  let hit: { phrase: string; index: number } | null = null;
-  for (const p of candidatePhrases) {
-    const idx = base.toLowerCase().indexOf(p.toLowerCase());
-    if (idx >= 0) {
-      hit = { phrase: base.slice(idx, idx + p.length), index: idx };
-      break;
-    }
+  // Lead = the first grounded sentence.
+  const lead = seed[0];
+  const rest = seed.slice(1);
+
+  // Highlight = the most striking REMAINING sentence (prefers one with a
+  // number / % / money figure). If only the lead exists, no highlight.
+  let highlight = "";
+  if (rest.length) {
+    const scored = [...rest]
+      .map((s, i) => ({ s, i, strong: /\d|%|\$|rs\b|eur|cr\b|crore|million|billion|bn\b/i.test(s) }))
+      .sort((a, b) => Number(b.strong) - Number(a.strong) || a.i - b.i);
+    highlight = scored[0]?.s ?? "";
   }
 
-  if (hit) {
-    // Split the base sentence around the matched phrase so it flows inline.
-    const before = base.slice(0, hit.index).replace(/[\s,;:]+$/, "");
-    const after = base.slice(hit.index + hit.phrase.length).replace(/^[\s]+/, "");
-    return {
-      lead: before,
-      highlight: hit.phrase.replace(/[.,;:]+$/, ""),
-      tail: after,
-    };
-  }
+  // Tail = the next distinct sentence that is neither the lead nor the highlight.
+  const used = new Set([norm(lead), norm(highlight)]);
+  const tail = rest.find((s) => !used.has(norm(s))) ?? "";
 
-  // No figure/name occurs in the base sentence: emphasize the most striking
-  // standalone phrase (figure > name > punchy clause) and let the base sentence
-  // ride as the lead, with a second distinct fact as the continuation.
-  let highlight = figures[0] || names[0] || "";
-  if (!highlight) highlight = pickPunchyClause(facts.slice(1)) || pickPunchyClause([base]) || factPack.headline;
-  const usedLead = norm(base);
-  const tail =
-    facts.find((f) => {
-      const n = norm(f);
-      return n && n !== usedLead && !n.includes(norm(highlight)) && !norm(highlight).includes(n);
-    }) || "";
-  return { lead: base, highlight, tail };
+  return { lead, highlight, tail };
+}
+
+/** Split text into trimmed sentences (keeps terminal punctuation). */
+function splitSentences(text: string): string[] {
+  return (text || "")
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/** De-duplicate a list of strings by their normalized key, preserving order. */
+function dedupeByNorm(items: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const s of items) {
+    const k = norm(s);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(s);
+  }
+  return out;
 }
 
 /** Lowercased, punctuation-trimmed key for comparing two deck strings. */
 function norm(s: string): string {
   return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-}
-
-/**
- * From a set of fact strings, pull the single tightest attention-grabbing
- * clause — the shortest sentence/segment that still carries a number or a
- * capitalized entity, else the shortest non-trivial clause. Returns "" when
- * nothing usable is found.
- */
-function pickPunchyClause(facts: string[]): string {
-  const clauses = facts
-    .flatMap((f) => f.split(/(?<=[.!?])\s+|[;:]\s+/))
-    .map((c) => c.trim().replace(/[.,;:]+$/, ""))
-    .filter((c) => c.length >= 6 && c.length <= 40);
-  if (clauses.length === 0) return "";
-  const scored = clauses
-    .map((c) => ({ c, strong: /\d|\$|%|[A-Z][a-z]+/.test(c) }))
-    .sort((a, b) => Number(b.strong) - Number(a.strong) || a.c.length - b.c.length);
-  return scored[0]?.c ?? "";
 }
 
 function accentFor(topics: string[], text: string): Accent {
@@ -388,14 +377,14 @@ export function buildRasPayload(args: {
   // instructed not to, and stripUrls below is the defensive backstop).
   const baseHeadline = isX ? derivedHeadline || factPack.headline : factPack.headline;
   const serifHeadline = clip(llmCopy?.serifHeadline || baseHeadline, 120);
-  // Deterministic deck (used only when the LLM copy is absent): build three
-  // lines that read as ONE coherent thought — lead sets up, highlight is the
-  // single most striking element the eye should land on, tail is the
-  // consequence — drawn from DISTINCT facts so the lines never duplicate.
+  // Deterministic deck (used only when the LLM copy is absent): three SUBSTANTIAL
+  // block lines — a full lead sentence, a highlighted sentence (a whole
+  // insightful statement, not just a figure), and a full tail sentence — so the
+  // body reads rich and multi-line like the reference post, not one terse line.
   const deck = buildDeterministicDeck(factPack, item.summary);
-  const deckLead = clipWords(llmCopy?.deckLead || deck.lead, 60);
-  const deckHighlight = clipWords(llmCopy?.deckHighlight || deck.highlight, 40);
-  const deckTail = clipWords(llmCopy?.deckTail || deck.tail, 60);
+  const deckLead = clipWords(llmCopy?.deckLead || deck.lead, 120);
+  const deckHighlight = clipWords(llmCopy?.deckHighlight || deck.highlight, 110);
+  const deckTail = clipWords(llmCopy?.deckTail || deck.tail, 120);
   const caption = clip(
     stripUrls(
       llmCopy?.caption ||

@@ -206,30 +206,31 @@ export function RasStoryTemplate(props: RasStoryProps) {
           {props.serifHeadline}
         </div>
 
-        {/* Context deck: ONE flowing paragraph that wraps naturally. The
-            highlight is an INLINE accented phrase, so the sentence continues on
-            the same line after it (no isolated, half-empty lines). Lead /
-            highlight / tail are each optional; only non-empty parts render, with
-            a single space between them. */}
+        {/* Context deck: three stacked BLOCK lines, each a full sentence that
+            wraps across multiple lines as needed (like the reference post):
+             1) lead sentence (ink),
+             2) highlighted sentence — a whole emphasized statement in the
+                accent color, bold, that can span ~2 lines (NOT just a figure),
+             3) tail sentence (ink).
+            Each part is optional; only non-empty parts render. */}
         <div
           style={{
             display: "flex",
-            flexWrap: "wrap",
-            columnGap: 8,
-            rowGap: 2,
+            flexDirection: "column",
+            rowGap: 10,
             fontFamily: t.fonts.sans,
-            fontSize: 24,
+            fontSize: 25,
             fontWeight: 400,
-            lineHeight: 1.42,
+            lineHeight: 1.34,
             color: t.colors.ink,
             marginTop: 16,
           }}
         >
-          {props.deckLead ? <span>{props.deckLead}</span> : null}
+          {props.deckLead ? <div style={{ display: "flex" }}>{props.deckLead}</div> : null}
           {props.deckHighlight ? (
-            <span style={{ fontWeight: 700, color: accent }}>{props.deckHighlight}</span>
+            <div style={{ display: "flex", fontWeight: 700, color: accent }}>{props.deckHighlight}</div>
           ) : null}
-          {props.deckTail ? <span>{props.deckTail}</span> : null}
+          {props.deckTail ? <div style={{ display: "flex" }}>{props.deckTail}</div> : null}
         </div>
 
         {/* Locked footer */}

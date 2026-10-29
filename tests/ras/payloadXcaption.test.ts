@@ -383,19 +383,22 @@ test("X-only story: xCaption keeps the @handle attribution but no URL", () => {
 
 /**
  * Deterministic deck quality (used when the LLM copywriter returns no copy).
- * The deck renders as ONE flowing sentence: deckLead + deckHighlight + deckTail,
- * with the highlight inline. When a figure appears inside the lead fact, the
- * builder splits that sentence AROUND the figure so the highlight IS the figure
- * and the three parts join back into the original coherent sentence.
+ * The deck renders as THREE SUBSTANTIAL block lines, each a full grounded
+ * sentence: a lead sentence, a highlighted sentence (a whole insightful
+ * statement — prefers one carrying a figure), and a tail sentence. The lines
+ * are distinct and drawn from distinct facts.
  */
-test("deterministic deck: figure inside the fact becomes the inline highlight and the parts re-join into one sentence", () => {
+test("deterministic deck: three full sentences, highlight is the figure-bearing one", () => {
   const item = rssItem();
-  const sentence = "Samsung posted its highest-ever quarterly operating profit of $80bn as AI memory demand surged";
   const payload = buildRasPayload({
     item,
     factPack: factPack({
       headline: "Samsung posts record quarterly profit on AI memory demand",
-      keyFacts: [sentence + "."],
+      keyFacts: [
+        "Samsung posted its highest-ever quarterly operating profit, driven by AI memory demand.",
+        "Operating profit reached $80bn, up sharply from the prior year.",
+        "The company guided to further growth into next quarter.",
+      ],
       figures: ["$80bn"],
       names: ["Samsung"],
       sourceUrls: ["https://ex.com/story"],
@@ -407,26 +410,30 @@ test("deterministic deck: figure inside the fact becomes the inline highlight an
   });
   assert.ok(RasPayloadSchema.safeParse(payload).success);
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  // The highlight is the concrete figure — the thing the eye should land on.
-  assert.equal(payload.deckHighlight, "$80bn", "the figure is the inline highlight");
+  // Lead is the first grounded sentence (full sentence, not a fragment).
+  assert.ok(norm(payload.deckLead).startsWith("samsung posted its highest ever"), "lead is the first full sentence");
+  // Highlight is the sentence carrying the figure — a WHOLE statement, not a bare token.
+  assert.ok(payload.deckHighlight.includes("$80bn"), "highlight is the figure-bearing sentence");
+  assert.ok(payload.deckHighlight.length > 12, "highlight is a full sentence, not a bare figure");
   assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters", "no generic placeholder");
-  // Lead sets up the figure (ends before it) and tail continues after it, so the
-  // three parts flow as one sentence with the figure inline and not duplicated.
-  assert.ok(payload.deckLead.length > 0 && payload.deckTail.length > 0, "lead and tail both present");
-  assert.ok(norm(payload.deckLead).startsWith("samsung posted its highest ever"), "lead is the setup before the figure");
-  assert.ok(norm(payload.deckTail).startsWith("as ai memory demand"), "tail continues after the figure");
-  assert.ok(!norm(payload.deckLead).includes("80bn") && !norm(payload.deckTail).includes("80bn"), "figure not duplicated in lead/tail");
+  // Tail is a distinct third sentence.
+  assert.ok(payload.deckTail.length > 0, "tail present");
+  assert.ok(norm(payload.deckTail).includes("further growth"), "tail is the remaining distinct fact");
+  // All three are distinct.
+  assert.notEqual(norm(payload.deckLead), norm(payload.deckHighlight));
+  assert.notEqual(norm(payload.deckLead), norm(payload.deckTail));
+  assert.notEqual(norm(payload.deckHighlight), norm(payload.deckTail));
 });
 
-test("deterministic deck: with no figures, highlight falls back to a named entity", () => {
+test("deterministic deck: with no figures, highlight is a distinct full sentence (not a bare name)", () => {
   const item = rssItem();
   const payload = buildRasPayload({
     item,
     factPack: factPack({
       headline: "OpenAI partners with a national lab on safety research",
       keyFacts: [
-        "OpenAI announced a research partnership.",
-        "The work focuses on model safety evaluation.",
+        "OpenAI announced a research partnership with a national lab.",
+        "The work focuses on frontier model safety evaluation.",
       ],
       figures: [],
       names: ["OpenAI"],
@@ -437,9 +444,12 @@ test("deterministic deck: with no figures, highlight falls back to a named entit
     isXOnly: false,
   });
   assert.ok(RasPayloadSchema.safeParse(payload).success);
-  assert.ok(payload.deckHighlight.length > 0, "highlight is non-empty");
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  assert.ok(payload.deckHighlight.length > 12, "highlight is a full sentence, not a bare token");
   assert.notEqual(payload.deckHighlight.toLowerCase(), "why it matters", "no filler placeholder");
-  assert.ok(payload.deckHighlight.includes("OpenAI"), "named entity chosen when no figure exists");
+  // With no figure, the second grounded sentence becomes the highlight.
+  assert.ok(norm(payload.deckHighlight).includes("model safety"), "highlight is the second grounded sentence");
+  assert.notEqual(norm(payload.deckLead), norm(payload.deckHighlight), "lead and highlight are distinct");
 });
 
 test("deterministic deck: llmCopy deck fields win over the deterministic fallback", () => {
