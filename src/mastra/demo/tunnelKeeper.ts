@@ -25,11 +25,9 @@
  * It does NOT give you a STABLE hostname (quick tunnels can't). It gives you
  * zero-touch recovery: you never edit .env or restart the tunnel by hand.
  *
- * IMPORTANT: the Mastra dev server (`npm run dev`) reads PUBLIC_BASE_URL once
- * at startup. When this supervisor rotates the URL, it prints a loud notice;
- * restart `npm run dev` to pick up the new value. (The published image URLs
- * are built at publish time from process.env, so a dev server that was started
- * AFTER the latest rotation is always correct.)
+ * No restart needed: the publish path (getPublicBaseUrl in
+ * lib/instagram-publish.ts) re-reads PUBLIC_BASE_URL from .env on every
+ * publish, so a running `npm run dev` picks up each rotation automatically.
  *
  * USAGE
  *   npm run tunnel:keep
@@ -173,7 +171,7 @@ function startTunnel(): Promise<string> {
             `  old: ${previous ?? "(none)"}`,
             `  new: ${url}`,
             "",
-            "RESTART `npm run dev` so the Mastra server picks up the new URL.",
+            "No restart needed: publishing re-reads PUBLIC_BASE_URL from .env.",
           ]);
         } else {
           log(`tunnel hostname unchanged (${url}).`);

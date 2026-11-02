@@ -354,7 +354,11 @@ export async function prepareForHandoff(args: {
   const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback);
   const story = itemToMinimalStory(args.item, args.finalScore);
   const factPack = buildFactPack(story, { limited, sourceUrls: [args.item.url] });
-  const image = await sourceImage({ headline: args.item.title, feedCandidateUrls: args.feedCandidateUrls });
+  const image = await sourceImage({
+    headline: args.item.title,
+    feedCandidateUrls: args.feedCandidateUrls,
+    articleUrls: args.item.url ? [args.item.url] : [],
+  });
 
   // LLM editorial copy (Exa-enriched). Fails open to the deterministic template.
   const { copy, enrichedSourceUrls } = await writeEditorialCopy({

@@ -35,16 +35,74 @@ const TEXT_ONLY: Omit<ImageResult, "candidatesTried"> = {
   chosenFrom: "none",
 };
 
-async function exaImageCandidates(headline: string, cfg: ImageConfig): Promise<string[]> {
-  if (!process.env.EXA_API_KEY) return [];
+/**
+ * Exa search for the headline. Returns the `image` fields Exa provides AND the
+ * matching article URLs — Exa often finds the right article but returns no
+ * `image` for it, so the caller falls back to those pages' og:image.
+ */
+async function exaSearch(headline: string, cfg: ImageConfig): Promise<{ images: string[]; pageUrls: string[] }> {
+  if (!process.env.EXA_API_KEY) return { images: [], pageUrls: [] };
   try {
     const res = await searchExa({ query: headline, numResults: cfg.exaCandidates, includeText: false, includeImages: true });
-    return (res?.results ?? [])
-      .map((r) => (r as { image?: string }).image)
-      .filter((u): u is string => typeof u === "string" && /^https?:\/\//i.test(u));
+    const results = (res?.results ?? []) as { image?: string; url?: string }[];
+    const isHttp = (u: unknown): u is string => typeof u === "string" && /^https?:\/\//i.test(u);
+    return {
+      images: results.map((r) => r.image).filter(isHttp),
+      pageUrls: results.map((r) => r.url).filter(isHttp),
+    };
   } catch {
-    return [];
+    return { images: [], pageUrls: [] };
   }
+}
+
+/**
+ * Pulls the social-share image URLs (og:image, twitter:image) out of an HTML
+ * page, resolved against the page URL. Pure — exported for tests.
+ */
+export function extractMetaImages(html: string, pageUrl: string): string[] {
+  const out: string[] = [];
+  const keys = /^(og:image(:secure_url|:url)?|twitter:image(:src)?)$/i;
+  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+    const attr = (name: string) => tag.match(new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"));
+    const key = attr("property") ?? attr("name");
+    const content = attr("content");
+    const k = key?.[2] ?? key?.[3];
+    const v = (content?.[2] ?? content?.[3] ?? "").trim().replace(/&amp;/g, "&");
+    if (!k || !v || !keys.test(k)) continue;
+    try {
+      const abs = new URL(v, pageUrl).toString();
+      if (/^https?:\/\//i.test(abs) && !out.includes(abs)) out.push(abs);
+    } catch {
+      /* malformed URL */
+    }
+  }
+  return out;
+}
+
+/** Fetches each article page (time-boxed, size-capped) and collects its og/twitter images. */
+async function pageImageCandidates(pageUrls: string[], cfg: ImageConfig): Promise<string[]> {
+  const MAX_HTML_BYTES = 1_500_000; // meta tags live in <head>; never read a whole huge page
+  const found: string[] = [];
+  for (const pageUrl of pageUrls) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), cfg.downloadTimeoutMs);
+      const res = await fetch(pageUrl, {
+        redirect: "follow",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+        },
+      }).finally(() => clearTimeout(timer));
+      if (!res.ok || !/html/i.test(res.headers.get("content-type") ?? "")) continue;
+      const html = (await res.text()).slice(0, MAX_HTML_BYTES);
+      for (const u of extractMetaImages(html, res.url || pageUrl)) if (!found.includes(u)) found.push(u);
+    } catch {
+      /* unreachable page — try the next */
+    }
+  }
+  return found;
 }
 
 function saveImage(buffer: Buffer, ext: string, cfg: ImageConfig): string {
@@ -58,14 +116,20 @@ function saveImage(buffer: Buffer, ext: string, cfg: ImageConfig): string {
 export async function sourceImage(args: {
   headline: string;
   feedCandidateUrls?: string[];
+  /** The story's own article URL(s): their og:image is tried if the feed has none. */
+  articleUrls?: string[];
   config?: ImageConfig;
 }): Promise<ImageResult> {
   const cfg = args.config ?? imageConfig;
   const feed = [...new Set((args.feedCandidateUrls ?? []).filter(Boolean))];
+  const articles = [...new Set((args.articleUrls ?? []).filter((u) => /^https?:\/\//i.test(u ?? "")))];
   let tried = 0;
+  const attempted = new Set<string>();
 
   const tryList = async (urls: string[], from: "feed" | "exa"): Promise<ImageResult | null> => {
     for (const url of urls) {
+      if (attempted.has(url)) continue;
+      attempted.add(url);
       tried++;
       const v = await downloadAndValidate(url, cfg);
       if (v.ok && v.buffer && v.ext) {
@@ -84,12 +148,21 @@ export async function sourceImage(args: {
     return null;
   };
 
+  // Order: feed image -> the story's own article og:image -> Exa image ->
+  // og:image of the articles Exa found for the headline.
   const fromFeed = await tryList(feed, "feed");
   if (fromFeed) return fromFeed;
 
-  const exa = await exaImageCandidates(args.headline, cfg);
-  const fromExa = await tryList(exa, "exa");
+  const fromArticle = await tryList(await pageImageCandidates(articles, cfg), "feed");
+  if (fromArticle) return fromArticle;
+
+  const exa = await exaSearch(args.headline, cfg);
+  const fromExa = await tryList(exa.images, "exa");
   if (fromExa) return fromExa;
+
+  const exaPages = exa.pageUrls.filter((u) => !articles.includes(u));
+  const fromExaPages = await tryList(await pageImageCandidates(exaPages, cfg), "exa");
+  if (fromExaPages) return fromExaPages;
 
   return { ...TEXT_ONLY, candidatesTried: tried, reason: tried === 0 ? "no candidates" : "no candidate passed validation" };
 }

@@ -189,18 +189,18 @@ export function CarouselCoverSlide(props: CarouselCoverProps) {
           {props.serifHeadline}
         </div>
 
+        {/* "block" (not flex) so lead + highlight flow as one inline paragraph
+            instead of the highlight jumping to its own line. */}
         <div
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            columnGap: 7,
+            display: "block",
             fontFamily: t.fonts.sans,
             fontSize: 22,
             color: t.colors.ink,
             marginTop: 18,
           }}
         >
-          <span>{props.deckLead}</span>
+          <span>{props.deckLead + " "}</span>
           <span style={{ fontWeight: 700, color: accent }}>{props.deckHighlight}</span>
         </div>
 

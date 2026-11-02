@@ -211,11 +211,13 @@ export function RasStoryTemplate(props: RasStoryProps) {
             text runs continuously and the HIGHLIGHT (bold, accent color) sits
             IN THE MIDDLE of the paragraph — not on its own line. Each part is
             optional; a trailing space after lead/highlight keeps word spacing
-            when they wrap. */}
+            when they wrap.
+            display MUST be "block": with "flex" each span becomes a rigid flex
+            item, so a long highlight jumps to its own line instead of
+            continuing the sentence word by word. */}
         <div
           style={{
-            display: "flex",
-            flexWrap: "wrap",
+            display: "block",
             fontFamily: t.fonts.sans,
             fontSize: 26,
             fontWeight: 400,

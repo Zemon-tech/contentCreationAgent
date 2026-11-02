@@ -10,6 +10,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { getDesignJobStatus, type SlideManifest } from "./design-agent-client";
 
 /**
@@ -17,13 +18,65 @@ import { getDesignJobStatus, type SlideManifest } from "./design-agent-client";
  * In production set PUBLIC_BASE_URL to your deployed HTTPS host; in local
  * dev point it at a tunnel (ngrok / cloudflared) that forwards to the
  * Mastra server, otherwise Instagram cannot fetch the slides.
+ *
+ * Read LIVE from .env on every call: `npm run tunnel:keep` rewrites
+ * PUBLIC_BASE_URL in .env whenever the quick tunnel rotates, but a running
+ * server only loaded .env once at startup. Re-reading here means a rotation is
+ * picked up at publish time with no server restart. Falls back to process.env
+ * (production / no .env file).
  */
 export function getPublicBaseUrl(): string {
+  const fromFile = readPublicBaseUrlFromEnvFile();
+  if (fromFile) process.env.PUBLIC_BASE_URL = fromFile; // keep preflight checks consistent
   const raw =
+    fromFile ||
     process.env.PUBLIC_BASE_URL?.trim() ||
     process.env.PUBLIC_ASSET_BASE_URL?.trim() ||
     "";
   return raw.replace(/\/+$/, "");
+}
+
+/**
+ * Locates the project .env (next to package.json) by walking up from the cwd
+ * and from this module (dev runs from src/mastra/public, the bundle from
+ * .mastra/output). Cached once found; the FILE is re-read every call.
+ */
+let cachedEnvPath: string | null | undefined;
+function findEnvFile(): string | null {
+  if (cachedEnvPath !== undefined) return cachedEnvPath;
+  const starts = [process.cwd()];
+  try {
+    starts.push(path.dirname(fileURLToPath(import.meta.url)));
+  } catch {
+    /* non-file module URL */
+  }
+  for (const start of starts) {
+    let dir = start;
+    while (true) {
+      const candidate = path.join(dir, ".env");
+      if (fs.existsSync(candidate) && fs.existsSync(path.join(dir, "package.json"))) {
+        cachedEnvPath = candidate;
+        return candidate;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  cachedEnvPath = null;
+  return null;
+}
+
+/** Returns the current uncommented PUBLIC_BASE_URL value in .env, or "". */
+export function readPublicBaseUrlFromEnvFile(envPath: string | null = findEnvFile()): string {
+  if (!envPath) return "";
+  try {
+    const text = fs.readFileSync(envPath, "utf8");
+    const m = text.match(/^\s*PUBLIC_BASE_URL\s*=\s*([^\r\n#]*)/m);
+    return m ? m[1].trim().replace(/^["']|["']$/g, "") : "";
+  } catch {
+    return "";
+  }
 }
 
 /** Builds the public HTTPS URL for a single rendered slide file. */
