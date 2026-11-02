@@ -5,6 +5,7 @@ import { copyConfig, type CopyConfig } from "../../config/copy.config";
 import { extractJson } from "../json-extract";
 import { rankScoringAgent } from "../../agents/rankScoringAgent";
 import { searchExa } from "../../tools/exa-tools";
+import { withTimeout, isTimeoutError } from "../timeout";
 
 /**
  * Editorial copywriter — LLM-generated post copy (title/deck/caption) that
@@ -112,20 +113,30 @@ export interface WriteCopyResult {
   enrichedSourceUrls: string[];
 }
 
-/** Default generator — the real Sarvam model, mirroring llmScore.ts exactly. */
-const defaultGenerate: CopyGenerate = async (prompt) => {
-  const res = await rankScoringAgent.generate(prompt, {
-    modelSettings: {
-      temperature: copyConfig.temperature,
-      maxOutputTokens: copyConfig.maxOutputTokens,
-      maxRetries: 2,
-    },
-    // Keep Sarvam's reasoning off so reasoning tokens don't eat the output
-    // budget and truncate the JSON (same guard as the ranker).
-    providerOptions: { sarvam: { reasoning_effort: "none", reasoningEffort: "none" } },
+/**
+ * Default generator — the real Sarvam model via rankScoringAgent. Hard time
+ * limit per call; the request is aborted on timeout. maxRetries 1: a transport
+ * error retries once inside the SDK, the time limit still covers both tries.
+ *
+ * Do NOT swap in an agent with a short/neutral system prompt: measured, that
+ * made sarvam-105b reason for ~16k tokens (204-219s per call, first call cut
+ * off with no text) vs ~6.3k tokens / ~65s with this agent.
+ */
+const defaultGenerate: CopyGenerate = (prompt) =>
+  withTimeout(copyConfig.llmTimeoutMs ?? 0, "copy LLM call", async (abortSignal) => {
+    const res = await rankScoringAgent.generate(prompt, {
+      abortSignal,
+      modelSettings: {
+        temperature: copyConfig.temperature,
+        maxOutputTokens: copyConfig.maxOutputTokens,
+        maxRetries: 1,
+      },
+      // Keep Sarvam's reasoning off so reasoning tokens don't eat the output
+      // budget and truncate the JSON (same guard as the ranker).
+      providerOptions: { sarvam: { reasoning_effort: "none", reasoningEffort: "none" } },
+    });
+    return { text: res.text ?? "", usage: res.usage };
   });
-  return { text: res.text ?? "", usage: res.usage };
-};
 
 /**
  * Enrich the story with FREE third-party coverage via Exa. Returns the snippet
@@ -143,12 +154,14 @@ async function enrich(
     return { snippets: "", sourceUrls: [] };
   }
   try {
-    const out = await searchExa({
-      query: headline,
-      numResults: config.exaNumResults,
-      includeText: true,
-      category: "news",
-    });
+    const out = await withTimeout(config.exaTimeoutMs ?? 0, "copy Exa enrichment", () =>
+      searchExa({
+        query: headline,
+        numResults: config.exaNumResults,
+        includeText: true,
+        category: "news",
+      }),
+    );
     const known = new Set(knownUrls.map((u) => u.trim()));
     const lines: string[] = [];
     const newUrls: string[] = [];
@@ -249,6 +262,9 @@ export async function writeEditorialCopy(args: {
       text = res.text;
     } catch (err) {
       log("copy-llm-call-error", { attempt, error: err instanceof Error ? err.message : String(err) });
+      // A timeout already burned the full time budget; a second attempt would
+      // double it. Fall back to template copy instead of retrying.
+      if (isTimeoutError(err)) break;
       prompt = basePrompt; // transport error — retry the same prompt
       continue;
     }
@@ -268,7 +284,7 @@ export async function writeEditorialCopy(args: {
     return { copy: parsed.data, path: "llm", enrichedSourceUrls };
   }
 
-  // 3) FALLBACK — invalid after the retry; template copy will be used.
-  log("copy-write", { path: "fallback", reason: "invalid-after-retry", enrichedSources: enrichedSourceUrls.length });
+  // 3) FALLBACK — invalid after the retry (or timed out); template copy will be used.
+  log("copy-write", { path: "fallback", reason: "invalid-after-retry-or-timeout", enrichedSources: enrichedSourceUrls.length });
   return { copy: null, path: "fallback", enrichedSourceUrls };
 }

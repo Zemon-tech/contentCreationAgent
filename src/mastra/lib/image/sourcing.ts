@@ -5,6 +5,10 @@ import { imageConfig, type ImageConfig } from "../../config/image.config";
 import { downloadAndValidate } from "./validate";
 import { hostOf } from "../article-body";
 import { searchExa } from "../../tools/exa-tools";
+import { withTimeout } from "../timeout";
+
+/** Hard limit on the Exa image search so a slow Exa call can't stall a post. */
+const EXA_TIMEOUT_MS = 15_000;
 
 /**
  * Image sourcing (Step 5). Candidate order: FEED image -> Exa image search ->
@@ -43,7 +47,9 @@ const TEXT_ONLY: Omit<ImageResult, "candidatesTried"> = {
 async function exaSearch(headline: string, cfg: ImageConfig): Promise<{ images: string[]; pageUrls: string[] }> {
   if (!process.env.EXA_API_KEY) return { images: [], pageUrls: [] };
   try {
-    const res = await searchExa({ query: headline, numResults: cfg.exaCandidates, includeText: false, includeImages: true });
+    const res = await withTimeout(EXA_TIMEOUT_MS, "image Exa search", () =>
+      searchExa({ query: headline, numResults: cfg.exaCandidates, includeText: false, includeImages: true }),
+    );
     const results = (res?.results ?? []) as { image?: string; url?: string }[];
     const isHttp = (u: unknown): u is string => typeof u === "string" && /^https?:\/\//i.test(u);
     return {
@@ -79,30 +85,40 @@ export function extractMetaImages(html: string, pageUrl: string): string[] {
   return out;
 }
 
-/** Fetches each article page (time-boxed, size-capped) and collects its og/twitter images. */
+/**
+ * Fetches the article pages IN PARALLEL (each time-boxed, size-capped) and
+ * collects their og/twitter images, keeping the input page order so the
+ * story's own article still wins over later pages.
+ */
 async function pageImageCandidates(pageUrls: string[], cfg: ImageConfig): Promise<string[]> {
-  const MAX_HTML_BYTES = 1_500_000; // meta tags live in <head>; never read a whole huge page
+  const perPage = await Promise.all(pageUrls.map((u) => pageMetaImages(u, cfg)));
   const found: string[] = [];
-  for (const pageUrl of pageUrls) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), cfg.downloadTimeoutMs);
-      const res = await fetch(pageUrl, {
-        redirect: "follow",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-          Accept: "text/html,application/xhtml+xml",
-        },
-      }).finally(() => clearTimeout(timer));
-      if (!res.ok || !/html/i.test(res.headers.get("content-type") ?? "")) continue;
-      const html = (await res.text()).slice(0, MAX_HTML_BYTES);
-      for (const u of extractMetaImages(html, res.url || pageUrl)) if (!found.includes(u)) found.push(u);
-    } catch {
-      /* unreachable page — try the next */
-    }
-  }
+  for (const list of perPage) for (const u of list) if (!found.includes(u)) found.push(u);
   return found;
+}
+
+async function pageMetaImages(pageUrl: string, cfg: ImageConfig): Promise<string[]> {
+  const MAX_HTML_BYTES = 1_500_000; // meta tags live in <head>; never read a whole huge page
+  const controller = new AbortController();
+  // One timer covers headers AND body, so a slow-streaming page can't hang.
+  const timer = setTimeout(() => controller.abort(), cfg.downloadTimeoutMs);
+  try {
+    const res = await fetch(pageUrl, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml",
+      },
+    });
+    if (!res.ok || !/html/i.test(res.headers.get("content-type") ?? "")) return [];
+    const html = (await res.text()).slice(0, MAX_HTML_BYTES);
+    return extractMetaImages(html, res.url || pageUrl);
+  } catch {
+    return []; // unreachable / timed-out page — the caller tries the others
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function saveImage(buffer: Buffer, ext: string, cfg: ImageConfig): string {

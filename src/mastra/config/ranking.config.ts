@@ -66,6 +66,8 @@ export interface RankingConfig {
   concurrency: number;
   temperature: number;
   maxOutputTokens: number;
+  /** Hard limit per Stage B model call (ms). A timed-out item is left unscored. 0 = no limit. */
+  llmTimeoutMs?: number;
   /** USD per 1k total tokens, for the cost estimate. 0 for a free local model. */
   costPer1kTokensUsd: number;
 
@@ -173,12 +175,16 @@ export const rankingConfig: RankingConfig = {
   // fits well under the budget even with its ~2k reasoning tokens, so nothing
   // is lost to truncation. Raise RANK_BATCH_SIZE for a cheaper model.
   batchSize: envNum("RANK_BATCH_SIZE", 1),
-  // Model calls in flight at once. Sarvam calls are slow (~5s each) but
-  // independent, so running a few in parallel cuts wall-clock time ~linearly.
+  // Model calls in flight at once. sarvam-105b calls are slow (~30s each,
+  // measured) but independent, so running more in parallel cuts wall-clock
+  // time ~linearly (40 new stories: ~5 min at 4, ~2 min at 10).
   // Lower it (or set 1) if the provider starts returning 429s.
-  concurrency: envNum("RANK_CONCURRENCY", 4),
+  concurrency: envNum("RANK_CONCURRENCY", 10),
   temperature: envNum("RANK_TEMPERATURE", 0.15),
   maxOutputTokens: envNum("RANK_MAX_OUTPUT_TOKENS", 16384),
+  // Hard cap per scoring call so one stuck request can't stall the whole run.
+  // Typical call ~30s; a timed-out story is just left unscored (penalized).
+  llmTimeoutMs: envNum("RANK_LLM_TIMEOUT_MS", 75_000),
   costPer1kTokensUsd: envNum("RANK_COST_PER_1K_TOKENS_USD", 0),
 
   // Quality-first weights. recency folded to 0 (freshness is a final

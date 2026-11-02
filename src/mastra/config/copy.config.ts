@@ -50,6 +50,11 @@ export interface CopyConfig {
 
   /** Soft target for caption length (sentences). Keeps the caption tight. */
   captionMaxSentences: number;
+
+  /** Hard limit per copy model call (ms). On timeout, template copy is used. 0 = no limit. */
+  llmTimeoutMs?: number;
+  /** Hard limit for the Exa enrichment search (ms). On timeout, no extra grounding. */
+  exaTimeoutMs?: number;
 }
 
 export const copyConfig: CopyConfig = {
@@ -59,4 +64,8 @@ export const copyConfig: CopyConfig = {
   temperature: envNum("COPY_TEMPERATURE", 0.4),
   maxOutputTokens: envNum("COPY_MAX_OUTPUT_TOKENS", 16384),
   captionMaxSentences: envNum("COPY_CAPTION_MAX_SENTENCES", 6),
+  // sarvam-105b copy calls measured 46-70s; cap well above typical so a
+  // normal call is never cut off, but a stuck one can't hang the run.
+  llmTimeoutMs: envNum("COPY_LLM_TIMEOUT_MS", 120_000),
+  exaTimeoutMs: envNum("COPY_EXA_TIMEOUT_MS", 15_000),
 };

@@ -9,6 +9,7 @@ import {
 import { extractJson } from "../json-extract";
 import { rankScoringAgent } from "../../agents/rankScoringAgent";
 import { buildBatchPrompt } from "./prompt";
+import { withTimeout, isTimeoutError } from "../timeout";
 
 /**
  * Stage B — LLM scoring (batched, cheap model, low temperature).
@@ -33,20 +34,26 @@ export interface LlmScoreOutput {
   tokenEstimate: TokenEstimate;
 }
 
-/** Default generator — the real Stage B model. Injectable for tests/eval. */
-const defaultGenerate: RankGenerate = async (prompt) => {
-  const res = await rankScoringAgent.generate(prompt, {
-    modelSettings: {
-      temperature: rankingConfig.temperature,
-      maxOutputTokens: rankingConfig.maxOutputTokens,
-      maxRetries: 2,
-    },
-    // Nudge Sarvam's reasoning down so it doesn't eat the output budget and
-    // truncate the JSON (reasoning tokens are billed separately from text).
-    providerOptions: { sarvam: { reasoning_effort: "none", reasoningEffort: "none" } },
+/**
+ * Default generator — the real Stage B model. Injectable for tests/eval.
+ * Hard time limit per call (RANK_LLM_TIMEOUT_MS); the request is aborted on
+ * timeout so one stuck call can't stall the whole ranking stage.
+ */
+const defaultGenerate: RankGenerate = (prompt) =>
+  withTimeout(rankingConfig.llmTimeoutMs ?? 0, "rank LLM call", async (abortSignal) => {
+    const res = await rankScoringAgent.generate(prompt, {
+      abortSignal,
+      modelSettings: {
+        temperature: rankingConfig.temperature,
+        maxOutputTokens: rankingConfig.maxOutputTokens,
+        maxRetries: 1,
+      },
+      // Nudge Sarvam's reasoning down so it doesn't eat the output budget and
+      // truncate the JSON (reasoning tokens are billed separately from text).
+      providerOptions: { sarvam: { reasoning_effort: "none", reasoningEffort: "none" } },
+    });
+    return { text: res.text ?? "", usage: res.usage };
   });
-  return { text: res.text ?? "", usage: res.usage };
-};
 
 /**
  * Optional score cache. The same article is re-ranked every 30-minute cycle,
@@ -121,6 +128,9 @@ export async function scoreItems(
         addUsage(usageTotals, res.usage);
       } catch (err) {
         log("rank-llm-call-error", { attempt, error: errMsg(err), batchSize: batch.length });
+        // A timeout already used the full budget; retrying would double it.
+        // Leave the item unscored (penalized in Stage C) and move on.
+        if (isTimeoutError(err)) break;
         prompt = basePrompt; // transport error — just retry the same prompt
         continue;
       }

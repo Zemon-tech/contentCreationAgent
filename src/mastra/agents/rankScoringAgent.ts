@@ -20,7 +20,7 @@ import { resolveSmallChatModel } from "../config/model";
 import { rankingConfig } from "../config/ranking.config";
 import { buildSystemPrompt } from "../lib/ranking/prompt";
 
-function resolveRankModel(): OpenAICompatibleConfig | string {
+export function resolveRankModel(): OpenAICompatibleConfig | string {
   const baseUrl = process.env["RANK_MODEL_BASE_URL"];
   const modelName = process.env["RANK_MODEL_NAME"];
   if (baseUrl && modelName) {

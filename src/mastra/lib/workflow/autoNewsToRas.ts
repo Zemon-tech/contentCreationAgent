@@ -295,34 +295,52 @@ export async function pickPostableCandidates(args: {
   const prepare = args.prepare ?? prepareForHandoff;
   const want = Math.max(1, args.count);
   const maxTries = args.maxTries ?? Math.max(5, want * 3);
+  // Eligible stories in rank order: score >= threshold, one per cluster,
+  // capped at maxTries (same rules as before).
   const seenClusters = new Set<string>();
+  const queue: RankedStory[] = [];
+  for (const r of args.rankResult.ranked) {
+    if (queue.length >= maxTries) break;
+    if (r.finalScore < args.minScore) break; // ranked is sorted desc
+    if (seenClusters.has(r.item.clusterId)) continue;
+    seenClusters.add(r.item.clusterId);
+    queue.push(r);
+  }
+
   const skippedNoImage: string[] = [];
   const candidates: PostableCandidate[] = [];
   let tried = 0;
 
-  for (const r of args.rankResult.ranked) {
-    if (candidates.length >= want) break;
-    if (tried >= maxTries) break;
-    if (r.finalScore < args.minScore) break; // ranked is sorted desc
-    if (seenClusters.has(r.item.clusterId)) continue;
-    seenClusters.add(r.item.clusterId);
-    tried++;
-
-    const raw = args.rawById.get(r.item.id) ?? null;
-    const prepared = await prepare({
-      item: r.item,
-      finalScore: r.finalScore,
-      raw,
-      feedCandidateUrls: feedCandidatesFor(raw),
-      now: args.now,
-      rankedStory: r,
-      isXOnly: isXOnlyStory(r, args.rawById),
+  // Prepare in PARALLEL waves. Each wave takes exactly as many stories as we
+  // still need, so no story beyond the needed count ever pays for LLM copy;
+  // if some lack an image, the next wave fills the gap from further down the
+  // list. Results are kept in RANK order, so the outcome is identical to the
+  // old one-at-a-time walk, just without waiting on each post in turn.
+  while (candidates.length < want && tried < queue.length) {
+    const wave = queue.slice(tried, tried + (want - candidates.length));
+    tried += wave.length;
+    const prepared = await Promise.all(
+      wave.map((r) => {
+        const raw = args.rawById.get(r.item.id) ?? null;
+        return prepare({
+          item: r.item,
+          finalScore: r.finalScore,
+          raw,
+          feedCandidateUrls: feedCandidatesFor(raw),
+          now: args.now,
+          rankedStory: r,
+          isXOnly: isXOnlyStory(r, args.rawById),
+        });
+      }),
+    );
+    wave.forEach((r, i) => {
+      const p = prepared[i]!;
+      if (p.payload.imageLocalPath) {
+        candidates.push({ item: r.item, finalScore: r.finalScore, reason: r.reason, prepared: p });
+      } else {
+        skippedNoImage.push(r.item.title.slice(0, 80));
+      }
     });
-    if (prepared.payload.imageLocalPath) {
-      candidates.push({ item: r.item, finalScore: r.finalScore, reason: r.reason, prepared });
-    } else {
-      skippedNoImage.push(r.item.title.slice(0, 80));
-    }
   }
   return { candidates, tried, skippedNoImage };
 }
@@ -354,6 +372,9 @@ export async function prepareForHandoff(args: {
   const limited = !!(args.raw?.paywalled || args.raw?.factPackLimited || args.raw?.viaFallback);
   const story = itemToMinimalStory(args.item, args.finalScore);
   const factPack = buildFactPack(story, { limited, sourceUrls: [args.item.url] });
+  // Image FIRST (seconds). The post template needs a hero image, and the
+  // callers skip any story without one — so only pay for the slow LLM copy
+  // (~60s on sarvam-105b) once we know the story is actually postable.
   const image = await sourceImage({
     headline: args.item.title,
     feedCandidateUrls: args.feedCandidateUrls,
@@ -361,13 +382,16 @@ export async function prepareForHandoff(args: {
   });
 
   // LLM editorial copy (Exa-enriched). Fails open to the deterministic template.
-  const { copy, enrichedSourceUrls } = await writeEditorialCopy({
-    item: args.item,
-    factPack,
-    ...(args.copyGenerate ? { generate: args.copyGenerate } : {}),
-    ...(args.copyConfig ? { config: args.copyConfig } : {}),
-    log,
-  });
+  // Skipped (template copy) when there's no image: that story won't be posted.
+  const { copy, enrichedSourceUrls } = image.imageLocalPath
+    ? await writeEditorialCopy({
+        item: args.item,
+        factPack,
+        ...(args.copyGenerate ? { generate: args.copyGenerate } : {}),
+        ...(args.copyConfig ? { config: args.copyConfig } : {}),
+        log,
+      })
+    : (log("copy-write", { path: "skipped", reason: "no-image" }), { copy: null, enrichedSourceUrls: [] as string[] });
 
   const payload = buildRasPayload({
     item: args.item,
