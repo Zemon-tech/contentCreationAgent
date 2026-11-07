@@ -7,7 +7,7 @@ import type { Source } from "../schemas/source";
  * fetchArticleBody — the ONE guarded path for fetching article body text.
  *
  * Paywall enforcement is in CODE, not convention: if the source is paywalled
- * OR the URL resolves to a known paywalled domain (so Google-News-fallback and
+ * OR the URL resolves to a known paywalled domain (so fallback-discovered and
  * API items that land on wsj.com are caught too), this refuses and returns
  * { body: null, reason: "paywalled" }. No paywall bypass of any kind
  * (archives, caches, mirrors, headless) is attempted. No other code path in

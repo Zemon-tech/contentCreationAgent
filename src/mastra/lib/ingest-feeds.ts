@@ -6,7 +6,7 @@ import { parseFeedXml, type FeedImage } from "../collectors/rss";
 import { makeBaseRaw } from "../collectors/types";
 import { stripHtml, normalizeWhitespace } from "./normalize";
 import { politeFetch } from "./http-polite";
-import { fetchGoogleNewsFallback } from "./google-news-fallback";
+import { fetchExaDiscoveryFallback } from "./exa-discovery-fallback";
 import { hostOf } from "./article-body";
 import {
   applyOutcome,
@@ -24,7 +24,7 @@ import {
  *    warning (not a failure),
  *  - tags items: paywalled / factPackLimited / signalOnly / imageCandidates
  *    (cleared:false) / viaFallback,
- *  - auto-activates the Google News fallback for dropped/auto-disabled sources,
+ *  - auto-activates the Exa discovery fallback for dropped/auto-disabled sources,
  *  - records health and never lets one bad feed fail the run.
  *
  * This is additive: the legacy collectors/workflow are untouched.
@@ -120,25 +120,32 @@ function safeIso(v: string): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
+/**
+ * Discovery fallback for a source with no working RSS (dropped / auto-disabled
+ * / fetch failed). Runs an Exa domain-scoped search to discover fresh article
+ * URLs the outlet's (missing) feed would have carried. Best-effort — never
+ * throws, never fails the run. A source counts as fallback-activated once the
+ * search contributes at least one item.
+ */
 async function runFallback(source: Source, out: RawContent[], summary: IngestRunSummary, cfg: IngestionConfig): Promise<void> {
-  if (!cfg.googleNews.enabled || !source.url) return;
+  if (!source.url) return;
   const domain = hostOf(source.url);
   if (!domain) return;
+
   try {
-    const fb = await fetchGoogleNewsFallback({
+    const exa = await fetchExaDiscoveryFallback({
       sourceId: source.id,
       sourceName: source.name,
       domain: deriveArticleDomain(source),
-      region: source.region ?? "GLOBAL",
       topic: source.topics?.[0],
       config: cfg,
     });
-    if (fb.length) {
-      out.push(...fb);
+    if (exa.length) {
+      out.push(...exa);
       summary.fallbackActivated.push(source.id);
     }
   } catch {
-    /* fallback is best-effort; never fail the run */
+    /* best-effort; never fail the run */
   }
 }
 

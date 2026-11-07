@@ -1,8 +1,12 @@
 /**
- * sources:verify — live verification of EVERY source in the news registry
- * (active, disabled, and their Google News fallbacks), through the real
- * pipeline fetch path (politeFetch: robots.txt respected, per-domain rate
- * limited). Writes docs/source-verification-report.md and prints it.
+ * sources:verify — live verification of EVERY feed in the news registry
+ * (active and disabled), through the real pipeline fetch path (politeFetch:
+ * robots.txt respected, per-domain rate limited). Writes
+ * docs/source-verification-report.md and prints it.
+ *
+ * Note: disabled/no-RSS sources are served at runtime by the Exa discovery
+ * fallback (an API call, not a fetchable feed), so they are NOT re-verified
+ * here — this script only checks real feed endpoints.
  *
  *   npx -y tsx src/mastra/demo/verifySources.ts
  *
@@ -25,14 +29,11 @@ import { NEWS_FEED_SOURCES } from "../config/newsFeeds";
 import { getHealth } from "../repositories/feedHealth";
 import { politeFetch } from "../lib/http-polite";
 import { parseFeedXml } from "../collectors/rss";
-import { buildGoogleNewsUrl } from "../lib/google-news-fallback";
 import { ingestionConfig } from "../config/ingestion.config";
-import { hostOf } from "../lib/article-body";
-import type { Source } from "../schemas/source";
 
 const STALE_DAYS = ingestionConfig.health.staleDays;
 
-type StatusLabel = "active" | "disabled_auto" | "disabled_manual" | "fallback";
+type StatusLabel = "active" | "disabled_auto" | "disabled_manual";
 
 interface Row {
   name: string;
@@ -98,24 +99,6 @@ async function main(): Promise<void> {
       notes: [r.error, ...noteBits].filter(Boolean).join("; "),
     });
 
-    // For dropped/disabled sources, also verify the Google News fallback live.
-    if (manual && ingestionConfig.googleNews.enabled) {
-      const domain = fallbackDomain(s);
-      const gnUrl = buildGoogleNewsUrl(domain, region as "US" | "IN" | "GLOBAL", s.topics?.[0]);
-      const g = await checkFeed(gnUrl);
-      rows.push({
-        name: `  ↳ ${s.name} — Google News fallback`,
-        region,
-        url: `news.google.com/rss/search?q=site:${domain}`,
-        status: "fallback",
-        http: g.error && g.http === "-" ? "ERR" : g.http,
-        parsed: g.blocked ? "blocked" : g.parsed ? "yes" : "no",
-        items: g.items,
-        newest: g.newestIso ?? "-",
-        stale: g.ageDays !== null && g.ageDays > STALE_DAYS ? "YES" : "no",
-        notes: [g.error, "headline-level discovery"].filter(Boolean).join("; "),
-      });
-    }
   }
 
   const istNow = new Intl.DateTimeFormat("en-IN", {
@@ -132,21 +115,12 @@ async function main(): Promise<void> {
   console.log(`\nSaved to: ${outPath}`);
 }
 
-function fallbackDomain(s: Source): string {
-  const host = s.url ? hostOf(s.url) : null;
-  if (!host) return s.name.toLowerCase().replace(/\s+/g, "");
-  if (host.includes("dowjones")) return "wsj.com";
-  if (host.includes("cnn.com")) return "cnn.com";
-  return host;
-}
-
 function render(rows: Row[], istNow: string): string {
-  const feeds = rows.filter((r) => r.status !== "fallback");
+  const feeds = rows;
   const working = feeds.filter((r) => r.parsed === "yes" && r.stale !== "YES");
   const stale = feeds.filter((r) => r.stale === "YES");
   const dead = feeds.filter((r) => r.status !== "disabled_manual" && (r.parsed === "no" || r.parsed === "blocked"));
   const dropped = feeds.filter((r) => r.status === "disabled_manual");
-  const fallbackRows = rows.filter((r) => r.status === "fallback");
 
   const head = "| Source | Region | Feed URL | Status | HTTP | Parsed | Items | Newest | Stale | Notes |\n|---|---|---|---|---|---|---|---|---|---|";
   const body = rows
@@ -160,7 +134,7 @@ function render(rows: Row[], istNow: string): string {
   return `# Source Verification Report
 
 **Run (IST):** ${istNow}
-**Scope:** every source in the curated news registry (\`src/mastra/config/newsFeeds.ts\`) — active, disabled, and Google News fallbacks. Fetched live through the pipeline's robots-respecting path. Results reflect ONLY what was fetched in this run.
+**Scope:** every feed in the curated news registry (\`src/mastra/config/newsFeeds.ts\`) — active and disabled. Fetched live through the pipeline's robots-respecting path. Results reflect ONLY what was fetched in this run. Disabled/no-RSS sources are served at runtime by the Exa discovery fallback and are not re-verified here.
 
 ${head}
 ${body}
@@ -172,12 +146,11 @@ ${body}
 - **Stale (newest > ${STALE_DAYS}d):** ${stale.length}
 - **Dead/blocked among enabled:** ${dead.length}
 - **Dropped (disabled_manual):** ${dropped.length}
-- **Google News fallback rows checked:** ${fallbackRows.length}
 
 ### Dropped sources and why
 ${droppedList || "- none"}
 
-> Note: \`reddit.com\` and \`news.google.com\` return \`User-agent: * → Disallow: /\`, so with robots.txt respected the Reddit feeds and the Google News fallback endpoint show as **blocked** by design (no browser-UA spoofing).
+> Note: \`reddit.com\` returns \`User-agent: * → Disallow: /\`, so with robots.txt respected the Reddit feeds show as **blocked** by design (no browser-UA spoofing). Disabled/no-RSS sources are covered at runtime by the Exa discovery fallback.
 `;
 }
 

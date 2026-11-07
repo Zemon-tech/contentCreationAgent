@@ -2,7 +2,7 @@
  * ingestion.config.ts — the ONE place to tune feed ingestion hygiene.
  *
  * Covers conditional GET, per-domain rate limiting, robots.txt policy,
- * feed-health auto-disable/re-probe, staleness, and the Google News fallback.
+ * feed-health auto-disable/re-probe, staleness, and the Exa discovery fallback.
  * Change values here (or via the INGEST_* / FEED_* env vars); never hardcode.
  */
 
@@ -15,12 +15,6 @@ function envBool(name: string, fallback: boolean): boolean {
   const v = process.env[name];
   if (v === undefined) return fallback;
   return /^(1|true|yes|on)$/i.test(v.trim());
-}
-
-export interface GoogleNewsLocale {
-  hl: string;
-  gl: string;
-  ceid: string;
 }
 
 export interface IngestionConfig {
@@ -52,13 +46,24 @@ export interface IngestionConfig {
     staleDays: number;
   };
 
-  googleNews: {
+  /**
+   * Exa DISCOVERY fallback — the real "find news from sources RSS can't reach".
+   *
+   * For a source with no working RSS (manually dropped / auto-disabled / fetch
+   * failed) we run a domain-scoped Exa search (`exaSearch` with
+   * `includeDomains:[outlet]`, `category:"news"`, recent window) to DISCOVER
+   * fresh article URLs. Discover-only: we keep title + URL + date (+ Exa image)
+   * and tag items `viaFallback`/`factPackLimited`. The full body is fetched
+   * later, only for the handful of stories that survive ranking.
+   */
+  exaDiscovery: {
     enabled: boolean;
-    /** Max items pulled from a fallback query per run. */
+    /** Max discovered items kept per source per run. */
     maxItemsPerRun: number;
-    /** Recency window token, e.g. "1d". */
-    when: string;
-    localeByRegion: Record<"US" | "IN" | "GLOBAL", GoogleNewsLocale>;
+    /** Results to request from Exa per source query. */
+    numResults: number;
+    /** Only keep articles published within this many hours (recency window). */
+    startWithinHours: number;
   };
 }
 
@@ -85,17 +90,12 @@ export const ingestionConfig: IngestionConfig = {
     staleDays: envNum("FEED_STALE_DAYS", 7),
   },
 
-  googleNews: {
-    // Disabled by default: news.google.com returns `Disallow: /` for generic
-    // bots, so with robots.txt respected the fallback endpoint is blocked.
-    // Left in the codebase (behind this flag) in case an allowed route appears.
-    enabled: envBool("GOOGLE_NEWS_FALLBACK_ENABLED", false),
-    maxItemsPerRun: envNum("GOOGLE_NEWS_MAX_ITEMS", 10),
-    when: process.env["GOOGLE_NEWS_WHEN"] ?? "1d",
-    localeByRegion: {
-      US: { hl: "en-US", gl: "US", ceid: "US:en" },
-      IN: { hl: "en-IN", gl: "IN", ceid: "IN:en" },
-      GLOBAL: { hl: "en-US", gl: "US", ceid: "US:en" },
-    },
+  exaDiscovery: {
+    // Off by default: discovery spends Exa credits (one search per no-RSS
+    // source per run). Turn on with EXA_DISCOVERY_ENABLED=true (needs EXA_API_KEY).
+    enabled: envBool("EXA_DISCOVERY_ENABLED", false),
+    maxItemsPerRun: envNum("EXA_DISCOVERY_MAX_ITEMS", 5),
+    numResults: envNum("EXA_DISCOVERY_NUM_RESULTS", 10),
+    startWithinHours: envNum("EXA_DISCOVERY_WINDOW_HOURS", 48),
   },
 };

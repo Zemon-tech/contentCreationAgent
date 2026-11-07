@@ -57,7 +57,7 @@ export const RawContentSchema = z.object({
   paywalled: z.boolean().optional(),
   /** Thin material (paywalled/headline-only) — the fact pack must not invent. */
   factPackLimited: z.boolean().optional(),
-  /** Discovered via the Google News fallback (headline-level only). */
+  /** Discovered via the Exa discovery fallback (headline-level only). */
   viaFallback: z.boolean().optional(),
   /** From a signal-only source — never citable as a primary source. */
   signalOnly: z.boolean().optional(),

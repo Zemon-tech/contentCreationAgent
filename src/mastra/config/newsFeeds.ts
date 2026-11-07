@@ -11,8 +11,8 @@ import { rss, stub } from "./sourceCatalog1";
  * paywalled / signalOnly so the ranker can read them.
  *
  * Every URL here was candidate-verified live (see `npm run feeds:verify`);
- * dead/stale feeds are marked active:false with a note and, where useful, a
- * Google News fallback is available (see lib/google-news-fallback.ts).
+ * dead/stale feeds are marked active:false with a note. For those, the Exa
+ * discovery fallback finds fresh article URLs (see lib/exa-discovery-fallback.ts).
  *
  * `signalOnly:true` sources (HN, Reddit, Product Hunt) may inform ranking
  * (coverage/velocity) but must NEVER be cited as a story's primary source.
@@ -61,7 +61,7 @@ export const CONVERTED_FEEDS: Source[] = [
   feed("yourstory", "YourStory", "https://yourstory.com/feed", "IN", STARTUPS, 72),
   feed("inc42", "Inc42", "https://inc42.com/feed/", "IN", STARTUPS, 72),
   feed("aim", "Analytics India Magazine", "https://analyticsindiamag.com/feed/", "IN", AI, 74, {
-    active: false, note: "Feed serves HTML to bots (verified dead). Use Google News fallback site:analyticsindiamag.com.",
+    active: false, note: "Feed serves HTML to bots (verified dead). Covered by Exa discovery fallback (domain analyticsindiamag.com).",
   }),
   feed("ettech", "Economic Times Tech", "https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms", "IN", BIZ, 72),
   feed("entrackr", "Entrackr", "https://entrackr.com/rss", "IN", STARTUPS, 68, { tier: 3 }),
@@ -77,10 +77,10 @@ export const US_GLOBAL_FEEDS: Source[] = [
     tier: 2, paywalled: true, note: "Paywalled — title + summary only.",
   }),
   feed("cnn-tech", "CNN Technology", "http://rss.cnn.com/rss/edition_technology.rss", "US", ["Technology"], 70, {
-    active: false, note: "CNN public RSS defunct — endpoint returns items frozen ~10 years old. Use Google News fallback site:cnn.com.",
+    active: false, note: "CNN public RSS defunct — endpoint returns items frozen ~10 years old. Covered by Exa discovery fallback (domain cnn.com).",
   }),
   feed("cnn-top", "CNN Top Stories", "http://rss.cnn.com/rss/cnn_topstories.rss", "US", ["News"], 66, {
-    active: false, tier: 3, note: "Stale (frozen ~2022, legacy rss.cnn.com). Disabled; use edition_technology or Google News fallback.",
+    active: false, tier: 3, note: "Stale (frozen ~2022, legacy rss.cnn.com). Disabled; use edition_technology or the Exa discovery fallback.",
   }),
   feed("wired", "Wired", "https://www.wired.com/feed/rss", "US", AI, 80),
   feed("engadget", "Engadget", "https://www.engadget.com/rss.xml", "US", ["Technology"], 72, { tier: 3 }),
@@ -101,18 +101,18 @@ export const INDIA_FEEDS: Source[] = [
   feed("livemint-tech", "Livemint Technology", "https://www.livemint.com/rss/technology", "IN", BIZ, 74, { tier: 3 }),
   feed("thehindu-scitech", "The Hindu Sci-Tech", "https://www.thehindu.com/sci-tech/feeder/default.rss", "IN", DEEPTECH, 76, { tier: 3 }),
   feed("bstandard-tech", "Business Standard Tech", "https://www.business-standard.com/rss/technology-108.rss", "IN", BIZ, 72, {
-    active: false, tier: 3, note: "HTTP 403 to honest bot UA (verified). Not spoofing a browser. Use Google News fallback site:business-standard.com.",
+    active: false, tier: 3, note: "HTTP 403 to honest bot UA (verified). Not spoofing a browser. Covered by Exa discovery fallback (domain business-standard.com; paywalled, discovery only).",
   }),
   feed("ienexpress-tech", "Indian Express Technology", "https://indianexpress.com/section/technology/feed/", "IN", ["Technology"], 72, { tier: 3 }),
   feed("businesstoday-tech", "Business Today Tech", "https://www.businesstoday.in/rss/technology", "IN", BIZ, 68, { tier: 3 }),
   feed("techcircle", "TechCircle", "https://www.techcircle.in/rss/news", "IN", [...STARTUPS, "Technology"], 66, {
-    active: false, tier: 3, note: "No working RSS endpoint found (all variants return HTML). Use Google News fallback site:techcircle.in.",
+    active: false, tier: 3, note: "No working RSS endpoint found (all variants return HTML). Covered by Exa discovery fallback (domain techcircle.in).",
   }),
   feed("pib", "PIB India", "https://pib.gov.in/rss/lreleng.xml", "IN", ["Policy", "Government"], 70, {
-    role: "official", active: false, tier: 3, note: "HTTP 403 to honest bot UA (verified). Use Google News fallback site:pib.gov.in.",
+    role: "official", active: false, tier: 3, note: "HTTP 403 to honest bot UA (verified). Covered by Exa discovery fallback (domain pib.gov.in).",
   }),
   feed("isro", "ISRO News", "https://www.isro.gov.in/rss.xml", "IN", ["Deeptech", "Space"], 78, {
-    role: "official", active: false, tier: 3, note: "No stable RSS endpoint (404). Use Google News fallback site:isro.gov.in.",
+    role: "official", active: false, tier: 3, note: "No stable RSS endpoint (404). Covered by Exa discovery fallback (domain isro.gov.in).",
   }),
 ];
 

@@ -2,7 +2,7 @@
  * ingest:dry — dry-run the health-aware feed ingestion and print a source
  * health table. Fetches live feeds, applies conditional GET / rate limiting /
  * robots / feed-health / paywall tagging / image-candidate extraction /
- * Google News fallback, but persists nothing and publishes nothing.
+ * Exa discovery fallback, but persists nothing and publishes nothing.
  *
  *   npx -y tsx src/mastra/demo/ingestDryRun.ts
  */
